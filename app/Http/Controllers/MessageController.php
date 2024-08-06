@@ -275,7 +275,7 @@ class MessageController extends Controller
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_recommends',
-                    'description' => 'Get the data of recommended cryptocurrencies for purchasing',
+                    'description' => "Get the data of recommended cryptocurrencies for purchasing.",
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -480,7 +480,8 @@ class MessageController extends Controller
                 $format = 'json_object'; //json until end
                 $messages[] = [
                     'role' => 'user',
-                    'content' => 'Return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'
+                    'content' => 'Return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
+                        'Finally, the content has be translated according to the language of the initial user request'
                 ];
             }
         }
@@ -635,14 +636,6 @@ class MessageController extends Controller
         return $inputCost + $outputCost;
     }
     private function getRecommends($limit) {
-//        $resultRow = DB::connection('mysql2')->table('beuliping')
-//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id') // Adjust join condition
-//            ->where('beuliping.symbol', '!=', '1000BONK')
-//            ->orderBy('beuliping.id', 'desc')
-//            ->limit($limit)
-//            ->select('beuliping.*', 'vm_beuliping_EN.content') // Ensure 'contents' is the correct column name
-//            ->get();
-//        return json_encode($resultRow);
         $initialQueryLimit = $limit * 2; // Query more rows initially to ensure enough rows after filtering
 
         // Query more rows initially
@@ -655,7 +648,7 @@ class MessageController extends Controller
 
         // Filter out rows with symbol '1000BONK' and content starting with 'No'
         $filteredResults = $initialResults->filter(function($item) {
-            return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No');
+            return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No') && !is_null($item->images);
         })->take($limit);
 
         return json_encode($filteredResults->values());

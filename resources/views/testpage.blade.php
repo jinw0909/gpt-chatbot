@@ -57,36 +57,70 @@
                 @endif
             </header>
 
-            <button class="open-btn">Click</button>
+            <div class="open-btn">
+                <i></i>
+                Chat AI
+            </div>
 
             <!-- The Modal -->
             <div id="myModal" class="modal">
                 <div class="modal-content">
-                    <span class="close">&times;</span>
                     <main class="main">
                         <div class="chat-box-header">
-                            <h3 class="chat-box-title">Goya ChatBox</h3>
+                            <h3 class="chat-box-title">
+                                <i></i>
+                                Goya Chat AI
+                            </h3>
                             <div class="charge-wrapper">
                                 <div class="remaining">Remaining 0</div>
-                                <button type="button" id="add-button" class="button-custom">Charge</button>
+                                <button type="button" id="add-button" class="button-custom">충전</button>
+                                <span class="close">&times;</span>
                             </div>
                         </div>
                         <div id="chat-box" class="chat-box">
-                            <div class="message system">You have just logged in <span id="login-time"></span></div>
-                            <div class="message assistant">How may I help you?</div>
+                            <div class="message center">
+                                <div class="system">
+                                    <span>접속 시간 <span id="login-time"></span></span>
+                                </div>
+                            </div>
+
+                            <div class="message left">
+                                <div class="assistant content">
+                                    <span>안녕하세요.</span>
+                                    <span>Goya Chat AI에 오신 것을 환영합니다.</span>
+                                    <span>Chat AI는 사용료가 부과되는 유료 서비스입니다.</span>
+                                    <span>"Chat AI 질문"을 클릭해 주세요.</span>
+                                </div>
+                            </div>
+                            <div class="message right">
+                                <div class="user">
+                                    <span>Chat AI 질문하기</span>
+                                    <p class="question">지금 진입하기 좋은 코인을 추천해줘</p>
+                                    <p class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
+                                    <p class="question">암호 화폐 시장의 전망을 알려줘</p>
+                                </div>
+                            </div>
                         </div>
                         <div id="generating-message" class="generating" style="display: none;">Generating...</div>
-                        <form id="chat-form" action="{{ route('process-message') }}" method="POST">
-                            @csrf
-                            <div>
-                                <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
-                                <input type="hidden" name="userId" id="user-id" value="1">
-                                <input type="hidden" name="maxUsage" id="max-usage" value="0">
-                            </div>
-                            <div class="mt-4">
-                                <button type="button" id="send-button" class="button-custom">Send</button>
-                            </div>
-                        </form>
+                        <div id="input-wrapper" class="input-wrapper">
+                            <form id="chat-form" action="{{ route('process-message') }}" method="POST">
+                                @csrf
+                                <div>
+                                    <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
+                                    <input type="hidden" name="userId" id="user-id" value="1">
+                                    <input type="hidden" name="maxUsage" id="max-usage" value="0">
+                                </div>
+                                <div class="mt-4">
+                                    <button type="button" id="send-button" class="button-custom">Send</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="input-open">
+                            <button id="input-open" class="input-open-btn">1대1 문의</button>
+                        </div>
+                        <div class="input-close">
+                            <button id="input-close" class="input-close-btn">일반 문의</button>
+                        </div>
 
                         @if (session('responseText'))
                         <div class="mt-6">
@@ -112,7 +146,7 @@
                 console.log('Current Charge:', chargeData.charge);
                 const formattedCharge = parseFloat(chargeData.charge).toFixed(3);
                 // Update token display
-                document.querySelector('.remaining').textContent = `Remaining $${formattedCharge}`;
+                document.querySelector('.remaining').textContent = `$${formattedCharge}`;
             } else {
                 console.error('Error fetching tokens:', response.statusText);
             }
@@ -173,10 +207,13 @@
         messageInput.value = '';
 
         // Add the user's message to the chat box
+        const userMessageWrapper = document.createElement('div');
+        userMessageWrapper.className = 'message right';
         const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'message user';
+        userMessageDiv.className = 'user';
         userMessageDiv.textContent = message;
-        chatBox.appendChild(userMessageDiv);
+        userMessageWrapper.append(userMessageDiv);
+        chatBox.appendChild(userMessageWrapper);
 
         // Scroll to the bottom of the chat box
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -210,40 +247,57 @@
                     parsedResponse['recommendations'].forEach(parsedResponse => {
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.className = 'message assistant';
-                        symbolDiv.textContent = `Symbol: ${parsedResponse.symbol}`;
-                        symbolDiv.style.marginTop = '1rem';
-                        chatBox.appendChild(symbolDiv);
+                        //symbolDiv.className = 'message assistant';
+                        symbolDiv.textContent = `${parsedResponse.symbol}`;
+                        symbolDiv.style.fontWeight = 'bold';
+                        // symbolDiv.style.marginTop = '1rem';
+                        //chatBox.appendChild(symbolDiv);
 
                         // Create div for datetime
                         const datetimeDiv = document.createElement('div');
-                        datetimeDiv.className = 'message assistant';
-                        datetimeDiv.textContent = `Datetime: ${parsedResponse.datetime}`;
-                        chatBox.appendChild(datetimeDiv);
+                        //datetimeDiv.className = 'message assistant';
+                        datetimeDiv.textContent = `${parsedResponse.datetime}`;
+                        //chatBox.appendChild(datetimeDiv);
 
                         // Create div for image
                         const imageDiv = document.createElement('div');
-                        imageDiv.className = 'message assistant';
+                        //imageDiv.className = 'message assistant';
                         const imageElement = document.createElement('img');
                         imageElement.src = parsedResponse.image;
-                        imageElement.style.width = '75%';
-                        imageElement.style.borderRadius = '12px';
+                        imageElement.style.width = '100%';
+                        imageElement.style.borderRadius = '8px';
                         imageDiv.appendChild(imageElement);
-                        chatBox.appendChild(imageDiv);
+                        //chatBox.appendChild(imageDiv);
 
                         // Create div for content
                         const contentDiv = document.createElement('div');
-                        contentDiv.className = 'message assistant';
-                        contentDiv.textContent = `Content: ${parsedResponse.content}`;
-                        chatBox.appendChild(contentDiv);
+                        //contentDiv.className = 'message assistant';
+                        contentDiv.textContent = `${parsedResponse.content}`;
+                        //chatBox.appendChild(contentDiv);
+
+                        // Create wrapper
+                        const wrapperDiv = document.createElement('div');
+                        wrapperDiv.className = 'message';
+                        const assistantDiv = document.createElement('div');
+                        assistantDiv.className = 'assistant';
+
+                        assistantDiv.appendChild(symbolDiv);
+                        assistantDiv.appendChild(datetimeDiv);
+                        assistantDiv.appendChild(imageDiv);
+                        assistantDiv.appendChild(contentDiv);
+                        wrapperDiv.appendChild(assistantDiv);
+                        chatBox.appendChild(wrapperDiv);
 
                     });
                 } else {
                     // Add the assistant's message to the chat box
+                    const wrapperDiv = document.createElement('div');
+                    wrapperDiv.className = 'message left'
                     const assistantMessageDiv = document.createElement('div');
-                    assistantMessageDiv.className = 'message assistant';
+                    assistantMessageDiv.className = 'assistant';
                     assistantMessageDiv.innerHTML = data.responseText.replace(/\n/g, '<br>');
-                    chatBox.appendChild(assistantMessageDiv);
+                    wrapperDiv.appendChild(assistantMessageDiv);
+                    chatBox.appendChild(wrapperDiv);
                 }
 
                 // Fetch user tokens
@@ -303,10 +357,34 @@
         addUserCharge();
     });
 
+    document.getElementById('input-open').addEventListener('click', function() {
+       let inputWrapper = document.getElementById('input-wrapper');
+       let chatBox = document.getElementById('chat-box');
+       let inputOpen = document.querySelector('.input-open');
+       let inputClose = document.querySelector('.input-close');
+       chatBox.classList.add('closed');
+       inputWrapper.style.display = 'block';
+
+       inputOpen.style.display = 'none';
+       inputClose.style.display = 'block';
+    });
+
+    document.getElementById('input-close').addEventListener('click', function() {
+        let inputWrapper = document.getElementById('input-wrapper');
+        let chatBox = document.getElementById('chat-box');
+        let inputOpen = document.querySelector('.input-open');
+        let inputClose = document.querySelector('.input-close');
+        chatBox.classList.remove('closed');
+        inputWrapper.style.display = 'none';
+
+        inputClose.style.display = 'none';
+        inputOpen.style.display = 'block';
+    });
+
     // Modal handling
-    var modal = document.getElementById("myModal");
-    var btn = document.querySelector(".open-btn");
-    var span = document.querySelector(".close");
+    let modal = document.getElementById("myModal");
+    let btn = document.querySelector(".open-btn");
+    let span = document.querySelector(".close");
 
     btn.onclick = function() {
         modal.style.display = "block";
@@ -316,11 +394,11 @@
         modal.style.display = "none";
     }
 
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
+    // window.onclick = function(event) {
+    //     if (event.target == modal) {
+    //         modal.style.display = "none";
+    //     }
+    // }
 </script>
 </body>
 </html>
