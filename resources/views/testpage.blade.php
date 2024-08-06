@@ -95,9 +95,9 @@
                             <div class="message right">
                                 <div class="user">
                                     <span>Chat AI 질문하기</span>
-                                    <p class="question">지금 진입하기 좋은 코인을 추천해줘</p>
-                                    <p class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
-                                    <p class="question">암호 화폐 시장의 전망을 알려줘</p>
+                                    <p id="question-a" class="question">지금 진입하기 좋은 코인을 추천해줘</p>
+                                    <p id="question-b" class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
+                                    <p id="question-c" class="question">암호 화폐 시장의 전망을 알려줘</p>
                                 </div>
                             </div>
                         </div>

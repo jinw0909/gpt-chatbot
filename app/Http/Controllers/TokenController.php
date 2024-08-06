@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TokenController extends Controller
 {
@@ -16,6 +17,7 @@ class TokenController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function addToken($id, Request $request) {
+
         $user = User::find($id);
         if ($user) {
             $tokensToAdd = $request->input('tokens', 0); //Get tokens from request, default to 0 if not provided
@@ -29,6 +31,9 @@ class TokenController extends Controller
     }
 
     public function addCharge($id, Request $request) {
+
+        Log::info('Request received', $request->all());
+
         $user = User::find($id);
         if ($user) {
             $chargeToAdd = $request->input('amount', 0); //Get tokens from request, default to 0 if not provided
