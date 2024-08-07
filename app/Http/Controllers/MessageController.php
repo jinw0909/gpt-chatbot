@@ -275,7 +275,7 @@ class MessageController extends Controller
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_recommends',
-                    'description' => "Get the data of recommended cryptocurrencies for purchasing.",
+                    'description' => "Get the data of recommended cryptocurrencies for purchasing. The limit of the recommendation defaults to 3 when no specific limit is mentions from the user's message",
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [

@@ -12,15 +12,6 @@
 
     <!-- Custom Styles -->
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet">
-    <style>
-        .generating {
-            color: green;
-            margin-top: 10px;
-        }
-        .error-message {
-            color: red;
-        }
-    </style>
 </head>
 <body class="font-sans antialiased dark:bg-black dark:text-white/50">
 <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
@@ -77,49 +68,53 @@
                                 <span class="close">&times;</span>
                             </div>
                         </div>
-                        <div id="chat-box" class="chat-box">
-                            <div class="message center">
-                                <div class="system">
-                                    <span>접속 시간 <span id="login-time"></span></span>
+                        <div class="chat-box-body">
+                            <div id="chat-box" class="chat-box">
+                                <div class="message center">
+                                    <div class="system">
+                                        <span>접속 시간 <span id="login-time"></span></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="message left">
-                                <div class="assistant content">
-                                    <span>안녕하세요.</span>
-                                    <span>Goya Chat AI에 오신 것을 환영합니다.</span>
-                                    <span>Chat AI는 사용료가 부과되는 유료 서비스입니다.</span>
-                                    <span>"Chat AI 질문"을 클릭해 주세요.</span>
+                                <div class="message left">
+                                    <div class="assistant content">
+                                        <span>안녕하세요.</span>
+                                        <span>Goya Chat AI에 오신 것을 환영합니다.</span>
+                                        <span>Chat AI는 사용료가 부과되는 유료 서비스입니다.</span>
+                                        <span>"Chat AI 질문"을 클릭해 주세요.</span>
+                                    </div>
+                                </div>
+                                <div class="message right">
+                                    <div class="user">
+                                        <span>Chat AI 질문하기</span>
+                                        <p id="question-a" class="question">지금 진입하기 좋은 코인을 추천해줘</p>
+                                        <p id="question-b" class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
+                                        <p id="question-c" class="question">암호 화폐 시장의 전망을 알려줘</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="message right">
-                                <div class="user">
-                                    <span>Chat AI 질문하기</span>
-                                    <p id="question-a" class="question">지금 진입하기 좋은 코인을 추천해줘</p>
-                                    <p id="question-b" class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
-                                    <p id="question-c" class="question">암호 화폐 시장의 전망을 알려줘</p>
-                                </div>
+                            <div id="generating-message" class="generating" style="display: none;">
+                                <span>Generating...</span>
                             </div>
-                        </div>
-                        <div id="generating-message" class="generating" style="display: none;">Generating...</div>
-                        <div id="input-wrapper" class="input-wrapper">
-                            <form id="chat-form" action="{{ route('process-message') }}" method="POST">
-                                @csrf
-                                <div>
-                                    <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
-                                    <input type="hidden" name="userId" id="user-id" value="1">
-                                    <input type="hidden" name="maxUsage" id="max-usage" value="0">
-                                </div>
-                                <div class="mt-4">
-                                    <button type="button" id="send-button" class="button-custom">Send</button>
-                                </div>
-                            </form>
+                            <div id="input-wrapper" class="input-wrapper">
+                                <form id="chat-form" action="{{ route('process-message') }}" method="POST">
+                                    @csrf
+                                    <div class="message-input-wrapper">
+                                        <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
+                                        <input type="hidden" name="userId" id="user-id" value="1">
+                                        <input type="hidden" name="maxUsage" id="max-usage" value="0">
+                                    </div>
+                                    <div class="mt-4 send-button-wrapper">
+                                        <button type="button" id="send-button" class="button-custom">Send</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                         <div class="input-open">
-                            <button id="input-open" class="input-open-btn">1대1 문의</button>
+                            <button id="input-open" class="input-open-btn">채팅창 열기</button>
                         </div>
                         <div class="input-close">
-                            <button id="input-close" class="input-close-btn">일반 문의</button>
+                            <button id="input-close" class="input-close-btn">채팅창 닫기</button>
                         </div>
 
                         @if (session('responseText'))
@@ -191,29 +186,71 @@
     });
 
     document.getElementById('send-button').addEventListener('click', async function() {
+        sendMessage();
+    });
+
+    document.getElementById('add-button').addEventListener('click', function() {
+        addUserCharge();
+    });
+
+    document.getElementById('input-open').addEventListener('click', function() {
+       let inputWrapper = document.getElementById('input-wrapper');
+       let chatBox = document.getElementById('chat-box');
+       let inputOpen = document.querySelector('.input-open');
+       let inputClose = document.querySelector('.input-close');
+       // chatBox.classList.add('closed');
+       inputWrapper.style.maxHeight = "175px";
+
+       inputOpen.style.display = 'none';
+       inputClose.style.display = 'block';
+    });
+
+    document.getElementById('input-close').addEventListener('click', function() {
+        let inputWrapper = document.getElementById('input-wrapper');
+        let chatBox = document.getElementById('chat-box');
+        let inputOpen = document.querySelector('.input-open');
+        let inputClose = document.querySelector('.input-close');
+        chatBox.classList.remove('closed');
+        inputWrapper.style.maxHeight = '0';
+
+        inputClose.style.display = 'none';
+        inputOpen.style.display = 'block';
+    });
+
+
+    let sendMessage = async (custom) => {
+
         const messageInput = document.getElementById('message-input');
         const userIdInput = document.getElementById('user-id');
         const maxUsageInput = document.getElementById('max-usage');
         const chatBox = document.getElementById('chat-box');
-        const generatingMessage = document.getElementById('generating-message');
-        const message = messageInput.value;
+
+        let message = messageInput.value;
+        let userId = userIdInput.value;
+        let maxUsage = maxUsageInput.value;
 
         // Show the "Generating..." message
-        generatingMessage.style.display = 'block';
+        const generatingMessage = document.getElementById('generating-message');
+        generatingMessage.style.display = 'flex';
         messageInput.readOnly = true;
         messageInput.classList.add('locked');
 
-        // Clear the input field
-        messageInput.value = '';
 
-        // Add the user's message to the chat box
-        const userMessageWrapper = document.createElement('div');
-        userMessageWrapper.className = 'message right';
-        const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'user';
-        userMessageDiv.textContent = message;
-        userMessageWrapper.append(userMessageDiv);
-        chatBox.appendChild(userMessageWrapper);
+        if (!custom) {
+            // Clear the input field
+            messageInput.value = '';
+
+            // Add the user's message to the chat box
+            const userMessageWrapper = document.createElement('div');
+            userMessageWrapper.className = 'message right';
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'user';
+            userMessageDiv.textContent = message;
+            userMessageWrapper.append(userMessageDiv);
+            chatBox.appendChild(userMessageWrapper);
+        } else {
+            message = custom;
+        }
 
         // Scroll to the bottom of the chat box
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -228,8 +265,8 @@
                 },
                 body: JSON.stringify({
                     message: message,
-                    userId: userIdInput.value,
-                    maxUsage: maxUsageInput.value,
+                    userId: userId,
+                    maxUsage: maxUsage,
                     conversation: conversation
                 })
             });
@@ -351,34 +388,38 @@
             messageInput.classList.remove('locked');
 
         }
-    });
+    }
 
-    document.getElementById('add-button').addEventListener('click', function() {
-        addUserCharge();
-    });
+    let executeQuestion = (elem) => {
+        const messageInput = document.getElementById('message-input');
+        const userIdInput = document.getElementById('user-id');
+        const maxUsageInput = document.getElementById('max-usage');
+        const chatBox = document.getElementById('chat-box');
+        const generatingMessage = document.getElementById('generating-message');
+        let message = messageInput.value;
+        let userId = userIdInput.value;
+        let maxUsage = maxUsageInput.value;
 
-    document.getElementById('input-open').addEventListener('click', function() {
-       let inputWrapper = document.getElementById('input-wrapper');
-       let chatBox = document.getElementById('chat-box');
-       let inputOpen = document.querySelector('.input-open');
-       let inputClose = document.querySelector('.input-close');
-       chatBox.classList.add('closed');
-       inputWrapper.style.display = 'block';
+        if (elem.id === 'question-a') {
+            message = "지금 진입하기 좋은 코인을 추천해줘";
+            console.log('question-a');
+            sendMessage(message);
+        } else if (elem.id === 'question-b') {
+            message = "지난 12시간 동안의 비트코인 가격 움직임을 분석해줘"
+            console.log('question-b');
+            sendMessage(message);
+        } else if (elem.id === 'question-c') {
+            message = "지난 12시간 동안의 비트코인 스코어 움직임을 분석해줘"
+            console.log('question-c');
+            sendMessage(message);
+        }
+    }
 
-       inputOpen.style.display = 'none';
-       inputClose.style.display = 'block';
-    });
-
-    document.getElementById('input-close').addEventListener('click', function() {
-        let inputWrapper = document.getElementById('input-wrapper');
-        let chatBox = document.getElementById('chat-box');
-        let inputOpen = document.querySelector('.input-open');
-        let inputClose = document.querySelector('.input-close');
-        chatBox.classList.remove('closed');
-        inputWrapper.style.display = 'none';
-
-        inputClose.style.display = 'none';
-        inputOpen.style.display = 'block';
+    let questionArray = document.getElementsByClassName('question');
+    Array.from(questionArray).forEach((elem) => {
+        elem.addEventListener('click', () => {
+            executeQuestion(elem);
+        });
     });
 
     // Modal handling
