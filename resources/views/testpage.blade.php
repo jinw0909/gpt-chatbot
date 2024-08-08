@@ -217,7 +217,7 @@
         inputOpen.style.display = 'block';
     });
 
-
+    //function to send message
     let sendMessage = async (custom) => {
 
         const messageInput = document.getElementById('message-input');
@@ -229,28 +229,33 @@
         let userId = userIdInput.value;
         let maxUsage = maxUsageInput.value;
 
+        if (!custom) {
+            // Clear the input field
+            messageInput.value = '';
+        } else {
+            message = custom;
+        }
+
+        if (message === '') {
+            console.log("message is empty");
+            return;
+        }
+
         // Show the "Generating..." message
         const generatingMessage = document.getElementById('generating-message');
         generatingMessage.style.display = 'flex';
         messageInput.readOnly = true;
         messageInput.classList.add('locked');
 
+        // Add the user's message to the chat box
+        const userMessageWrapper = document.createElement('div');
+        userMessageWrapper.className = 'message right';
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'user';
 
-        if (!custom) {
-            // Clear the input field
-            messageInput.value = '';
-
-            // Add the user's message to the chat box
-            const userMessageWrapper = document.createElement('div');
-            userMessageWrapper.className = 'message right';
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'user';
-            userMessageDiv.textContent = message;
-            userMessageWrapper.append(userMessageDiv);
-            chatBox.appendChild(userMessageWrapper);
-        } else {
-            message = custom;
-        }
+        userMessageDiv.textContent = message;
+        userMessageWrapper.append(userMessageDiv);
+        chatBox.appendChild(userMessageWrapper);
 
         // Scroll to the bottom of the chat box
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -391,14 +396,14 @@
     }
 
     let executeQuestion = (elem) => {
-        const messageInput = document.getElementById('message-input');
-        const userIdInput = document.getElementById('user-id');
-        const maxUsageInput = document.getElementById('max-usage');
-        const chatBox = document.getElementById('chat-box');
-        const generatingMessage = document.getElementById('generating-message');
-        let message = messageInput.value;
-        let userId = userIdInput.value;
-        let maxUsage = maxUsageInput.value;
+        // const messageInput = document.getElementById('message-input');
+        // const userIdInput = document.getElementById('user-id');
+        // const maxUsageInput = document.getElementById('max-usage');
+        // const chatBox = document.getElementById('chat-box');
+        // const generatingMessage = document.getElementById('generating-message');
+        // let message = messageInput.value;
+        // let userId = userIdInput.value;
+        // let maxUsage = maxUsageInput.value;
 
         if (elem.id === 'question-a') {
             message = "지금 진입하기 좋은 코인을 추천해줘";

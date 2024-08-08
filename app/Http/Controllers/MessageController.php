@@ -19,90 +19,6 @@ class MessageController extends Controller
     private static $totalCost = [];
     private static $maxToken = [];
 
-//    public function processMessage(Request $request)
-//    {
-//        //Validate the input
-//        $request->validate([
-//           'message' => 'required|string',
-//        ]);
-//
-//        $message = $request->input('message');
-//        $userId = $request->input('userId');
-//        $conversation = $request->input('conversation');
-//        $wasSummarized = false;
-//        $summary = null;
-//        $token = $request->input('usage', 0);
-//
-//        //Ensure userId is a string to handle any type of userId;
-//        $userId = (string) $userId;
-//        Log::info("userId: ", ["userId" => $userId]);
-//
-//        //Initialize the user cost if not already set
-//        if (!isset(self::$totalCost[$userId])) {
-//            self::$totalCost[$userId] = 0;
-//        }
-//        if (!isset(self::$maxToken[$userId])) {
-//            self::$maxToken[$userId] = $token;
-//        }
-//
-//        self::$totalCost[$userId] = 0;
-//        self::$maxToken[$userId] = $token;
-//        Log::info("usage: ", ["usage" => self::$maxToken[$userId]]);
-//
-//        // Check if the conversation length exceeds a certain limit (e.g., 3000 tokens)
-//        if (self::$maxToken[$userId] > 500) {
-//
-//            //Summarize the conversation
-//            $conversationString = json_encode($conversation);
-//
-//            $summaryPrompt = [
-//                [
-//                    'role' => 'system',
-//                    'content' => 'Please summarize the following conversation. If there is a summary included in the conversation, the content of the summary too should be included for summarization:'
-//                ],
-//                [
-//                    'role' => 'system',
-//                    'content' => $conversationString
-//                ]
-//            ];
-//
-//            $summaryResponse = OpenAI::chat()->create([
-//                'model' => 'gpt-4o',
-//                'messages' => $summaryPrompt,
-//                'max_tokens' => 500 //Adjust as needed
-//            ]);
-//            $summaryResponseMessage = $summaryResponse['choices'][0]['message']['content'];
-//            $summaryInput = $summaryResponse['usage']['prompt_tokens'];
-//            $summaryOutput = $summaryResponse['usage']['completion_tokens'];
-//
-//            $summaryCost = $this->calculateTokenCost($summaryInput, $summaryOutput);
-//
-//            self::$totalCost[$userId] += $summaryCost;
-//            Log::info("summary response: ", ['message' => $summaryResponseMessage]);
-//            Log::info("summary usage", ["usage" => [$summaryInput, $summaryOutput]]);
-//            Log::info("summary cost", ["cost" => $summaryCost]);
-//            Log::info("total cost", ["cost" => self::$totalCost[$userId]]);
-//
-//            $summary =  [
-//                'role' => 'system',
-//                'content' => 'Summary of previous conversation: ' . $summaryResponseMessage
-//            ];
-//            $conversation = [$summary];
-//            $wasSummarized = true;
-//        }
-//        // Here, you would integrate with the OpenAI API to process the message
-//        // Return the response to the same view with the response text
-//        $openAIResponse = $this->sendMessageToOpenAI($message, $userId, $conversation);
-//        $responseContent = $openAIResponse->getData(true);
-//        $usage = self::$maxToken[$userId];
-//
-//        return response()->json([
-//           'responseText' => $responseContent['responseText'],
-//           'wasSummarized' => $wasSummarized,
-//           'summary' => $summary,
-//            'usage' => $usage
-//        ]);
-//    }
     public function processMessage(Request $request)
     {
         //Validate the input
@@ -186,6 +102,22 @@ class MessageController extends Controller
                 'role' => 'system',
                 'content' => "Map the following coin names to their symbols: bitcoin -> btcusdt, ethereum -> ethusdt, solana -> solusdt, ripple or xrp -> xrpusdt. " .
                     "When the user asks for the price of a coin, use the symbol and calculate the start_time and end_time to call the get_crypto_price function. "
+            ],
+            [
+                'role' => 'system',
+                'content' => "Whenever you need to show a time in your response message (assistant message), convert the UTC time to the local time where the response's language is used at." .
+                    "For example when the response is sent out in Korean, then convert the time to KST before showing. When the response is Japanese, convert the time into JST. For English, just use the UTC."
+            ],
+            [
+                'role' => 'system',
+                'content' => 'When the function call [get_recommends] has been invoked, return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
+                    "Finally, the content has be translated as the language of the user request asking for recommendation, and the datetime has to be adjusted to match the user's timezone. KST for Korean, JST for Japanese and UTC for English."
+            ],
+            [
+                'role' => 'system',
+                'content' => 'The score returned from teh function call [get_crypto_price] is called a Goya score　(ゴヤースコア in Japanese, 고야 스코어 in Korean) and is n indicator to predict the future price of that cryptocurrency.'.
+                    'When the score is on a downward trend, the price of the cryptocurrency is likely go down and when the score is on a upward trend the actual price of the cryptocurrency is likely to go up.'.
+                    'This score is derived by analyzing the blockchain transaction data focusing on the movements that has positive or negative impacts on the price of the cryptocurrency'
             ]
         ];
 
@@ -205,7 +137,7 @@ class MessageController extends Controller
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_crypto_price',
-                    'description' => 'Get the price and score data of a certain cryptocurrency between specified times given the symbol, start_time, and end_time.',
+                    'description' => 'Get the price and score data of a certain cryptocurrency between specified times given the symbol, start_time, and end_time. The score data can be utilized to predict the future price trend of the cryptocurrency',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -275,7 +207,8 @@ class MessageController extends Controller
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_recommends',
-                    'description' => "Get the data of recommended cryptocurrencies for purchasing. The limit of the recommendation defaults to 3 when no specific limit is mentions from the user's message",
+                    'description' => "Get the data of recommended cryptocurrencies for purchasing. The limit of the recommendation defaults to 3 when no specific limit is mentions from the user's message."
+                                    . "Returns a JSON-encoded array of recommended cryptocurrencies. datetime is applied a UTC timezone.",
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -478,11 +411,12 @@ class MessageController extends Controller
             $type = $functionName;
             if ($functionName == 'get_recommends') {
                 $format = 'json_object'; //json until end
-                $messages[] = [
-                    'role' => 'user',
-                    'content' => 'Return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
-                        'Finally, the content has be translated according to the language of the initial user request'
-                ];
+//                $messages[] = [
+//                    'role' => 'user',
+//                    'content' => 'Return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
+//                        "Finally, the content has be translated as the language of the initial user request asking for recommendation. Korean for Korean, Japanese for Japanese and English for English.".
+//                        "Also The datetime has to be adjusted to match the user's timezone. KST for Korean, JST for Japanese and UTC for English."
+//                ];
             }
         }
 
@@ -563,6 +497,8 @@ class MessageController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Error communicating with OpenAI:', ['error' => $e->getMessage()]);
+            //If error set the totalCost of the user to 0
+            self::$totalCost[$userId] = 0;
             return ['error' => 'Error: ' . $e->getMessage()];
         }
     }
@@ -636,22 +572,39 @@ class MessageController extends Controller
         return $inputCost + $outputCost;
     }
     private function getRecommends($limit) {
+        $totalResults = collect(); // Initialize an empty collection to store results
         $initialQueryLimit = $limit * 2; // Query more rows initially to ensure enough rows after filtering
+        $offset = 0; // Offset for pagination
 
-        // Query more rows initially
-        $initialResults = DB::connection('mysql2')->table('beuliping')
-            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id') // Adjust join condition
-            ->orderBy('beuliping.id', 'desc')
-            ->limit($initialQueryLimit)
-            ->select('beuliping.*', 'vm_beuliping_EN.content') // Ensure 'contents' is the correct column name
-            ->get();
+        while ($totalResults->count() < $limit) {
+            // Query more rows initially
+            $initialResults = DB::connection('mysql2')->table('beuliping')
+                ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id') // Adjust join condition
+                ->orderBy('beuliping.id', 'desc')
+                ->offset($offset)
+                ->limit($initialQueryLimit)
+                ->select('beuliping.*', 'vm_beuliping_EN.content', DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime'))
+                ->get();
 
-        // Filter out rows with symbol '1000BONK' and content starting with 'No'
-        $filteredResults = $initialResults->filter(function($item) {
-            return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No') && !is_null($item->images);
-        })->take($limit);
+            // Filter out rows with symbol '1000BONK' and content starting with 'No'
+            $filteredResults = $initialResults->filter(function($item) {
+                return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No') && !is_null($item->images);
+            });
 
-        return json_encode($filteredResults->values());
+            // Add filtered results to the total results collection
+            $totalResults = $totalResults->merge($filteredResults);
+
+            // Check if no more rows are available
+            if ($initialResults->count() < $initialQueryLimit) {
+                break;
+            }
+
+            // Increase offset for next query
+            $offset += $initialQueryLimit;
+        }
+
+        // Return only the required number of rows
+        return json_encode($totalResults->take($limit)->values());
     }
 
     private function summarizeConversation($conversation, $userid) {
