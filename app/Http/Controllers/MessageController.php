@@ -111,11 +111,29 @@ class MessageController extends Controller
             [
                 'role' => 'system',
                 'content' => 'When the function call [get_recommends] has been invoked, return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
-                    "Finally, the content has be translated as the language of the user request asking for recommendation, and the datetime has to be adjusted to match the user's timezone. KST for Korean, JST for Japanese and UTC for English."
+                    "All of the response content has be translated as the language of the user request asking for recommendation, and the datetime has to be adjusted to match the user's timezone. KST for Korean, JST for Japanese and UTC for English.".
+                    "WHen the user doesnt specify a specific limit and says several or some, use limit 3 as a default parameter value"
             ],
             [
                 'role' => 'system',
-                'content' => 'The score returned from teh function call [get_crypto_price] is called a Goya score　(ゴヤースコア in Japanese, 고야 스코어 in Korean) and is n indicator to predict the future price of that cryptocurrency.'.
+                'content' => 'When the user asks to narrow down the recommended list or asks for further explanation on the recommend list, elaborate the content and return as a response.'.
+                    ' This elaboration should reference the current price and score data of the cryptocurrency using function call [get_crypto_price]'.
+                    'The response should follow the following json format. {"elaborations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "price_trend" : "STRING", "score_trend" : "STRING", "content": "STRING"}, ...]}'.
+                    "[symbol] [datetime] [image] use the data from the recommend list. [price_trend] [score_trend] trend analysis of the symbol cryptocurrency's recent price and score movement, newly created".
+                    '[content] elaboration with details regarding price and score trends applied, newly created'.
+                    'Lastly always invoke the function call [elaborate_recommends] before making the response.'
+            ],
+            [
+                'role' => 'system',
+                'content' => 'When the user asks for additional recommendation, then first call function [get_recommends] with the limit added to the previous recommendation.'.
+                        'For example when the user asks to recommend two more coins, and when the limit parameter passed to the previous [get_recommends] was 3, then this time call the [get_recommends] with limit 6'.
+                        'When the user doesnt specify the additional limit (such as recommend me some more cryptocurrencies, recommend few more) then add 3 to the previous limit'.
+                        'After the additional [get_recommends] have returned its result, then compare two lists and only return the recommendations that was not included in the previous recommendation list in a json array format'.
+                        'The response json array format should be as follows. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'
+            ],
+            [
+                'role' => 'system',
+                'content' => 'The score returned from the function call [get_crypto_price] is called a Goya score　(ゴヤースコア in Japanese, 고야 스코어 in Korean) and is n indicator to predict the future price of that cryptocurrency.'.
                     'When the score is on a downward trend, the price of the cryptocurrency is likely go down and when the score is on a upward trend the actual price of the cryptocurrency is likely to go up.'.
                     'This score is derived by analyzing the blockchain transaction data focusing on the movements that has positive or negative impacts on the price of the cryptocurrency'
             ]
@@ -182,27 +200,27 @@ class MessageController extends Controller
                     ]
                 ]
             ],
-            [
-                'type' => 'function',
-                'function' => [
-                    'name' => 'subtract_hours_from_time',
-                    'description' => 'Subtract a number of hours from a given time',
-                    'parameters' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'time' => [
-                                'type' => 'string',
-                                'description' => "The time to subtract hours from in ISO 8601 format (e.g., '2024-07-30T16:05:06Z')."
-                            ],
-                            'hours' => [
-                                'type' => 'number',
-                                'description' => "The number of hours to subtract."
-                            ]
-                        ],
-                        'required' => ['time', 'hours']
-                    ]
-                ]
-            ],
+//            [
+//                'type' => 'function',
+//                'function' => [
+//                    'name' => 'subtract_hours_from_time',
+//                    'description' => 'Subtract a number of hours from a given time',
+//                    'parameters' => [
+//                        'type' => 'object',
+//                        'properties' => [
+//                            'time' => [
+//                                'type' => 'string',
+//                                'description' => "The time to subtract hours from in ISO 8601 format (e.g., '2024-07-30T16:05:06Z')."
+//                            ],
+//                            'hours' => [
+//                                'type' => 'number',
+//                                'description' => "The number of hours to subtract."
+//                            ]
+//                        ],
+//                        'required' => ['time', 'hours']
+//                    ]
+//                ]
+//            ],
             [
                 'type' => 'function',
                 'function' => [
@@ -220,6 +238,13 @@ class MessageController extends Controller
                     ]
                 ]
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'elaborate_recommends',
+                    'description' => "Called when the user asks for elaboration on the recommended cryptocurrency list"
+                ]
+            ]
         ];
 
         $openAIResponse = $this->sendMessageToOpenAI($messages, $tools, $userId);
@@ -239,184 +264,19 @@ class MessageController extends Controller
 
     }
 
-//    private function sendMessageToOpenAI($message, $userId, $conversation)
-//    {
-//        $systems = [
-//            [
-//                'role' => 'system',
-//                'content' => "Map the following coin names to their symbols: bitcoin -> btcusdt, ethereum -> ethusdt, solana -> solusdt. " .
-//                    "When the user asks for the price of a coin, use the symbol and calculate the start_time and end_time to call the get_crypto_price function. ".
-//                    "Get the dollar yen ratio using the function call"
-////                    "If the user specifies a time range (e.g., 'within the past 5 hours'), calculate the appropriate start_time and end_time. " .
-////                    "If start_time is not specified, use the current UTC time. If end_time is not specified, use 5 hours ago from the start_time in UTC."
-//            ]
-//        ];
-//        $messages = [
-//          [
-//              'role' => 'user',
-//              'content' => $message
-//          ]
-//        ];
-//
-//        // Prepend the conversation array if it is not null
-//        if (!is_null($conversation) && is_array($conversation)) {
-//            $messages = array_merge($systems, $conversation, $messages);
-//        }
-//
-//        Log::info("merged message: ", ["merged" => $messages]);
-//
-//        $tools = [
-//            [
-//                'type' => 'function',
-//                'function' => [
-//                    'name' => 'get_crypto_price',
-//                    'description' => 'Get the price data of a certain cryptocurrency between specified times given the symbol, start_time, and end_time.',
-//                    'parameters' => [
-//                        'type' => 'object',
-//                        'properties' => [
-//                            'symbol' => [
-//                                'type' => 'string',
-//                                'description' => "The symbol of the cryptocurrency (e.g., 'btcusdt')."
-//                            ],
-//                            'start_time' => [
-//                                'type' => 'string',
-//                                'description' => "The start datetime to filter the price data."
-//                            ],
-//                            'end_time' => [
-//                                'type' => 'string',
-//                                'description' => "The end datetime to filter the price data."
-//                            ]
-//                        ],
-//                        'required' => ['symbol']
-//                    ]
-//                ]
-//            ],
-//            [
-//                'type' => 'function',
-//                'function' => [
-//                    'name' => 'get_current_time',
-//                    'description' => 'Get the current time'
-//                ]
-//            ],
-//            [
-//              'type' => 'function',
-//              'function' => [
-//                  'name' => 'get_dollar_yen',
-//                  'description' => 'Return the exchange rate between 1 USD and Japanese Yen'
-//              ]
-//            ],
-//            [
-//            'type' => 'function',
-//            'function' => [
-//                'name' => 'get_current_temperature',
-//                'description' => 'Get the current temperature'
-//            ]
-//        ]
-//        ];
-//        try {
-//            $response = OpenAI::chat()->create([
-//                'model' => 'gpt-4o',
-//                'messages' => $messages,
-//                'tools' => $tools,
-//                'tool_choice' => 'auto'
-//            ]);
-//            $initialInput = $response['usage']['prompt_tokens'];
-//            $initialOutput = $response['usage']['completion_tokens'];
-//
-//            $responseMessage = $response['choices'][0]['message'];
-//
-//            $initialCost = $this->calculateTokenCost($initialInput, $initialOutput);
-//            self::$totalCost[$userId] += $initialCost;
-//            self::$maxToken[$userId] = ($initialInput + $initialOutput);
-//            Log::info("initial usage", ["usage" => ($initialInput + $initialOutput)]);
-//            Log::info("total usage", ["usage" => self::$maxToken[$userId]]);
-//            Log::info("initial cost", ["cost" => $initialCost]);
-//            Log::info("initial response", ["message" => $responseMessage]);
-//            Log::info("total cost", ["cost" => self::$totalCost[$userId]]);
-//
-//            //init function call logic
-//            $toolCalls = $responseMessage['tool_calls'] ?? [];
-//
-//            if (!empty($toolCalls)) {
-//                Log::info("toolCalls: ", ["toolCalls" => $toolCalls]);
-//                $availableFunctions = [
-////                    'get_coin_price_day' => [$this, 'getCoinPriceDay'],
-////                    'get_coin_price_week' => [$this, 'getCoinPriceWeek'],
-//                    'get_crypto_price' => [$this, 'getCryptoPrice'],
-//                    'get_current_time' => [$this, 'getCurrentUTCTime'],
-//                    'get_current_temperature' => [$this, 'getCurrentTemperature'],
-//                    'get_dollar_yen' => [$this, 'getDollarToYen']
-//                ];
-//
-//                $messages[] = $responseMessage;
-//
-//                foreach ($toolCalls as $toolCall) {
-//                    $functionName = $toolCall['function']['name'];
-//                    Log::info("functionName:  ", ["functionName" => $functionName]);
-//                    $functionToCall = $availableFunctions[$functionName];
-//                    $functionArgs = json_decode($toolCall['function']['arguments'] ?? '{}', true);
-//                    Log::info("functionArgs: ", ["functionArgs" => $functionArgs]);
-//                    $functionResponse = call_user_func($functionToCall, $functionArgs);
-//
-//                    $secondMessage = [
-//                        'tool_call_id' => $toolCall['id'],
-//                        'role' => 'tool',
-//                        'name' => $functionName,
-//                        'content' => $functionResponse
-//                    ];
-//
-//                    $messages[] = $secondMessage;
-//
-//                }
-//
-//                //Second request to OpenAI with function results
-//                $secondResponse = OpenAI::chat()->create([
-//                    'model' => 'gpt-4o',
-//                    'messages' => $messages
-//                ]);
-//                $secondResponseMessage = $secondResponse['choices'][0]['message'];
-//                $additionalInput = $secondResponse['usage']['prompt_tokens'];
-//                $additionalOutput = $secondResponse['usage']['completion_tokens'];
-//                $additionalCost = $this->calculateTokenCost($additionalInput, $additionalOutput);
-//                self::$totalCost[$userId] += $additionalCost;
-//                self::$maxToken[$userId] += ($additionalInput + $additionalOutput);
-//                Log::info("additional response: ", ['message' => $secondResponseMessage]);
-//                Log::info("additional usage", ["usage" => ($additionalInput + $additionalOutput)]);
-//                Log::info("total usage", ["usage" => self::$maxToken[$userId]]);
-//                Log::info("additional cost", ["cost" => $additionalCost]);
-//                Log::info("total cost", ["cost" => self::$totalCost[$userId]]);
-//                $this->reduceCharge($userId, self::$totalCost[$userId]);
-//                return response()->json([
-//                    'responseText' => $secondResponseMessage['content'],
-//                ]);
-//            }
-//
-//            $this->reduceCharge($userId, self::$totalCost[$userId]);
-//            return response()->json([
-//                'responseText' => $responseMessage['content']
-//            ]);
-//
-//        } catch (\Exception $e) {
-//            Log::error('Error communicating with OpenAI:', ['error' => $e->getMessage()]);
-//            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
-//        }
-//
-//    }
 
     private function sendMessageToOpenAI($messages, $tools, $userId, $functionList = [], $format = 'text')
     {
         $type = "";
         //Iterate over functionList
+        Log::info("function list: ", ["functionList" => $functionList]);
         foreach ($functionList as $functionName) {
-            $type = $functionName;
             if ($functionName == 'get_recommends') {
+                $type = $functionName;
                 $format = 'json_object'; //json until end
-//                $messages[] = [
-//                    'role' => 'user',
-//                    'content' => 'Return the result in the following JSON format. {"recommendations" : [{"symbol": "STRING", "datetime": "STRING", "image": "URL_STRING", "content": "STRING"}, ...]}'.
-//                        "Finally, the content has be translated as the language of the initial user request asking for recommendation. Korean for Korean, Japanese for Japanese and English for English.".
-//                        "Also The datetime has to be adjusted to match the user's timezone. KST for Korean, JST for Japanese and UTC for English."
-//                ];
+            } else if ($functionName == 'elaborate_recommends') {
+                $type = $functionName;
+                $format = 'json_object';
             }
         }
 
@@ -427,7 +287,8 @@ class MessageController extends Controller
                 'messages' => $messages,
                 'tools' => $tools,
                 'tool_choice' => 'auto',
-                'response_format' => ["type" => $format]
+                'response_format' => ["type" => $format],
+                'parallel_tool_calls' => true,
             ]);
             Log:info("response: ", ["response" => $response]);
 
@@ -466,8 +327,9 @@ class MessageController extends Controller
                     'get_recent_price' => [$this, 'getRecentPrice'],
                     'get_crypto_price' => [$this, 'getCryptoPrice'],
                     'get_current_time' => [$this, 'getCurrentUTCTime'],
-                    'subtract_hours_from_time' => [$this, 'subtractHoursFromTime'],
-                    'get_recommends' => [$this, 'getRecommends']
+//                    'subtract_hours_from_time' => [$this, 'subtractHoursFromTime'],
+                    'get_recommends' => [$this, 'getRecommends'],
+                    'elaborate_recommends' => [$this, 'elaborateRecommends']
                 ];
 
                 foreach ($toolCalls as $toolCall) {
@@ -528,6 +390,14 @@ class MessageController extends Controller
     }
 
     private function getCryptoPrice($symbol, $startTime, $endTime) {
+        // Capitalize the symbol
+        $symbol = strtoupper($symbol);
+
+        // Ensure the symbol ends with 'USDT'
+        if (!str_ends_with($symbol, 'USDT')) {
+            $symbol .= 'USDT';
+        }
+
         $data = DB::connection('mysql')->table('trsi.retri_chart_data')
             ->where('simbol', $symbol)
             ->whereBetween('regdate', [$startTime, $endTime])
@@ -562,6 +432,129 @@ class MessageController extends Controller
         return "80";
     }
 
+    private function elaborateRecommends() {
+        return "elaborate_recommends called";
+    }
+
+//    private function elaborate($info, $userId) {
+//        $messages = [
+//            [
+//                'role' => 'system',
+//                'content' => 'You will be provided with the information that represents the recommended cryptocurrency.' .
+//                            'The [symbol] is the symbol of the cryptocurrency, and the [content] is the reason for its recommendation and this analyis is based on the [datetime] of the information.'
+//            ],
+//            [
+//              'role' => 'system',
+//              'content' => $info
+//            ],
+//            [
+//                'role' => 'user',
+//                'content' => 'From the provided information, return the response in a JSON format. The response should include the elaborated explanation on why this particular symbol has been recommended.' .
+//                            'When generating the elaborated explanation, you should check the recent price and the goya score trend of this cryptocurrency within the past 24 hours.'
+//            ]
+//        ];
+//        $tools = [
+//            [
+//                'type' => 'function',
+//                'function' => [
+//                    'name' => 'get_price_score',
+//                    'description' => "Get the price and score data of a particular cryptocurrency within the past 24 hours given its symbol.",
+//                    'parameters' => [
+//                        'type' => 'object',
+//                        'properties' => [
+//                            'symbol' => [
+//                                'type' => 'string',
+//                                'description' => "The symbol of the cryptocurrency to check its price and score. If the symbol doesnt end with the word USDT, then attach the word when passing to the function"
+//                            ]
+//                        ],
+//                        'required' => ['symbol']
+//                    ]
+//                ]
+//            ],
+//        ];
+//
+//        try {
+//            $response = OpenAI::chat()->create([
+//                'model' => 'gpt-4o',
+//                'messages' => $messages,
+//                'tools' => $tools,
+//                'tool_choice' => 'auto',
+//                'response_format' => ["type" => 'json_object']
+//            ]);
+//            Log:info("response: ", ["response" => $response]);
+//
+//            $responseMessage = $response['choices'][0]['message'];
+//            $promptToken = $response['usage']['prompt_tokens'];
+//            $completionToken = $response['usage']['completion_tokens'];
+//            $responseCost = $this->calculateTokenCost($promptToken, $completionToken);
+//            $responseToken = $response['usage']['total_tokens'];
+//
+//            self::$totalCost[$userId] += $responseCost;
+//            // Update the totalToken to be the maximum of its current value and the responseToken
+//            if (!isset(self::$maxToken[$userId])) {
+//                self::$maxToken[$userId] = 0;
+//            }
+//            self::$maxToken[$userId] = max(self::$maxToken[$userId], $responseToken);
+//
+//            Log::info("total cost: ", ["totalCost" => self::$totalCost[$userId]]);
+//            Log::info("maximum token: ", ["maximumToken" => self::$maxToken[$userId]]);
+//
+//            //append the message
+//            $messages[] = $responseMessage;
+//            $toolCalls = $responseMessage['tool_calls'] ?? [];
+//            if (empty($toolCalls)) {
+//                //return
+//                Log::info('response content: ', ["responseContent" => $responseMessage['content']]);
+//                return [
+//                    'responseText' => $responseMessage['content']
+//                ];
+//            } else {
+//                //recurse
+//                Log::info("toolCalls: ", ["toolCalls" => $toolCalls]);
+//                $availableFunctions = [
+//                    'get_price_score' => [$this, 'getCryptoPrice'],
+//                    'get_current_time' => [$this, 'getCurrentUTCTime']
+//                ];
+//
+//                foreach ($toolCalls as $toolCall) {
+//                    $functionName = $toolCall['function']['name'] ?? null; // Use null coalescing to handle missing keys
+//                    if ($functionName) {
+//                        Log::info("functionName:  ", ["functionName" => $functionName]);
+//                        //$functionList[] = $functionName; // Append to functionList
+//                        $functionToCall = $availableFunctions[$functionName];
+//                        $functionArgs = json_decode($toolCall['function']['arguments'] ?? '{}', true);
+//                        Log::info("functionArgs: ", ["functionArgs" => $functionArgs]);
+//                        $functionResponse = call_user_func($functionToCall, ...array_values($functionArgs));
+//
+//                        $callResponse = [
+//                            'tool_call_id' => $toolCall['id'],
+//                            'role' => 'tool',
+//                            'name' => $functionName,
+//                            'content' => $functionResponse
+//                        ];
+//
+//                        $messages[] = $callResponse;
+//                    } else {
+//                        Log::warning("Function name is null in toolCall: ", ["toolCall" => $toolCall]);
+//                    }
+//
+//                }
+//                return $this->elaborate($info, $userId);
+//            }
+//
+//
+//
+//
+//
+//
+//        } catch ( \Exception $e) {
+//            Log::error('Error communicating with OpenAI:', ['error' => $e->getMessage()]);
+//            //If error set the totalCost of the user to 0
+//            self::$totalCost[$userId] = 0;
+//            return ['error' => 'Error: ' . $e->getMessage()];
+//        }
+//    }
+
     private function calculateTokenCost($inputTokens, $outputTokens) {
         $inputTokenPrice = 5.00 / 1000000; //US$5.00 / 1M input tokens
         $outputTokenPrice = 15.00 / 1000000; //US$15.00 / 1M output tokens
@@ -583,7 +576,7 @@ class MessageController extends Controller
                 ->orderBy('beuliping.id', 'desc')
                 ->offset($offset)
                 ->limit($initialQueryLimit)
-                ->select('beuliping.*', 'vm_beuliping_EN.content', DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime'))
+                ->select('beuliping.id','beuliping.symbol','beuliping.datetime','beuliping.images' ,'vm_beuliping_EN.content', DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime'))
                 ->get();
 
             // Filter out rows with symbol '1000BONK' and content starting with 'No'

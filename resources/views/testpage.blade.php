@@ -283,39 +283,32 @@
                 generatingMessage.style.display = 'none';
 
                 // Add the assistant's message to the chat box
-                if (data.type === 'get_recommends') {
+                if (data.type === 'get_recommends' || data.type === 'elaborate_recommends') {
                     const parsedResponse = JSON.parse(data.responseText);
 
-                    parsedResponse['recommendations'].forEach(parsedResponse => {
+                    const recommendations = data.type === 'get_recommends' ? parsedResponse['recommendations'] : parsedResponse['elaborations'];
+
+                    recommendations.forEach(parsedResponse => {
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
-                        //symbolDiv.className = 'message assistant';
                         symbolDiv.textContent = `${parsedResponse.symbol}`;
                         symbolDiv.style.fontWeight = 'bold';
-                        // symbolDiv.style.marginTop = '1rem';
-                        //chatBox.appendChild(symbolDiv);
 
                         // Create div for datetime
                         const datetimeDiv = document.createElement('div');
-                        //datetimeDiv.className = 'message assistant';
                         datetimeDiv.textContent = `${parsedResponse.datetime}`;
-                        //chatBox.appendChild(datetimeDiv);
 
                         // Create div for image
                         const imageDiv = document.createElement('div');
-                        //imageDiv.className = 'message assistant';
                         const imageElement = document.createElement('img');
                         imageElement.src = parsedResponse.image;
                         imageElement.style.width = '100%';
                         imageElement.style.borderRadius = '8px';
                         imageDiv.appendChild(imageElement);
-                        //chatBox.appendChild(imageDiv);
 
                         // Create div for content
                         const contentDiv = document.createElement('div');
-                        //contentDiv.className = 'message assistant';
                         contentDiv.textContent = `${parsedResponse.content}`;
-                        //chatBox.appendChild(contentDiv);
 
                         // Create wrapper
                         const wrapperDiv = document.createElement('div');
@@ -327,20 +320,36 @@
                         assistantDiv.appendChild(datetimeDiv);
                         assistantDiv.appendChild(imageDiv);
                         assistantDiv.appendChild(contentDiv);
+
+                        // If type is 'elaborate_recommends', add price_trend and score_trend
+                        if (data.type === 'elaborate_recommends') {
+                            // Create div for price_trend
+                            const priceTrendDiv = document.createElement('div');
+                            priceTrendDiv.textContent = `${parsedResponse.price_trend}`;
+                            priceTrendDiv.className = 'price-trend';
+                            assistantDiv.appendChild(priceTrendDiv);
+
+                            // Create div for score_trend
+                            const scoreTrendDiv = document.createElement('div');
+                            scoreTrendDiv.textContent = `${parsedResponse.score_trend}`;
+                            scoreTrendDiv.className = 'score-trend';
+                            assistantDiv.appendChild(scoreTrendDiv);
+                        }
+
                         wrapperDiv.appendChild(assistantDiv);
                         chatBox.appendChild(wrapperDiv);
-
                     });
                 } else {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
-                    wrapperDiv.className = 'message left'
+                    wrapperDiv.className = 'message left';
                     const assistantMessageDiv = document.createElement('div');
                     assistantMessageDiv.className = 'assistant';
                     assistantMessageDiv.innerHTML = data.responseText.replace(/\n/g, '<br>');
                     wrapperDiv.appendChild(assistantMessageDiv);
                     chatBox.appendChild(wrapperDiv);
                 }
+
 
                 // Fetch user tokens
                 await fetchUserCharge();

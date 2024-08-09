@@ -276,6 +276,10 @@ footer {
 /*.chat-box.closed {*/
 /*    min-height: 300px;*/
 /*}*/
+.price-trend,
+.score-trend {
+    margin-top: 1rem;
+}
 
 
 @keyframes typing {
