@@ -8,6 +8,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TokenController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\ConversationController;
 
 
 
@@ -23,6 +24,8 @@ Route::get('/openai', [OpenAIController::class, 'openAI']);
 
 Route::post('/process-message', [MessageController::class, 'processMessage'])->name('process-message');
 
+Route::post('/conversation', [ConversationController::class, 'processMessage'])->name('conversation');
+
 Route::get('/assistants', [OpenAIController::class, 'assistantList']);
 
 Route::get('/messages', [OpenAIController::class, 'messageList']);
@@ -36,7 +39,6 @@ Route::get('/test-log', function() {
 
 Route::get('/test/rds', [TestController::class, 'connectAWS']);
 Route::get('/test/rds2', [TestController::class, 'connectRetri']);
-
 Route::post('/user/{id}/add-token', [TokenController::class, 'addToken']);
 Route::post('/user/{id}/add-charge', [TokenController::class, 'addCharge']);
 Route::post('/user/{id}/reduce-token', [TokenController::class, 'reduceToken']);

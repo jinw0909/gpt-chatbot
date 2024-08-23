@@ -30,7 +30,7 @@ body {
 }
 .user {
     color: rosybrown;
-    max-width: 66%;
+    max-width: 75%;
     border: 1px solid rosybrown;
     padding: .5rem;
     margin: .5rem 0;
@@ -44,7 +44,7 @@ body {
 }
 .assistant {
     color: lightskyblue;
-    max-width: 66%;
+    max-width: 75%;
     border: 1px solid lightskyblue;
     padding: .5rem;
     margin: .5rem 0;
@@ -68,7 +68,23 @@ body {
     border: 1px solid white;
     cursor: pointer;
 }
-
+.recommend {
+    transition: .5s;
+    overflow: hidden;
+    max-height: 0;
+}
+.recommend.show {
+    max-height: 500px;
+}
+.recommend-btn {
+    border: 1px solid white;
+    color: white;
+    background-color: transparent;
+    border-radius: 4px;
+    min-width: 4rem;
+    padding: .25rem .5rem;
+    margin: .25rem 0;
+}
 /* Modal Styles */
 .modal {
     display: none;

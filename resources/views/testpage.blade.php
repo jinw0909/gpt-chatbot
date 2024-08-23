@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Laravel</title>
+    <title>Goya Chatbot</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -12,6 +12,7 @@
 
     <!-- Custom Styles -->
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="font-sans antialiased dark:bg-black dark:text-white/50">
 <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
@@ -97,7 +98,8 @@
                                 <span>Generating...</span>
                             </div>
                             <div id="input-wrapper" class="input-wrapper">
-                                <form id="chat-form" action="{{ route('process-message') }}" method="POST">
+<!--                                <form id="chat-form" action="{{ route('process-message') }}" method="POST">-->
+                                <form id="chat-form" action="{{ route('conversation') }}" method="POST">
                                     @csrf
                                     <div class="message-input-wrapper">
                                         <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
@@ -262,7 +264,8 @@
 
         // Send the message via AJAX
         try {
-            const response = await fetch('{{ route('process-message') }}', {
+            // const response = await fetch('{{ route('process-message') }}', {
+            const response = await fetch('{{ route('conversation') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -277,38 +280,35 @@
             });
 
             if (response.ok) {
+
                 const data = await response.json();
+                const parsedResponse = JSON.parse(data.responseText);
 
-                // Hide the "Generating..." message
-                generatingMessage.style.display = 'none';
+                if (parsedResponse.recommendations) {
+                    console.log("recommend format");
+                    const recommendations = parsedResponse['recommendations'];
 
-                // Add the assistant's message to the chat box
-                if (data.type === 'get_recommends' || data.type === 'elaborate_recommends') {
-                    const parsedResponse = JSON.parse(data.responseText);
-
-                    const recommendations = data.type === 'get_recommends' ? parsedResponse['recommendations'] : parsedResponse['elaborations'];
-
-                    recommendations.forEach(parsedResponse => {
+                    recommendations.forEach(parsed => {
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.textContent = `${parsedResponse.symbol}`;
+                        symbolDiv.textContent = `${parsed.symbol}`;
                         symbolDiv.style.fontWeight = 'bold';
 
                         // Create div for datetime
                         const datetimeDiv = document.createElement('div');
-                        datetimeDiv.textContent = `${parsedResponse.datetime}`;
+                        datetimeDiv.textContent = `${parsed.datetime}`;
 
                         // Create div for image
                         const imageDiv = document.createElement('div');
                         const imageElement = document.createElement('img');
-                        imageElement.src = parsedResponse.image;
+                        imageElement.src = parsed.image;
                         imageElement.style.width = '100%';
                         imageElement.style.borderRadius = '8px';
                         imageDiv.appendChild(imageElement);
 
                         // Create div for content
                         const contentDiv = document.createElement('div');
-                        contentDiv.textContent = `${parsedResponse.content}`;
+                        contentDiv.textContent = `${parsed.content}`;
 
                         // Create wrapper
                         const wrapperDiv = document.createElement('div');
@@ -321,40 +321,143 @@
                         assistantDiv.appendChild(imageDiv);
                         assistantDiv.appendChild(contentDiv);
 
-                        // If type is 'elaborate_recommends', add price_trend and score_trend
-                        if (data.type === 'elaborate_recommends') {
-                            // Create div for price_trend
-                            const priceTrendDiv = document.createElement('div');
-                            priceTrendDiv.textContent = `${parsedResponse.price_trend}`;
-                            priceTrendDiv.className = 'price-trend';
-                            assistantDiv.appendChild(priceTrendDiv);
-
-                            // Create div for score_trend
-                            const scoreTrendDiv = document.createElement('div');
-                            scoreTrendDiv.textContent = `${parsedResponse.score_trend}`;
-                            scoreTrendDiv.className = 'score-trend';
-                            assistantDiv.appendChild(scoreTrendDiv);
-                        }
-
                         wrapperDiv.appendChild(assistantDiv);
                         chatBox.appendChild(wrapperDiv);
                     });
-                } else {
+                } else if (parsedResponse.symbols) {
+                    console.log("symbols format");
+                    const symbols = parsedResponse['symbols'];
+                    symbols.forEach((parsed) => {
+                        console.log("parsed: ", parsed);
+                        const canvas = document.createElement('canvas');
+
+                        const symbolDiv = document.createElement('div');
+                        symbolDiv.textContent = parsed.symbol;
+
+                        const priceDiv = document.createElement('div');
+                        if (parsed.latest_price !== null) {
+                            priceDiv.textContent = `$${parsed.latest_price.toLocaleString()}`;
+                        } else {
+                            priceDiv.textContent = '$0'; // or any default text you want to show when the price is null
+                        }
+
+                        const timeDiv = document.createElement('div');
+                        timeDiv.textContent = parsed.latest_time;
+
+                        const gapDiv = document.createElement('div');
+                        gapDiv.textContent = `${parsed.time_gap.hours ? parsed.time_gap.hours + ' hours': ''} ${parsed.time_gap.minutes ? parsed.time_gap.minutes + ' minutes': ''} ago`
+                        gapDiv.style.color = '#bbb';
+
+                        const analysisDiv = document.createElement('div');
+                        analysisDiv.textContent = parsed.analysis_translated;
+
+                        const wrapperDiv = document.createElement('div');
+                        wrapperDiv.className = 'message';
+
+                        const assistantDiv = document.createElement('div');
+                        assistantDiv.className = 'assistant';
+                        assistantDiv.appendChild(symbolDiv);
+                        assistantDiv.appendChild(priceDiv);
+                        assistantDiv.appendChild(timeDiv);
+                        assistantDiv.appendChild(gapDiv);
+                        assistantDiv.appendChild(canvas);
+                        assistantDiv.appendChild(analysisDiv);
+
+                        if (parsed.is_recommended) {
+                            const recommendComment = document.createElement('div');
+                            recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 12 hours`
+                            recommendComment.style.color = 'orange';
+                            recommendComment.style.margin = '.25rem 0';
+                            const openBtn = document.createElement('button');
+                            openBtn.textContent = 'View Signal';
+                            openBtn.classList.add("recommend-btn");
+                            const closeBtn = document.createElement('button');
+                            closeBtn.textContent = 'close';
+                            closeBtn.style.display = 'none';
+                            closeBtn.classList.add('recommend-btn');
+                            const recommendDiv = document.createElement('div');
+                            const recommendTimeDiv = document.createElement('div');
+                            recommendTimeDiv.textContent = parsed.recommend_time;
+                            const recommendImageDiv = document.createElement('img');
+                            recommendImageDiv.src = parsed.recommend_image_url;
+                            recommendImageDiv.style.width = '100%';
+                            recommendImageDiv.style.borderRadius = '8px';
+                            const recommendGapDiv = document.createElement('div');
+                            recommendGapDiv.textContent = `${parsed.recommend_time_gap.hours ? parsed.recommend_time_gap.hours + ' hours': ''} ${parsed.recommend_time_gap.minutes ? parsed.recommend_time_gap.minutes + ' minutes': ''} ago`;
+                            recommendGapDiv.style.color = '#bbb';
+                            const recommendContentDiv = document.createElement('div');
+                            recommendContentDiv.textContent = parsed.recommend_reason_translated;
+                            recommendDiv.appendChild(recommendTimeDiv);
+                            recommendDiv.appendChild(recommendGapDiv);
+                            recommendDiv.appendChild(recommendImageDiv);
+                            recommendDiv.appendChild(recommendContentDiv);
+                            // recommendDiv.style.display = 'none';
+                            recommendDiv.style.overflow = 'hidden';
+                            recommendDiv.classList.add('recommend');
+                            openBtn.addEventListener('click', () => {
+                                // recommendDiv.style.display = 'block';
+                                recommendDiv.classList.add('show');
+                                openBtn.style.display = 'none';
+                                closeBtn.style.display = 'block';
+                            });
+                            closeBtn.addEventListener('click', () => {
+                               recommendDiv.classList.remove('show');
+                               closeBtn.style.display = 'none';
+                               openBtn.style.display = 'block';
+                            });
+
+                            assistantDiv.appendChild(recommendComment);
+                            assistantDiv.appendChild(recommendDiv);
+                            assistantDiv.appendChild(openBtn);
+                            assistantDiv.appendChild(closeBtn);
+                        }
+
+                        //create query options
+                        const queryDiv = document.createElement('div');
+                        queryDiv.classList.add('message', 'right');
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'user';
+                        const expected = document.createElement('span');
+                        expected.textContent = 'Expected Questions';
+                        const question1 = document.createElement('p');
+                        const question2 = document.createElement('p');
+                        const question3 = document.createElement('p');
+                        if (parsed.interval > 48) {
+                            question1.textContent = `지난 24시간 ${parsed.symbol} 움직임을 알려줘`;
+                        } else {
+                            question1.textContent = `지난 한 달간 ${parsed.symbol} 움직임을 알려줘`;
+                        }
+                        question2.textContent = `최근 ${parsed.symbol} 관련 기사`;
+                        question3.textContent = `지금 진입하기 좋은 코인을 추춴해줘`;
+                        userDiv.appendChild(expected);
+                        userDiv.appendChild(question1);
+                        userDiv.appendChild(question2);
+                        userDiv.appendChild(question3);
+                        queryDiv.appendChild(userDiv);
+
+                        wrapperDiv.appendChild(assistantDiv);
+                        chatBox.appendChild(wrapperDiv);
+                        chatBox.appendChild(queryDiv);
+                        drawChart(parsed.price_movement, parsed.score_movement, canvas, parsed.time_labels);
+                    });
+                } else if (parsedResponse.common) {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message left';
                     const assistantMessageDiv = document.createElement('div');
                     assistantMessageDiv.className = 'assistant';
-                    assistantMessageDiv.innerHTML = data.responseText.replace(/\n/g, '<br>');
+                    assistantMessageDiv.innerHTML = parsedResponse['common'].replace(/\n/g, '<br>');
                     wrapperDiv.appendChild(assistantMessageDiv);
                     chatBox.appendChild(wrapperDiv);
                 }
 
+                // Hide the "Generating..." message
+                generatingMessage.style.display = 'none';
 
                 // Fetch user tokens
                 await fetchUserCharge();
 
-                if (data.wasSummarized) {
+                if (data.summary != null) {
                     conversation = [];
                     if (data.summary) {
                         conversation.push(data.summary);
@@ -377,7 +480,8 @@
                 console.log("conversation: ", conversation);
 
                 //finally set the maxUsage input value
-                maxUsageInput.value = data.maxUsage;
+                // Convert to a number, default to 0 if conversion results in NaN
+                maxUsageInput.value = isNaN(Number(data.maxUsage)) ? 0 : Number(data.maxUsage);
 
                 // Scroll to the bottom of the chat box
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -400,30 +504,91 @@
         } finally {
             messageInput.readOnly = false;
             messageInput.classList.remove('locked');
-
         }
     }
 
-    let executeQuestion = (elem) => {
-        // const messageInput = document.getElementById('message-input');
-        // const userIdInput = document.getElementById('user-id');
-        // const maxUsageInput = document.getElementById('max-usage');
-        // const chatBox = document.getElementById('chat-box');
-        // const generatingMessage = document.getElementById('generating-message');
-        // let message = messageInput.value;
-        // let userId = userIdInput.value;
-        // let maxUsage = maxUsageInput.value;
+    let drawChart = (priceMovement, scoreMovement, canvas, labels) => {
 
+        const ctx = canvas.getContext('2d');
+
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Market Price',
+                        data: priceMovement,
+                        borderColor: 'rgba(153, 102, 255, 1)', // Color of the first line
+                        borderWidth: 2,
+                        fill: false, // Don't fill under the line
+                        yAxisID: 'y-left',
+                        pointRadius: 1,
+                        pointHoverRadius: 3,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Goya Score',
+                        data: scoreMovement,
+                        borderColor: 'rgba(75, 192, 192, 1)', // Color of the second line
+                        borderWidth: 2,
+                        fill: false, // Don't fill under the line
+                        yAxisID: 'y-right',
+                        pointRadius: 1,
+                        pointHoverRadius: 3,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    'y-left': { // Left y-axis for Price Movement
+                        type: 'linear',
+                        position: 'left',
+
+                    },
+                    'y-right': { // Right y-axis for Score Movement
+                        type: 'linear',
+                        position: 'right',
+
+                    },
+                    x: { // Hide the x-axis scale as well
+                        display: false, // Show the scale for the x-axis
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                // Display the label (time) when hovering over a point
+                                return tooltipItems[0].label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        })
+    }
+
+    let executeQuestion = (elem) => {
         if (elem.id === 'question-a') {
             message = "지금 진입하기 좋은 코인을 추천해줘";
             console.log('question-a');
             sendMessage(message);
         } else if (elem.id === 'question-b') {
-            message = "지난 12시간 동안의 비트코인 가격 움직임을 분석해줘"
+            message = "지난 12시간 동안 비트코인 스코어/가격 움직임 분석해줘"
             console.log('question-b');
             sendMessage(message);
         } else if (elem.id === 'question-c') {
-            message = "지난 12시간 동안의 비트코인 스코어 움직임을 분석해줘"
+            message = "지난 24시간 동안 비트코인 스코어/가격 움직임 분석해줘"
             console.log('question-c');
             sendMessage(message);
         }
@@ -449,11 +614,6 @@
         modal.style.display = "none";
     }
 
-    // window.onclick = function(event) {
-    //     if (event.target == modal) {
-    //         modal.style.display = "none";
-    //     }
-    // }
 </script>
 </body>
 </html>
