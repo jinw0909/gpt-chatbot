@@ -88,9 +88,9 @@
                                 <div class="message right">
                                     <div class="user">
                                         <span>Chat AI 질문하기</span>
-                                        <p id="question-a" class="question">지금 진입하기 좋은 코인을 추천해줘</p>
-                                        <p id="question-b" class="question">오늘 하루 비트코인 움직임을 분석해줘</p>
-                                        <p id="question-c" class="question">암호 화폐 시장의 전망을 알려줘</p>
+                                        <p id="question-a" class="question">지금 진입하기 좋은 코인 추천</p>
+                                        <p id="question-b" class="question">비트코인 스코어 및 가격 분석</p>
+                                        <p id="question-c" class="question">고야 스코어가 뭐야?</p>
                                     </div>
                                 </div>
                             </div>
@@ -285,9 +285,8 @@
                 const parsedResponse = JSON.parse(data.responseText);
 
                 if (parsedResponse.recommendations) {
-                    console.log("recommend format");
                     const recommendations = parsedResponse['recommendations'];
-
+                    console.log("parsed recommendations: ", recommendations);
                     recommendations.forEach(parsed => {
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
@@ -298,17 +297,32 @@
                         const datetimeDiv = document.createElement('div');
                         datetimeDiv.textContent = `${parsed.datetime}`;
 
+                        const gapDiv = document.createElement('div');
+
+                        let timeGapText = '';
+                        if (parsed.time_gap.hours) {
+                            timeGapText += `${parsed.time_gap.hours} hours `;
+                        }
+                        if (parsed.time_gap.minutes) {
+                            timeGapText += `${parsed.time_gap.minutes} minutes `;
+                        }
+                        if (timeGapText) {
+                            timeGapText += 'ago';
+                        }
+                        gapDiv.textContent = timeGapText;
+                        gapDiv.style.color = '#bbb';
+
                         // Create div for image
                         const imageDiv = document.createElement('div');
                         const imageElement = document.createElement('img');
-                        imageElement.src = parsed.image;
+                        imageElement.src = parsed.image_url;
                         imageElement.style.width = '100%';
                         imageElement.style.borderRadius = '8px';
                         imageDiv.appendChild(imageElement);
 
                         // Create div for content
                         const contentDiv = document.createElement('div');
-                        contentDiv.textContent = `${parsed.content}`;
+                        contentDiv.textContent = `${parsed.content_translated}`;
 
                         // Create wrapper
                         const wrapperDiv = document.createElement('div');
@@ -318,12 +332,85 @@
 
                         assistantDiv.appendChild(symbolDiv);
                         assistantDiv.appendChild(datetimeDiv);
+                        assistantDiv.appendChild(gapDiv);
                         assistantDiv.appendChild(imageDiv);
                         assistantDiv.appendChild(contentDiv);
 
+                        //create query options
+                        const queryDiv = document.createElement('div');
+                        queryDiv.classList.add('message', 'right');
+                        queryDiv.style.marginTop = '0';
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'user';
+                        const expected = document.createElement('span');
+                        expected.textContent = 'Expected Questions';
+                        const question1 = document.createElement('p');
+                        const question2 = document.createElement('p');
+                        const question3 = document.createElement('p');
+
+                        if (parsed.symbol.endsWith("USDT")) {
+                            // Remove "USDT" from the end of the symbol
+                            parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
+                        }
+
+                        question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
+                        question2.textContent = `${parsed.symbol} 한 달 스코어 및 가격 분석`;
+                        question3.textContent = `${parsed.symbol}에 대해 알려줘`;
+
+                        question1.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question2.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question3.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+
+                        // userDiv.appendChild(expected);
+                        userDiv.appendChild(question1);
+                        userDiv.appendChild(question2);
+                        userDiv.appendChild(question3);
+                        queryDiv.appendChild(userDiv);
+
                         wrapperDiv.appendChild(assistantDiv);
                         chatBox.appendChild(wrapperDiv);
+                        chatBox.appendChild(queryDiv);
                     });
+
+                    //create query options
+                    const queryDiv = document.createElement('div');
+                    queryDiv.classList.add('message', 'right');
+                    queryDiv.style.marginTop = '0';
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    const expected = document.createElement('span');
+                    expected.textContent = 'Expected Questions';
+                    const question1 = document.createElement('p');
+                    const question2 = document.createElement('p');
+                    const question3 = document.createElement('p');
+
+                    question1.textContent = `몇 개만 더 추천 해줘`;
+                    question2.textContent = `추천 리스트 중에서 하나 골라줘`;
+                    question3.textContent = `추천 기준이 뭐야?`;
+
+                    question1.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question2.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question3.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+
+                    // userDiv.appendChild(expected);
+                    userDiv.appendChild(question1);
+                    userDiv.appendChild(question2);
+                    userDiv.appendChild(question3);
+                    queryDiv.appendChild(userDiv);
+
+                    chatBox.appendChild(queryDiv);
                 } else if (parsedResponse.symbols) {
                     console.log("symbols format");
                     const symbols = parsedResponse['symbols'];
@@ -335,8 +422,8 @@
                         symbolDiv.textContent = parsed.symbol;
 
                         const priceDiv = document.createElement('div');
-                        if (parsed.latest_price !== null) {
-                            priceDiv.textContent = `$${parsed.latest_price.toLocaleString()}`;
+                        if (parsed.latest_price !== null && !isNaN(parsed.latest_price)) {
+                            priceDiv.textContent = `$${Number(parsed.latest_price).toLocaleString()}`;
                         } else {
                             priceDiv.textContent = '$0'; // or any default text you want to show when the price is null
                         }
@@ -345,7 +432,18 @@
                         timeDiv.textContent = parsed.latest_time;
 
                         const gapDiv = document.createElement('div');
-                        gapDiv.textContent = `${parsed.time_gap.hours ? parsed.time_gap.hours + ' hours': ''} ${parsed.time_gap.minutes ? parsed.time_gap.minutes + ' minutes': ''} ago`
+
+                        let timeGapText = '';
+                        if (parsed.time_gap.hours) {
+                            timeGapText += `${parsed.time_gap.hours} hours `;
+                        }
+                        if (parsed.time_gap.minutes) {
+                            timeGapText += `${parsed.time_gap.minutes} minutes `;
+                        }
+                        if (timeGapText) {
+                            timeGapText += 'ago';
+                        }
+                        gapDiv.textContent = timeGapText;
                         gapDiv.style.color = '#bbb';
 
                         const analysisDiv = document.createElement('div');
@@ -370,10 +468,12 @@
                             recommendComment.style.margin = '.25rem 0';
                             const openBtn = document.createElement('button');
                             openBtn.textContent = 'View Signal';
+                            openBtn.style.cursor = 'pointer';
                             openBtn.classList.add("recommend-btn");
                             const closeBtn = document.createElement('button');
                             closeBtn.textContent = 'close';
                             closeBtn.style.display = 'none';
+                            closeBtn.style.cursor = 'pointer';
                             closeBtn.classList.add('recommend-btn');
                             const recommendDiv = document.createElement('div');
                             const recommendTimeDiv = document.createElement('div');
@@ -415,6 +515,7 @@
                         //create query options
                         const queryDiv = document.createElement('div');
                         queryDiv.classList.add('message', 'right');
+                        queryDiv.style.marginTop = '0';
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user';
                         const expected = document.createElement('span');
@@ -422,14 +523,31 @@
                         const question1 = document.createElement('p');
                         const question2 = document.createElement('p');
                         const question3 = document.createElement('p');
-                        if (parsed.interval > 48) {
-                            question1.textContent = `지난 24시간 ${parsed.symbol} 움직임을 알려줘`;
-                        } else {
-                            question1.textContent = `지난 한 달간 ${parsed.symbol} 움직임을 알려줘`;
+
+                        if (parsed.symbol.endsWith("USDT")) {
+                            // Remove "USDT" from the end of the symbol
+                            parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                         }
-                        question2.textContent = `최근 ${parsed.symbol} 관련 기사`;
-                        question3.textContent = `지금 진입하기 좋은 코인을 추춴해줘`;
-                        userDiv.appendChild(expected);
+
+                        if (parsed.interval > 48) {
+                            question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
+                        } else {
+                            question1.textContent = `${parsed.symbol} 한 달 스코어 및 가격 분석`;
+                        }
+                        question2.textContent = `${parsed.symbol}에 대해 알려줘`;
+                        question3.textContent = `지금 진입하기 좋은 코인 추천`;
+
+                        question1.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question2.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question3.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+
+                        // userDiv.appendChild(expected);
                         userDiv.appendChild(question1);
                         userDiv.appendChild(question2);
                         userDiv.appendChild(question3);
@@ -579,17 +697,22 @@
     }
 
     let executeQuestion = (elem) => {
-        if (elem.id === 'question-a') {
-            message = "지금 진입하기 좋은 코인을 추천해줘";
-            console.log('question-a');
-            sendMessage(message);
-        } else if (elem.id === 'question-b') {
-            message = "지난 12시간 동안 비트코인 스코어/가격 움직임 분석해줘"
-            console.log('question-b');
-            sendMessage(message);
-        } else if (elem.id === 'question-c') {
-            message = "지난 24시간 동안 비트코인 스코어/가격 움직임 분석해줘"
-            console.log('question-c');
+        // if (elem.id === 'question-a') {
+        //     message = "지금 진입하기 좋은 코인을 추천해줘";
+        //     console.log('question-a');
+        //     sendMessage(message);
+        // } else if (elem.id === 'question-b') {
+        //     message = "비트코인 스코어 분석해줘"
+        //     console.log('question-b');
+        //     sendMessage(message);
+        // } else if (elem.id === 'question-c') {
+        //     message = "고야 스코어가 뭐야?"
+        //     console.log('question-c');
+        //     sendMessage(message);
+        // }
+        if (elem.textContent !== '') {
+            message = elem.textContent;
+            console.log("user message: ", message);
             sendMessage(message);
         }
     }

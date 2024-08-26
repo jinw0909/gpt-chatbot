@@ -5,9 +5,9 @@ namespace App\Services;
 use DateInterval;
 use DateTime;
 use DateTimeZone;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
 
 class CryptoService
 {
@@ -20,37 +20,37 @@ class CryptoService
         return $dateTime->format('Y-m-d H:i:s');
     }
 
-    public function getTimeGap($datetime, $timezone)
-    {
-        try {
-            // Create a DateTime object from the provided $datetime
-            $dateTimeObj = new DateTime($datetime, new DateTimeZone($timezone));
-
-            // Get the current time in the specified timezone
-            $currentDateTime = new DateTime('now', new DateTimeZone($timezone));
-
-            // Calculate the difference between the current time and the provided datetime
-            $interval = $currentDateTime->diff($dateTimeObj);
-
-            // Build the time gap array with all units included
-            $timeGap = [
-                'year' => $interval->y,
-                'month' => $interval->m,
-                'day' => $interval->d,
-                'hours' => $interval->h,
-                'minutes' => $interval->i,
-                'seconds' => $interval->s
-            ];
-
-            Log::info("time gap: ", $timeGap);
-
-            return json_encode($timeGap);
-
-        } catch (Exception $e) {
-            // Handle any errors, for example, if the $datetime format is incorrect
-            return 'Error: ' . $e->getMessage();
-        }
-    }
+//    public function getTimeGap($datetime, $timezone)
+//    {
+//        try {
+//            // Create a DateTime object from the provided $datetime
+//            $dateTimeObj = new DateTime($datetime, new DateTimeZone($timezone));
+//
+//            // Get the current time in the specified timezone
+//            $currentDateTime = new DateTime('now', new DateTimeZone($timezone));
+//
+//            // Calculate the difference between the current time and the provided datetime
+//            $interval = $currentDateTime->diff($dateTimeObj);
+//
+//            // Build the time gap array with all units included
+//            $timeGap = [
+//                'year' => $interval->y,
+//                'month' => $interval->m,
+//                'day' => $interval->d,
+//                'hours' => $interval->h,
+//                'minutes' => $interval->i,
+//                'seconds' => $interval->s
+//            ];
+//
+//            Log::info("time gap: ", $timeGap);
+//
+//            return json_encode($timeGap);
+//
+//        } catch (Exception $e) {
+//            // Handle any errors, for example, if the $datetime format is incorrect
+//            return 'Error: ' . $e->getMessage();
+//        }
+//    }
 
 
 
@@ -87,7 +87,7 @@ class CryptoService
         $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
 
         return json_encode([
-            'symbol' => $data->symbol,
+            'symbol' => strtoupper($data->symbol),
             'score' => $data->score,
             'price' => $data->price,
             'datetime' => $convertedDatetime,
@@ -164,7 +164,7 @@ class CryptoService
         ];
 
         // Log the result
-        Log::info("check if recommended: ", ["result" => $response]);
+        Log::info("check_if_recommended result: ", ["result" => $response]);
 
         // Return the response as JSON
         return json_encode($response);
@@ -192,10 +192,12 @@ class CryptoService
                 return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No') && !is_null($item->images) && !in_array($item->symbol, $selectedSymbols);
             });
 
-            $formattedResults = $filteredResults->map(function($item) use ($timezoneObj, &$selectedSymbols) {
+            $formattedResults = $filteredResults->map(function($item) use ($timezone, $timezoneObj, &$selectedSymbols) {
                 $dateTime = new DateTime($item->datetime, new DateTimeZone('UTC'));
                 $dateTime->setTimezone($timezoneObj);
                 $item->datetime = $dateTime->format('Y-m-d\TH:i:sP');
+                //calculate the time gap
+                $item->timeGap = $this->calculateTimeGap($item->datetime, $timezone);
                 $selectedSymbols[] = $item->symbol;
                 return $item;
             });
@@ -215,53 +217,44 @@ class CryptoService
         return $result;
     }
 
-    public function getCryptoDataHourInterval($symbol, $hours = 24, $timezone = 'UTC')
+//    public function getCryptoData($symbol, $hours = 24, $timezone = 'UTC')
+//    {
+//        $symbol = $this->normalizeSymbol($symbol);
+//
+//        $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
+//        $startDateTime = clone $currentDateTime;
+//        $startDateTime->modify('-' . $hours . ' hours');
+//
+//        $startTimeFormatted = $startDateTime->format('Y-m-d H:i:s');
+//        $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
+//        Log::info("start and end: ", ["start" => $startTimeFormatted, "end" => $endTimeFormatted]);
+//
+//        if ($hours <= 48) {
+//            // Logic for hourly interval
+//            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+//                ->where('simbol', $symbol)
+//                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+//                ->orderBy('regdate')
+//                ->select('simbol as symbol', 'score', 'price', 'regdate')
+//                ->get();
+//
+//            return $this->formatDataWithTimezone($data, $symbol, $timezone);
+//        } else {
+//            // Logic for daily interval (more than 48 hours)
+//            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+//                ->where('simbol', $symbol)
+//                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+//                ->orderBy('regdate')
+//                ->select('simbol as symbol', 'score', 'price', 'regdate')
+//                ->get();
+//
+//            return $this->averageAndFormatData($data, $symbol, $timezone);
+//        }
+//    }
+
+    public function getCryptoData(array $symbols, $hours = 24, $timezone = 'UTC')
     {
-        $symbol = $this->normalizeSymbol($symbol);
-
-        $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
-
-        $startDateTime = clone $currentDateTime;
-        $startDateTime->modify('-' . $hours . ' hours');
-
-        $startTimeFormatted = $startDateTime->format('Y-m-d H:i:s');
-        $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
-
-        $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-            ->where('simbol', $symbol)
-            ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-            ->orderBy('regdate')
-            ->select('simbol as symbol', 'score', 'price', 'regdate')
-            ->get();
-
-        return $this->formatDataWithTimezone($data, $symbol, $timezone);
-    }
-
-    public function getCryptoDataDayInterval($symbol, $days = 30, $timezone ='UTC')
-    {
-        $symbol = $this->normalizeSymbol($symbol);
-
-        $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
-
-        $startDateTime = clone $currentDateTime;
-        $startDateTime->modify('-' . $days . 'days');
-
-        $startTimeFormatted = $startDateTime->format('Y-m-d H:i:s');
-        $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
-
-        $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-            ->where('simbol', $symbol)
-            ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-            ->orderBy('regdate')
-            ->select('simbol as symbol', 'score', 'price', 'regdate')
-            ->get();
-
-        return $this->averageAndFormatData($data, $symbol, $timezone);
-    }
-
-    public function getCryptoData($symbol, $hours = 24, $timezone = 'UTC')
-    {
-        $symbol = $this->normalizeSymbol($symbol);
+        $results = [];
 
         $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
         $startDateTime = clone $currentDateTime;
@@ -269,33 +262,41 @@ class CryptoService
 
         $startTimeFormatted = $startDateTime->format('Y-m-d H:i:s');
         $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
+        Log::info("start and end: ", ["start" => $startTimeFormatted, "end" => $endTimeFormatted]);
 
-        if ($hours <= 48) {
-            // Logic for hourly interval
-            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-                ->where('simbol', $symbol)
-                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-                ->orderBy('regdate')
-                ->select('simbol as symbol', 'score', 'price', 'regdate')
-                ->get();
+        foreach ($symbols as $symbol) {
+            $symbol = $this->normalizeSymbol($symbol);
 
-            return $this->formatDataWithTimezone($data, $symbol, $timezone);
-        } else {
-            // Logic for daily interval (more than 48 hours)
-            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-                ->where('simbol', $symbol)
-                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-                ->orderBy('regdate')
-                ->select('simbol as symbol', 'score', 'price', 'regdate')
-                ->get();
+            if ($hours <= 48) {
+                // Logic for hourly interval
+                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+                    ->where('simbol', $symbol)
+                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+                    ->orderBy('regdate')
+                    ->select('simbol as symbol', 'score', 'price', 'regdate')
+                    ->get();
 
-            return $this->averageAndFormatData($data, $symbol, $timezone);
+                $formattedData = $this->formatDataWithTimezone($data, $symbol, $timezone);
+            } else {
+                // Logic for daily interval (more than 48 hours)
+                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+                    ->where('simbol', $symbol)
+                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+                    ->orderBy('regdate')
+                    ->select('simbol as symbol', 'score', 'price', 'regdate')
+                    ->get();
+
+                $formattedData = $this->averageAndFormatData($data, $symbol, $timezone);
+            }
+
+            // Add the formatted data to the results array
+            $results[$symbol] = $formattedData;
         }
+
+        Log::info("get_crypto_data results: ", ["results" => $results]);
+
+        return json_encode($results);
     }
-
-
-
-
 
     public function subtractHoursFromTime($time, $hours)
     {
@@ -387,7 +388,7 @@ class CryptoService
                 'datetime' => $regDate->format('Y-m-d\TH:i:sP'),
             ];
         }
-        Log::info("Retrieved symbol data", ["symboldata" => $resultData, "symbol" => $symbol]);
+//        Log::info("format data with timezone", ["symboldata" => $resultData, "symbol" => $symbol]);
         return json_encode(['symbol' => $symbol, 'data' => $resultData]);
     }
 
@@ -399,8 +400,8 @@ class CryptoService
         foreach ($data as $key => $item) {
             $chunk[] = $item;
             if (count($chunk) == 24 || $key == $data->count() - 1) {
-                $avgPrice = collect($chunk)->avg('price');
-                $avgScore = collect($chunk)->avg('score');
+                $avgPrice = round(collect($chunk)->avg('price'), 4);
+                $avgScore = round(collect($chunk)->avg('score'), 4);
                 $lastDate = new DateTime(end($chunk)->regdate, new DateTimeZone('UTC'));
                 $lastDate->setTimezone($timezoneObj);
                 $averagedData[] = [
@@ -413,7 +414,7 @@ class CryptoService
             }
         }
         Log::info("Averaged symbol data", ["symboldata" => $averagedData, "symbol" => $symbol]);
-        return json_encode(['symbol' => $symbol, 'data' => $averagedData]);
+        return ['symbol' => $symbol, 'data' => $averagedData];
     }
 
     private function calculateTimeGap($recommendTime, $timezone)
@@ -424,12 +425,12 @@ class CryptoService
         $interval = $currentDateTime->diff($recommendDateTime);
 
         return [
-            'years' => $interval->y,
-            'months' => $interval->m,
-            'days' => $interval->d,
+//            'years' => $interval->y,
+//            'months' => $interval->m,
+//            'days' => $interval->d,
             'hours' => $interval->h,
             'minutes' => $interval->i,
-            'seconds' => $interval->s
+//            'seconds' => $interval->s
         ];
     }
 }

@@ -128,6 +128,7 @@ body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    height: 4rem;
 }
 .chat-box-body {
     display: flex;
@@ -318,6 +319,18 @@ footer {
     .system {
         max-width: 80%;
     }
+}
+
+@media (max-width: 579px) {
+    .assistant {
+        max-width: 100%;
+    }
+    .message { font-size: .8rem; }
+    .chat-box-header { height: 3rem; }
+    .chat-box-title { font-size: 1.2rem; }
+    .chat-box-title i { width: 24px; height: 30px; background-size: 24px; }
+    .charge-wrapper { font-size: .8rem; }
+    .close { margin-left: 0; font-size: 36px; }
 }
 
 
