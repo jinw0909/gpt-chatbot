@@ -220,6 +220,11 @@ body {
 
 .error-message {
     color: red;
+    border: 1px solid red;
+    border-radius: 8px;
+    padding: .5rem;
+    display: inline-flex;
+    margin: .5rem 0;
 }
 
 .charge-wrapper {
@@ -326,6 +331,7 @@ footer {
         max-width: 100%;
     }
     .message { font-size: .8rem; }
+    .error-message { font-size: .8rem; }
     .chat-box-header { height: 3rem; }
     .chat-box-title { font-size: 1.2rem; }
     .chat-box-title i { width: 24px; height: 30px; background-size: 24px; }

@@ -88,7 +88,7 @@
                                 <div class="message right">
                                     <div class="user">
                                         <span>Chat AI 질문하기</span>
-                                        <p id="question-a" class="question">지금 진입하기 좋은 코인 추천</p>
+                                        <p id="question-a" class="question">현재 진입하기 좋은 코인 추천</p>
                                         <p id="question-b" class="question">비트코인 스코어 및 가격 분석</p>
                                         <p id="question-c" class="question">고야 스코어가 뭐야?</p>
                                     </div>
@@ -354,7 +354,7 @@
                         }
 
                         question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
-                        question2.textContent = `${parsed.symbol} 한 달 스코어 및 가격 분석`;
+                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
                         question3.textContent = `${parsed.symbol}에 대해 알려줘`;
 
                         question1.addEventListener('click', function() {
@@ -532,10 +532,10 @@
                         if (parsed.interval > 48) {
                             question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
                         } else {
-                            question1.textContent = `${parsed.symbol} 한 달 스코어 및 가격 분석`;
+                            question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
                         }
                         question2.textContent = `${parsed.symbol}에 대해 알려줘`;
-                        question3.textContent = `지금 진입하기 좋은 코인 추천`;
+                        question3.textContent = `현재 진입하기 좋은 코인 추천`;
 
                         question1.addEventListener('click', function() {
                             executeQuestion(this);
@@ -558,13 +558,13 @@
                         chatBox.appendChild(queryDiv);
                         drawChart(parsed.price_movement, parsed.score_movement, canvas, parsed.time_labels);
                     });
-                } else if (parsedResponse.common) {
+                } else if (parsedResponse.commons) {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message left';
                     const assistantMessageDiv = document.createElement('div');
                     assistantMessageDiv.className = 'assistant';
-                    assistantMessageDiv.innerHTML = parsedResponse['common'].replace(/\n/g, '<br>');
+                    assistantMessageDiv.innerHTML = parsedResponse['commons'].replace(/\n/g, '<br>');
                     wrapperDiv.appendChild(assistantMessageDiv);
                     chatBox.appendChild(wrapperDiv);
                 }
