@@ -284,8 +284,8 @@
                 const data = await response.json();
                 const parsedResponse = JSON.parse(data.responseText);
 
-                if (parsedResponse.recommendations) {
-                    const recommendations = parsedResponse['recommendations'];
+                if (parsedResponse.data.format_type === 'recommendations') {
+                    const recommendations = parsedResponse.data.content;
                     console.log("parsed recommendations: ", recommendations);
                     recommendations.forEach(parsed => {
                         // Create div for symbol
@@ -411,9 +411,9 @@
                     queryDiv.appendChild(userDiv);
 
                     chatBox.appendChild(queryDiv);
-                } else if (parsedResponse.symbols) {
+                } else if (parsedResponse.data.format_type === 'symbols') {
                     console.log("symbols format");
-                    const symbols = parsedResponse['symbols'];
+                    const symbols = parsedResponse.data.content;
                     symbols.forEach((parsed) => {
                         console.log("parsed: ", parsed);
                         const canvas = document.createElement('canvas');
@@ -558,13 +558,13 @@
                         chatBox.appendChild(queryDiv);
                         drawChart(parsed.price_movement, parsed.score_movement, canvas, parsed.time_labels);
                     });
-                } else if (parsedResponse.commons) {
+                } else if (parsedResponse.data.format_type === 'commons') {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message left';
                     const assistantMessageDiv = document.createElement('div');
                     assistantMessageDiv.className = 'assistant';
-                    assistantMessageDiv.innerHTML = parsedResponse['commons'].replace(/\n/g, '<br>');
+                    assistantMessageDiv.innerHTML = parsedResponse.data.content.replace(/\n/g, '<br>');
                     wrapperDiv.appendChild(assistantMessageDiv);
                     chatBox.appendChild(wrapperDiv);
                 }

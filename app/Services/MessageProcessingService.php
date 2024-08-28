@@ -65,41 +65,45 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any inquires related to the price and score of the cryptocurrency symbol, or upon receiving inquires to show chart of the symbol, or upon just receiving cryptocurrency symbol names, you should always call the functions [get_crypto_data], [get_latest_price], and [check_recommendation_status] in generating the response. Do not call any other functions except these. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling [get_crypto_data]. Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
+                    'Upon receiving any inquires related to the price and score of the cryptocurrency symbol, or upon receiving inquires to show chart of the symbol, or upon just receiving cryptocurrency symbol names, you should call the functions [get_crypto_data], [get_latest_price], [check_recommendation_status] in and set "response_format" as "symbols" in the response. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling [get_crypto_data]. Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
             ],
             [
                 'role' => 'system',
-                'content' =>'When your response message format is json_schema [symbols_format] follow the next rules to generate the response. '
-                    .'Rule 1. Each "symbol", "latest_price", "latest_time", "time_gap.hours", "time_gap.minutes" values are retrieved by calling function [get_latest_price]. "symbol" value has to be capitalized. '
+                'content' =>'When your "response_format" of your response is "symbols", follow the next rules to generate the response. '
+                    .'Rule 1. Each "symbol", "latest_price", "latest_time", "time_gap.hours", "time_gap.minutes" values can be retrieved by calling the function [get_latest_price]. "symbol" should be capitalized. '
                     .'Rule 2. "price_movement", "score_movement", "time_labels" are arrays of each "price", "score", and "datetime" values returned from calling [get_crypto_data]. Make sure no rows are omitted from the retrieved data.'
-                    .'Rule 3. "is_recommended", "recommend_time", "recommend_reason_translated", "recommend_image_url", "recommend_time_gap.hours", "recommend_time_gap.minutes" can be filled in by calling [check_recommendation_status]. "recommend_reason_translated" content has be translated into the local language of the user without any original content being omitted. '
-                    .'Rule 4. "analysis_translated" is your analysis on all of the relevant data retrieved from calling [get_crypto_data], [get_latest_price] and [check_recommendation_status]. The analysis should be at least 4 sentences long and be presented in a translated plain text. The "recommend_reason" should be considered in making the analysis. '
+                    .'Rule 3. "is_recommended", "recommend_time", "recommend_reason_translated", "recommend_image_url", "recommend_time_gap.hours", "recommend_time_gap.minutes" can be filled in by calling [check_recommendation_status]. "recommend_reason_translated" should be translated into the local language of the user without any of the original English content being omitted. '
+                    .'Rule 4. "analysis_translated" is your analysis on all of the relevant data retrieved from calling [get_crypto_data], [get_latest_price] and [check_recommendation_status]. The analysis should be at least 4 sentences long and be presented in a translated plain text. The "recommend_reason" should be considered when creating the analysis. '
                     .'Rule 5. "interval" is an integer value of parameter "hours" passed when calling [get_crypto_data]. '
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to recommend cryptocurrencies, always call the function [get_recommendation]. If the user did not specify the limit on the numbers of recommendation, then pass 3 as the "limit" parameter. Also if the user is not asking for an additional recommendation, pass an empty array to the "recommended_list" parameter.'
+                'content' => 'When the user asks to recommend cryptocurrencies, then always call the function [get_recommended_symbols]. If the user did not specify the number, then pass 3 as the "limit" parameter. Pass an empty array to the "already_recommended" parameter. The response "format_type" should be "recommendations". '
+            ],
+            [
+                'role' => 'system',
+                'content' => 'Every time the user asks for additional recommendations, then call the function [get_recommended_symbols] with the parameter "already_recommended" with already recommended symbols after checking the conversation history. If the user did not specify the number, then pass 3 as the "limit" parameter. If the user specified a specific number, then pass it as the limit parameter. Look up the previous conversation between the user and pass the previously recommended symbols as the "already_recommended" parameter. The response "format_type" should be "recommendations". '
             ],
 //            [
 //              'role' => 'system',
-//              'content' => 'When the user asks for additional cryptocurrency recommendation, always call [get_recommendations] with the increased "limit" parameter value. If the user did not specify the additional limit, then add 2.'
-//              .'For example, when you previously recommended 3 symbols but the user asks for additional recommendation call [get_recommendations] with limit of 5. When the user asks again for additional recommendation this time the limit will be 7.'
-//              .'After calling [get_recommendations], compare the newly retrieved data with all of the previously recommended symbols. From the retrieved data, delete the elements whose symbol is already included in the previous list and make a response. '
+//              'content' => 'When the user asks for additional cryptocurrency recommendation, always call [get_recommended_symbols] with the increased "limit" parameter value. If the user did not specify the additional limit, then add 2.'
+//              .'For example, when you previously recommended 3 symbols but the user asks for additional recommendation call [get_recommended_symbols] with limit of 5. When the user asks again for additional recommendation this time the limit will be 7.'
+//              .'After calling [get_recommended_symbols], compare the newly retrieved data with all of the previously recommended symbols. From the retrieved data, delete the elements whose symbol is already included in the previous list and make a response. '
 //            ],
             [
                 'role' => 'system',
-                'content' => 'When the response_format is json_schema [recommendation_format], follow the next rules to generate the response. '
-                .'Rule 1."symbol", "datetime", "time_gap", "image_url" values can be retrieved by calling function [get_recommendations]'
-                .'Rule 2. "content_translated" is the content retrieved from calling function [get_recommendations] translated into the local language of the user. The original content must not be omitted during the translation process.'
-                .'Rule 3. Check if the "image_url" value correctly matches the retrieved url from calling [get_recommendations]. '
+                'content' => 'When the response "format_type" is "recommendations" follow the next rules to generate the response. '
+                .'Rule 1."symbol", "datetime", "time_gap", "image_url" values can be retrieved by calling function [get_recommended_symbols]. '
+                .'Rule 2. "content_translated" is the content retrieved from calling function [get_recommended_symbols] translated into the local language of the user. The original content must not be omitted during the translation process.'
+                .'Rule 3. Check if the "image_url" value correctly matches the retrieved url. '
             ],
             [
               'role' => 'system',
-              'content' => 'When the user asks to pick symbols from the recommendation list, first pick symbols from the list and then call the function [get_crypto_data] [get_latest_price] and [get_recommendation_status] with the symbols array. If the user did not specify the number of symbols to pick, then just pick one symbol from the list. '
+              'content' => 'When the user asks to pick symbols from the recommendation list, first pick symbols from the list and then call the function [get_crypto_data], [get_latest_price] and [get_recommendation_status]. If the user did not specify the number of symbols to pick, then just pick one symbol from the list. '
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then do not call the function [get_crypto_data] or [get_recommendations]. In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
+                'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then do not call the function [get_crypto_data] or [get_recommended_symbols]. In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
             ],
             [
                 'role' => 'system',
@@ -118,7 +122,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'If there is no instruction on the response format, then return the response in this JSON format: {"commons" : CONTENT_NOT_IN_JSON}. '
+                    'If there is no instruction on the response format, then return the response in this JSON format: {"data" : { "format_type" : "commons", "content" : RESPONSE_IN_STRING }}. '
             ],
         ];
     }
@@ -232,7 +236,7 @@ class MessageProcessingService
             [
                 'type' => 'function',
                 'function' => [
-                    'name' => 'get_recommendations',
+                    'name' => 'get_recommended_symbols',
                     'description' => "Get the data of recommended cryptocurrencies in order to purchase."
                         . "Returns a JSON-encoded array of recommended cryptocurrencies. The 'datetime' is the time when the recommendation was made. ",
                     'parameters' => [
@@ -247,7 +251,7 @@ class MessageProcessingService
                                 'description' => "The local timezone of the user",
                                 'enum' => ['UTC', 'JST', 'KST']
                             ],
-                            'recommended_list' => [
+                            'already_recommended' => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'string',
@@ -256,7 +260,7 @@ class MessageProcessingService
                                 'description' => 'The list of cryptocurrency symbols that has already been recommended. Used to filter coins that has been already recommended from the recommendation list.'
                             ]
                         ],
-                        'required' => ['limit', 'timezone', 'coin_list']
+                        'required' => ['limit', 'timezone', 'already_recommended']
                     ]
                 ]
             ],
@@ -318,149 +322,312 @@ class MessageProcessingService
             : array_merge($systems, $userMessage);
     }
 
-    private function getResponseFormat($functionList)
+//    private function getResponseFormat($functionList)
+//    {
+//        if (in_array('get_crypto_data', $functionList)) {
+//            return [
+//                'type' => 'json_schema',
+//                'json_schema' => [
+//                    'name' => 'symbols_format',
+//                    'schema' => [
+//                        'type' => 'object',
+//                        'properties' => [
+//                            'symbols' => [
+//                                'type' => 'array',
+//                                'items' => [
+//                                    'type' => 'object',
+//                                    'properties' => [
+//                                        'symbol' => ['type' => 'string'],
+//                                        'latest_time' => ['type' => 'string'],
+//                                        'latest_price' => ['type' => 'number'],
+//                                        'time_gap' => [
+//                                            'type' => 'object',
+//                                            'properties' => [
+//                                                'hours' => ['type' => 'integer'],
+//                                                'minutes' => ['type' => 'integer']
+//                                            ],
+//                                            'required' => ['hours', 'minutes'],
+//                                            'additionalProperties' => false
+//                                        ],
+//                                        'price_movement' => [
+//                                            'type' => 'array',
+//                                            'items' => ['type' => 'number']
+//                                        ],
+//                                        'score_movement' => [
+//                                            'type' => 'array',
+//                                            'items' => ['type' => 'number']
+//                                        ],
+//                                        'time_labels' => [
+//                                            'type' => 'array',
+//                                            'items' => ['type' => 'string']
+//                                        ],
+//                                        'analysis_translated' => ['type' => 'string'],
+//                                        'is_recommended' => ['type' => 'boolean'],
+//                                        'recommend_time' => ['type' => 'string'],
+//                                        'recommend_reason_translated' => ['type' => 'string'],
+//                                        'recommend_image_url' => ['type' => 'string'],
+//                                        'recommend_time_gap' => [
+//                                            'type' => 'object',
+//                                            'properties' => [
+//                                                'hours' => ['type' => 'integer'],
+//                                                'minutes' => ['type' => 'integer']
+//                                            ],
+//                                            'required' => ['hours', 'minutes'],
+//                                            'additionalProperties' => false
+//                                        ],
+//                                        'interval' => ['type' => 'integer']
+//                                    ],
+//                                    'required' => [
+//                                        'symbol', 'latest_price', 'latest_time', 'time_gap', 'price_movement',
+//                                        'score_movement', 'time_labels', 'analysis_translated', 'is_recommended',
+//                                        'recommend_time', 'recommend_reason_translated', 'recommend_image_url',
+//                                        'recommend_time_gap', 'interval'
+//                                    ],
+//                                    'additionalProperties' => false
+//                                ]
+//                            ],
+//                        ],
+//                        'required' => ['symbols'],
+//                        'additionalProperties' => false
+//                    ],
+//                    'strict' => true
+//                ],
+//            ];
+//        }
+//        elseif (in_array('get_recommended_symbols', $functionList)) {
+//            return [
+//                'type' => 'json_schema',
+//                'json_schema' => [
+//                    'name' => 'recommendation_format',
+//                    'schema' => [
+//                        'type' => 'object',
+//                        'properties' => [
+//                            'recommendations' => [
+//                                'type' => 'array',
+//                                'items' => [
+//                                    'type' => 'object',
+//                                    'properties' => [
+//                                        'symbol' => ['type' => 'string'],
+//                                        'datetime' => ['type' => 'string'],
+//                                        'time_gap' => [
+//                                            'type' => 'object',
+//                                            'properties' => [
+//                                                'hours' => ['type' => 'integer'],
+//                                                'minutes' => ['type' => 'integer']
+//                                            ],
+//                                            'required' => ['hours', 'minutes'],
+//                                            'additionalProperties' => false
+//                                        ],
+//                                        'image_url' => ['type' => 'string'],
+//                                        'content_translated' => ['type' => 'string']
+//                                    ],
+//                                    'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'content_translated'],
+//                                    'additionalProperties' => false
+//                                ]
+//                            ]
+//                        ],
+//                        'required' => ['recommendations'],  // This specifies that the "recommendations" array is required
+//                        'additionalProperties' => false
+//                    ],
+//                    'strict' => true
+//                ]
+//            ];
+//
+//        } else {
+//            return [
+//                'type' => 'json_schema',
+//                'json_schema' => [
+//                    'name' => 'default_format',
+//                    'schema' => [
+//                        'type' => 'object',
+//                        'properties' => [
+//                            'default' => ['type' => 'string']
+//                        ],
+//                        'required' => ['commons'],
+//                        'additionalProperties' => false
+//                    ]
+//                ]
+//            ];
+//        }
+//
+//    }
+
+    private function getResponseFormat()
     {
-        if (in_array('get_crypto_data', $functionList)) {
-            return [
-                'type' => 'json_schema',
-                'json_schema' => [
-                    'name' => 'symbols_format',
-                    'schema' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'symbols' => [
-                                'type' => 'array',
-                                'items' => [
+        return [
+            'type' => 'json_schema',
+            'json_schema' => [
+                'name' => 'unified_format',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'data' => [
+                            'anyOf' => [
+                                [
                                     'type' => 'object',
                                     'properties' => [
-                                        'symbol' => ['type' => 'string'],
-                                        'latest_time' => ['type' => 'string'],
-                                        'latest_price' => ['type' => 'number'],
-                                        'time_gap' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'hours' => ['type' => 'integer'],
-                                                'minutes' => ['type' => 'integer']
-                                            ],
-                                            'required' => ['hours', 'minutes'],
-                                            'additionalProperties' => false
+                                        'format_type' => [
+                                            'type' => 'string',
+                                            'enum' => ['symbols']
                                         ],
-                                        'price_movement' => [
+                                        'content' => [
                                             'type' => 'array',
-                                            'items' => ['type' => 'number']
-                                        ],
-                                        'score_movement' => [
-                                            'type' => 'array',
-                                            'items' => ['type' => 'number']
-                                        ],
-                                        'time_labels' => [
-                                            'type' => 'array',
-                                            'items' => ['type' => 'string']
-                                        ],
-                                        'analysis_translated' => ['type' => 'string'],
-                                        'is_recommended' => ['type' => 'boolean'],
-                                        'recommend_time' => ['type' => 'string'],
-                                        'recommend_reason_translated' => ['type' => 'string'],
-                                        'recommend_image_url' => ['type' => 'string'],
-                                        'recommend_time_gap' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'hours' => ['type' => 'integer'],
-                                                'minutes' => ['type' => 'integer']
-                                            ],
-                                            'required' => ['hours', 'minutes'],
-                                            'additionalProperties' => false
-                                        ],
-                                        'interval' => ['type' => 'integer']
+                                            'items' => [
+                                                'type' => 'object',
+                                                'properties' => [
+                                                    'symbol' => ['type' => 'string'],
+                                                    'latest_time' => ['type' => 'string'],
+                                                    'latest_price' => ['type' => 'number'],
+                                                    'time_gap' => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'hours' => ['type' => 'integer'],
+                                                            'minutes' => ['type' => 'integer']
+                                                        ],
+                                                        'required' => ['hours', 'minutes'],
+                                                        'additionalProperties' => false
+                                                    ],
+                                                    'price_movement' => [
+                                                        'type' => 'array',
+                                                        'items' => ['type' => 'number']
+                                                    ],
+                                                    'score_movement' => [
+                                                        'type' => 'array',
+                                                        'items' => ['type' => 'number']
+                                                    ],
+                                                    'time_labels' => [
+                                                        'type' => 'array',
+                                                        'items' => ['type' => 'string']
+                                                    ],
+                                                    'analysis_translated' => ['type' => 'string'],
+                                                    'is_recommended' => ['type' => 'boolean'],
+                                                    'recommend_time' => ['type' => 'string'],
+                                                    'recommend_reason_translated' => ['type' => 'string'],
+                                                    'recommend_image_url' => ['type' => 'string'],
+                                                    'recommend_time_gap' => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'hours' => ['type' => 'integer'],
+                                                            'minutes' => ['type' => 'integer']
+                                                        ],
+                                                        'required' => ['hours', 'minutes'],
+                                                        'additionalProperties' => false
+                                                    ],
+                                                    'interval' => ['type' => 'integer']
+                                                ],
+                                                'required' => [
+                                                    'symbol', 'latest_price', 'latest_time', 'time_gap', 'price_movement',
+                                                    'score_movement', 'time_labels', 'analysis_translated', 'is_recommended',
+                                                    'recommend_time', 'recommend_reason_translated', 'recommend_image_url',
+                                                    'recommend_time_gap', 'interval'
+                                                ],
+                                                'additionalProperties' => false
+                                            ]
+                                        ]
                                     ],
-                                    'required' => [
-                                        'symbol', 'latest_price', 'latest_time', 'time_gap', 'price_movement',
-                                        'score_movement', 'time_labels', 'analysis_translated', 'is_recommended',
-                                        'recommend_time', 'recommend_reason_translated', 'recommend_image_url',
-                                        'recommend_time_gap', 'interval'
-                                    ],
+                                    'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
-                                ]
-                            ],
-                        ],
-                        'required' => ['symbols'],
-                        'additionalProperties' => false
-                    ],
-                    'strict' => true
-                ],
-            ];
-        }
-        elseif (in_array('get_recommendations', $functionList)) {
-            return [
-                'type' => 'json_schema',
-                'json_schema' => [
-                    'name' => 'recommendation_format',
-                    'schema' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'recommendations' => [
-                                'type' => 'array',
-                                'items' => [
+                                ],
+                                [
                                     'type' => 'object',
                                     'properties' => [
-                                        'symbol' => ['type' => 'string'],
-                                        'datetime' => ['type' => 'string'],
-                                        'time_gap' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'hours' => ['type' => 'integer'],
-                                                'minutes' => ['type' => 'integer']
-                                            ],
-                                            'required' => ['hours', 'minutes'],
-                                            'additionalProperties' => false
+                                        'format_type' => [
+                                            'type' => 'string',
+                                            'enum' => ['recommendations']
                                         ],
-                                        'image_url' => ['type' => 'string'],
-                                        'content_translated' => ['type' => 'string']
+                                        'content' => [
+                                            'type' => 'array',
+                                            'items' => [
+                                                'type' => 'object',
+                                                'properties' => [
+                                                    'symbol' => ['type' => 'string'],
+                                                    'datetime' => ['type' => 'string'],
+                                                    'time_gap' => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'hours' => ['type' => 'integer'],
+                                                            'minutes' => ['type' => 'integer']
+                                                        ],
+                                                        'required' => ['hours', 'minutes'],
+                                                        'additionalProperties' => false
+                                                    ],
+                                                    'image_url' => ['type' => 'string'],
+                                                    'content_translated' => ['type' => 'string']
+                                                ],
+                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'content_translated'],
+                                                'additionalProperties' => false
+                                            ]
+                                        ]
                                     ],
-                                    'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'content_translated'],
+                                    'required' => ['format_type', 'content'],
+                                    'additionalProperties' => false
+                                ],
+                                [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'format_type' => [
+                                            'type' => 'string',
+                                            'enum' => ['commons']
+                                        ],
+                                        'content' => ['type' => 'string']
+                                    ],
+                                    'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
                                 ]
                             ]
-                        ],
-                        'required' => ['recommendations'],  // This specifies that the "recommendations" array is required
-                        'additionalProperties' => false
+                        ]
                     ],
-                    'strict' => true
-                ]
-            ];
-
-        } else {
-            return [
-                'type' => 'json_schema',
-                'json_schema' => [
-                    'name' => 'default_format',
-                    'schema' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'default' => ['type' => 'string']
-                        ],
-                        'required' => ['commons'],
-                        'additionalProperties' => false
-                    ]
-                ]
-            ];
-        }
-
+                    'required' => ['data'],
+                    'additionalProperties' => false
+                ],
+                'strict' => true
+            ]
+        ];
     }
 
+    private function filterTools($functionList, $tools)
+    {
+        // Initialize tool choice as 'auto' by default
+        $toolChoice = 'auto';
+
+        if (in_array('get_recommended_symbols', $functionList)) {
+            // Filter tools to only include the tool with the name 'get_recommended_symbols'
+            $tools = array_filter($tools, function ($tool) {
+                return $tool['function']['name'] === 'get_recommended_symbols';
+            });
+            // Reindex the array to ensure it's not associative after filtering
+            $tools = array_values($tools);
+            $toolChoice = 'none';
+        } elseif (in_array('get_crypto_data', $functionList)) {
+            // Filter tools to include only 'get_crypto_data', 'get_latest_price', 'check_recommendation_status'
+            $tools = array_filter($tools, function ($tool) {
+                return in_array($tool['function']['name'], ['get_crypto_data', 'get_latest_price', 'check_recommendation_status']);
+            });
+            // Reindex the array to ensure it's not associative after filtering
+            $tools = array_values($tools);
+            $toolChoice = 'none';
+        }
+
+        return ['tools' => $tools, 'toolChoice' => $toolChoice];
+    }
 
     private function sendMessageToOpenAI($messages, $tools, $userId, $functionList)
     {
         try {
             // Get the response format based on the functionList
-            $responseFormat = $this->getResponseFormat($functionList);
+            $responseFormat = $this->getResponseFormat();
+            // Filter tools and get the appropriate tool choice
+            $filteredTools = $this->filterTools($functionList, $tools);
+            $tools = $filteredTools['tools'];
+            $toolChoice = $filteredTools['toolChoice'];
 
             $response = OpenAI::chat()->create([
 //                'model' => 'gpt-4o-2024-08-06',
                 'model' => 'gpt-4o-mini',
                 'messages' => $messages,
                 'tools' => $tools,
-                'tool_choice' => 'auto',
+                'tool_choice' => $toolChoice,
+//                'response_format' => ['type' => 'json_object'],
                 'response_format' => $responseFormat,
                 'parallel_tool_calls' => true
             ]);
@@ -484,7 +651,7 @@ class MessageProcessingService
                 return [
                     'responseText' => $responseMessage['content']
                 ];
-            } elseif (count($functionList) > 12) { // Stop recursion if functionList length exceeds 12
+            } elseif (count($functionList) > 20) { // Stop recursion if functionList length exceeds 12
                 Log::warning('Function list length exceeded 12, stopping recursion.');
                 return [
                     'responseText' => $responseMessage['content']
@@ -495,7 +662,7 @@ class MessageProcessingService
                     'get_crypto_data' => [$this->cryptoService, 'getCryptoData'],
 //                    'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
                     'get_current_time' => [$this->cryptoService, 'getCurrentTime'],
-                    'get_recommendations' => [$this->cryptoService, 'getRecommendation'],
+                    'get_recommended_symbols' => [$this->cryptoService, 'getRecommendation'],
                     'check_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus']
                 ];
 
