@@ -102,7 +102,7 @@
                                 <form id="chat-form" action="{{ route('conversation') }}" method="POST">
                                     @csrf
                                     <div class="message-input-wrapper">
-                                        <textarea id="message-input" name="message" rows="4" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
+                                        <textarea id="message-input" name="message" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
                                         <input type="hidden" name="userId" id="user-id" value="1">
                                         <input type="hidden" name="maxUsage" id="max-usage" value="0">
                                     </div>
@@ -111,13 +111,14 @@
                                     </div>
                                 </form>
                             </div>
+                            <div class="input-open">
+                                <button id="input-open" class="input-open-btn">채팅창 열기</button>
+                            </div>
+                            <div class="input-close">
+                                <button id="input-close" class="input-close-btn">채팅창 닫기</button>
+                            </div>
                         </div>
-                        <div class="input-open">
-                            <button id="input-open" class="input-open-btn">채팅창 열기</button>
-                        </div>
-                        <div class="input-close">
-                            <button id="input-close" class="input-close-btn">채팅창 닫기</button>
-                        </div>
+
 
                         @if (session('responseText'))
                         <div class="mt-6">
@@ -354,9 +355,9 @@
                             parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                         }
 
-                        question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
-                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
-                        question3.textContent = `${parsed.symbol}에 대해 알려줘`;
+                        question1.textContent = `${parsed.symbol.toUpperCase()} 24시간 스코어 및 가격 분석`;
+                        question2.textContent = `${parsed.symbol.toUpperCase()} 한 달간 스코어 및 가격 분석`;
+                        question3.textContent = `${parsed.symbol.toUpperCase()}에 대해 알려줘`;
 
                         question1.addEventListener('click', function() {
                             executeQuestion(this);
@@ -412,7 +413,7 @@
                     queryDiv.appendChild(userDiv);
 
                     chatBox.appendChild(queryDiv);
-                } else if (parsedResponse.data.format_type === 'symbols') {
+                } else if (parsedResponse.data.format_type === 'crypto_analyses') {
                     const symbols = parsedResponse.data.content;
                     symbols.forEach((parsed) => {
                         console.log("parsed symbol: ", parsed);

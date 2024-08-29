@@ -56,20 +56,28 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
+                'content' => 'When you have to analyze certain crypto symbols, you must call the function "get_crypto_data" and access the price and score data. Do not use any pre-trained data or API.'
+            ],
+            [
+                'role' => 'system',
+                'content' => 'When you have to recommend crypto symbols to users, you must call the function "get_recommended_symbols" to access the recommendation list. Do not use any pre-trained data or API.'
+            ],
+            [
+                'role' => 'system',
                 'content' => "If you can not infer the locale of the user from the language, then use 'KST' as the default local timezone of the user."
             ],
             [
                 'role' => 'system',
-                'content' => 'When passing "symbols" parameter to function calls [get_latest_price], [get_crypto_data], [get_recommendation_status], make sure that no character of the crypto symbol is omitted or modified. '
+                'content' => 'When passing "symbols" parameter to functions "get_latest_price", "get_crypto_data", "get_recommendation_status", Make sure that the last letter of the symbol is not missing or altered. '
             ],
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbol name, you should set the "response_format" as "symbols" and always call the functions "get_crypto_data", "get_latest_price", "get_recommendation_status" to retrieve the relevant data. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling "get_crypto_data". Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
+                    'Upon receiving any inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbol name, you should set the response "format_type" to "crypto_analyses" and always call the functions "get_crypto_data", "get_latest_price", "get_recommendation_status" to retrieve the relevant data of each symbol. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling "get_crypto_data". Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
             ],
             [
                 'role' => 'system',
-                'content' =>'When your response "format_type" is "symbols", follow the next rules to generate the response. '
+                'content' =>'When your response "format_type" is "crypto_analyses", follow the next rules to generate the response. '
                     .'Rule 1. Each "symbol", "latest_price", "latest_time", "time_gap.hours", "time_gap.minutes" values can be retrieved by calling the function "get_latest_price". The value of "symbol" should be capitalized. '
                     .'Rule 2. "crypto_data.datetime", "crypto_data.score", "crypto_data.price" are values of each "datetime", "score", "price" values retrieved from calling "get_crypto_data". Make sure no rows are omitted from the retrieved array.'
                     .'Rule 3. "recommendation_status.is_recommended", "recommendation_status.recommended_time", "recommendation_status.recommend_reason_translated", "recommendation_status.image_url", "recommendation_status.time_gap.hours", "recommendation_status.time_gap.minutes" values can be retrieved by calling the function [get_recommendation_status]. "recommended_reason_translated" should be translated as the local language of the user without omitting any of the original English content. '
@@ -93,7 +101,7 @@ class MessageProcessingService
             ],
             [
               'role' => 'system',
-              'content' => 'When the user asks to pick symbols from the recommendation list, first pick symbols from the list and then call the function [get_crypto_data], [get_latest_price] and [get_recommendation_status]. If the user did not specify the number of symbols to pick, then just pick one symbol from the list. '
+              'content' => 'When the user asks to pick symbols from the recommendation list, first pick symbols from the list and return the response with the format_type of "symbols". Call the function [get_crypto_data] with hours parameter of 24, [get_latest_price], and [get_recommendation_status] in making the response. If the user did not specify the number of symbols to pick, then just pick one symbol from the list. '
             ],
             [
                 'role' => 'system',
@@ -332,7 +340,7 @@ class MessageProcessingService
                                     'properties' => [
                                         'format_type' => [
                                             'type' => 'string',
-                                            'enum' => ['symbols']
+                                            'enum' => ['crypto_analyses']
                                         ],
                                         'content' => [
                                             'type' => 'array',
