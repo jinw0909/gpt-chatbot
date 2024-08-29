@@ -286,11 +286,12 @@
 
                 if (parsedResponse.data.format_type === 'recommendations') {
                     const recommendations = parsedResponse.data.content;
-                    console.log("parsed recommendations: ", recommendations);
+
                     recommendations.forEach(parsed => {
+                        console.log("parsed recommendation: ", parsed);
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.textContent = `${parsed.symbol}`;
+                        symbolDiv.textContent = `${parsed.symbol.toUpperCase()}`;
                         symbolDiv.style.fontWeight = 'bold';
 
                         // Create div for datetime
@@ -301,10 +302,10 @@
 
                         let timeGapText = '';
                         if (parsed.time_gap.hours) {
-                            timeGapText += `${parsed.time_gap.hours} hours `;
+                            timeGapText += `${parsed.time_gap.hours} ${parsed.time_gap.hours === 1 ? 'hour' : 'hours'} `;
                         }
                         if (parsed.time_gap.minutes) {
-                            timeGapText += `${parsed.time_gap.minutes} minutes `;
+                            timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                         }
                         if (timeGapText) {
                             timeGapText += 'ago';
@@ -322,7 +323,7 @@
 
                         // Create div for content
                         const contentDiv = document.createElement('div');
-                        contentDiv.textContent = `${parsed.content_translated}`;
+                        contentDiv.textContent = `${parsed.recommended_reason_translated}`;
 
                         // Create wrapper
                         const wrapperDiv = document.createElement('div');
@@ -412,14 +413,13 @@
 
                     chatBox.appendChild(queryDiv);
                 } else if (parsedResponse.data.format_type === 'symbols') {
-                    console.log("symbols format");
                     const symbols = parsedResponse.data.content;
                     symbols.forEach((parsed) => {
-                        console.log("parsed: ", parsed);
+                        console.log("parsed symbol: ", parsed);
                         const canvas = document.createElement('canvas');
 
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.textContent = parsed.symbol;
+                        symbolDiv.textContent = parsed.symbol.toUpperCase();
 
                         const priceDiv = document.createElement('div');
                         if (parsed.latest_price !== null && !isNaN(parsed.latest_price)) {
@@ -435,10 +435,10 @@
 
                         let timeGapText = '';
                         if (parsed.time_gap.hours) {
-                            timeGapText += `${parsed.time_gap.hours} hours `;
+                            timeGapText += `${parsed.time_gap.hours} ${parsed.time_gap.hours === 1 ? 'hour' : 'hours'} `;
                         }
                         if (parsed.time_gap.minutes) {
-                            timeGapText += `${parsed.time_gap.minutes} minutes `;
+                            timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                         }
                         if (timeGapText) {
                             timeGapText += 'ago';
@@ -461,7 +461,8 @@
                         assistantDiv.appendChild(canvas);
                         assistantDiv.appendChild(analysisDiv);
 
-                        if (parsed.is_recommended) {
+                        if (parsed.recommendation_status.is_recommended) {
+                            const status = parsed.recommendation_status;
                             const recommendComment = document.createElement('div');
                             recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 12 hours`
                             recommendComment.style.color = 'orange';
@@ -477,16 +478,29 @@
                             closeBtn.classList.add('recommend-btn');
                             const recommendDiv = document.createElement('div');
                             const recommendTimeDiv = document.createElement('div');
-                            recommendTimeDiv.textContent = parsed.recommend_time;
+                            recommendTimeDiv.textContent = status.recommended_time;
                             const recommendImageDiv = document.createElement('img');
-                            recommendImageDiv.src = parsed.recommend_image_url;
+                            recommendImageDiv.src = status.image_url;
                             recommendImageDiv.style.width = '100%';
                             recommendImageDiv.style.borderRadius = '8px';
                             const recommendGapDiv = document.createElement('div');
-                            recommendGapDiv.textContent = `${parsed.recommend_time_gap.hours ? parsed.recommend_time_gap.hours + ' hours': ''} ${parsed.recommend_time_gap.minutes ? parsed.recommend_time_gap.minutes + ' minutes': ''} ago`;
+
+                            let recommendGapText = '';
+                            if (status.time_gap.hours) {
+                                recommendGapText += `${status.time_gap.hours} ${status.time_gap.hours === 1 ? 'hour' : 'hours'} `;
+                            }
+                            if (status.time_gap.minutes) {
+                                recommendGapText += `${status.time_gap.minutes} ${status.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
+                            }
+                            if (recommendGapText) {
+                                recommendGapText += 'ago';
+                            }
+
+                            recommendGapDiv.textContent = recommendGapText;
                             recommendGapDiv.style.color = '#bbb';
+
                             const recommendContentDiv = document.createElement('div');
-                            recommendContentDiv.textContent = parsed.recommend_reason_translated;
+                            recommendContentDiv.textContent = status.recommended_reason_translated;
                             recommendDiv.appendChild(recommendTimeDiv);
                             recommendDiv.appendChild(recommendGapDiv);
                             recommendDiv.appendChild(recommendImageDiv);
@@ -556,7 +570,10 @@
                         wrapperDiv.appendChild(assistantDiv);
                         chatBox.appendChild(wrapperDiv);
                         chatBox.appendChild(queryDiv);
-                        drawChart(parsed.price_movement, parsed.score_movement, canvas, parsed.time_labels);
+                        const timeLabels = parsed.crypto_data.map(item => item.datetime);
+                        const scoreMovement = parsed.crypto_data.map(item => item.score);
+                        const priceMovement = parsed.crypto_data.map(item => item.price);
+                        drawChart(priceMovement, scoreMovement, timeLabels, canvas);
                     });
                 } else if (parsedResponse.data.format_type === 'commons') {
                     // Add the assistant's message to the chat box
@@ -625,7 +642,7 @@
         }
     }
 
-    let drawChart = (priceMovement, scoreMovement, canvas, labels) => {
+    let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
 
         const ctx = canvas.getContext('2d');
 

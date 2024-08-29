@@ -92,7 +92,7 @@ class CryptoService
                     'score' => $data->score,
                     'price' => $data->price,
                     'datetime' => $convertedDatetime,
-                    'timeGap' => $timeGap
+                    'time_gap' => $timeGap
                 ];
             }
         }
@@ -164,11 +164,11 @@ class CryptoService
             // Prepare the response for the current symbol
             $response = [
                 'symbol' => $normalizedSymbol . 'USDT',
-                'isRecommended' => $isRecommended,
-                'recommendTime' => $recommendTime,
-                'recommendImage' => $isRecommended ? $result->images : null,
-                'recommendReason' => $isRecommended ? $result->content : null,
-                'recommendTimeGap' => $recommendTimeGap
+                'is_recommended' => $isRecommended,
+                'recommend_time' => $recommendTime,
+                'image_url' => $isRecommended ? $result->images : null,
+                'recommended_reason' => $isRecommended ? $result->content : null,
+                'time_gap' => $recommendTimeGap
             ];
 
             // Log the result
@@ -248,55 +248,14 @@ class CryptoService
         // Return the processed result
         // Calculate the time gap for each row
         $result = $result->map(function($item) use ($timezone) {
-            $item->timeGap = $this->calculateTimeGap($item->datetime, $timezone);
+            $item->time_gap = $this->calculateTimeGap($item->datetime, $timezone);
             return $item;
         });
 
-        //Log::info("after conversion: ", ["after" => $result]);
+        Log::info("after conversion: ", ["after" => $result]);
 
         return json_encode($result);
     }
-
-//    private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0)
-//    {
-//        // Base case: if limit is reached, return an empty collection
-//        if ($limit <= 0) {
-//            return collect();
-//        }
-//
-//        // Query 5 rows from the database starting from the given offset
-//        $queryResults = DB::connection('mysql2')->table('beuliping')
-//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-//            ->orderBy('beuliping.id', 'desc')
-//            ->offset($offset)
-//            ->limit(7)
-//            ->select('beuliping.id', 'beuliping.symbol', 'beuliping.images', 'vm_beuliping_EN.content', DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate'))
-//            ->get();
-//
-//        // Filter out coins that are already in the coinlist
-//        $newResults = $queryResults->filter(function($item) use ($coin_list) {
-//            return $item->symbol !== '1000BONK'
-//                && !str_starts_with($item->content, 'No')
-//                && !is_null($item->images)
-//                && !in_array($item->symbol, $coin_list);
-//        });
-//
-//        // Add the symbols of the new results to the coinlist
-//        $newCoinList = array_merge($coin_list, $newResults->pluck('symbol')->toArray());
-//
-//        // Determine how many more results we need
-//        $remainingLimit = $limit - $newResults->count();
-//
-//        // If we still need more results, make a recursive call with the updated parameters
-//        if ($remainingLimit > 0 && $queryResults->count() > 0) {
-//            $additionalResults = $this->getRecommendationsRecursive($remainingLimit, $newCoinList, $offset + 7);
-//            return $newResults->merge($additionalResults);
-//        }
-//
-//        // If we have enough results or no more rows to query, return the accumulated results
-//        return $newResults;
-//    }
-
     private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
     {
         // Initialize the accumulated results if not already initialized
@@ -318,8 +277,8 @@ class CryptoService
             ->select(
                 'beuliping.id',
                 'beuliping.symbol',
-                'beuliping.images',
-                'vm_beuliping_EN.content',
+                'beuliping.images as image_url',
+                'vm_beuliping_EN.content as recommended_reason',
                 DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
             )
             ->get();
@@ -333,10 +292,10 @@ class CryptoService
         $newResults = $queryResults->filter(function ($item) use ($coin_list) {
             return $item->symbol !== '1000BONK'
                 && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
-                && !is_null($item->images)
+                && !is_null($item->image_url)
                 && !in_array($item->symbol, $coin_list)
-                && stripos($item->content, 'no') !== 0
-                && stripos($item->content, 'there are no') === false;
+                && stripos($item->recommended_reason, 'no') !== 0
+                && stripos($item->recommended_reason, 'there are no') === false;
         });
 
         // Add new results to the accumulated results
@@ -497,7 +456,8 @@ class CryptoService
             ];
         }
 //        Log::info("format data with timezone", ["symboldata" => $resultData, "symbol" => $symbol]);
-        return json_encode(['symbol' => $symbol, 'data' => $resultData]);
+//        return json_encode(['symbol' => $symbol, 'data' => $resultData]);
+        return json_encode($resultData);
     }
 
     private function averageAndFormatData($data, $symbol, $timezone)

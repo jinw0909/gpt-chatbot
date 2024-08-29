@@ -60,41 +60,35 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When passing "symbols" parameter to function calls [get_latest_price], [get_crypto_data], [check_recommendation_status], make sure that no character of any symbol in the array is omitted or modified. '
+                'content' => 'When passing "symbols" parameter to function calls [get_latest_price], [get_crypto_data], [get_recommendation_status], make sure that no character of the crypto symbol is omitted or modified. '
             ],
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any inquires related to the price and score of the cryptocurrency symbol, or upon receiving inquires to show chart of the symbol, or upon just receiving cryptocurrency symbol names, you should call the functions [get_crypto_data], [get_latest_price], [check_recommendation_status] in and set "response_format" as "symbols" in the response. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling [get_crypto_data]. Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
+                    'Upon receiving any inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbol name, you should set the "response_format" as "symbols" and always call the functions "get_crypto_data", "get_latest_price", "get_recommendation_status" to retrieve the relevant data. If the user did not specify a time range, then pass 24 as the "hours" parameter when calling "get_crypto_data". Otherwise calculate the specified time range in the user message into the hour unit and pass it as the "hours" parameter.'
             ],
             [
                 'role' => 'system',
-                'content' =>'When your "response_format" of your response is "symbols", follow the next rules to generate the response. '
-                    .'Rule 1. Each "symbol", "latest_price", "latest_time", "time_gap.hours", "time_gap.minutes" values can be retrieved by calling the function [get_latest_price]. "symbol" should be capitalized. '
-                    .'Rule 2. "price_movement", "score_movement", "time_labels" are arrays of each "price", "score", and "datetime" values returned from calling [get_crypto_data]. Make sure no rows are omitted from the retrieved data.'
-                    .'Rule 3. "is_recommended", "recommend_time", "recommend_reason_translated", "recommend_image_url", "recommend_time_gap.hours", "recommend_time_gap.minutes" can be filled in by calling [check_recommendation_status]. "recommend_reason_translated" should be translated into the local language of the user without any of the original English content being omitted. '
-                    .'Rule 4. "analysis_translated" is your analysis on all of the relevant data retrieved from calling [get_crypto_data], [get_latest_price] and [check_recommendation_status]. The analysis should be at least 4 sentences long and be presented in a translated plain text. The "recommend_reason" should be considered when creating the analysis. '
-                    .'Rule 5. "interval" is an integer value of parameter "hours" passed when calling [get_crypto_data]. '
+                'content' =>'When your response "format_type" is "symbols", follow the next rules to generate the response. '
+                    .'Rule 1. Each "symbol", "latest_price", "latest_time", "time_gap.hours", "time_gap.minutes" values can be retrieved by calling the function "get_latest_price". The value of "symbol" should be capitalized. '
+                    .'Rule 2. "crypto_data.datetime", "crypto_data.score", "crypto_data.price" are values of each "datetime", "score", "price" values retrieved from calling "get_crypto_data". Make sure no rows are omitted from the retrieved array.'
+                    .'Rule 3. "recommendation_status.is_recommended", "recommendation_status.recommended_time", "recommendation_status.recommend_reason_translated", "recommendation_status.image_url", "recommendation_status.time_gap.hours", "recommendation_status.time_gap.minutes" values can be retrieved by calling the function [get_recommendation_status]. "recommended_reason_translated" should be translated as the local language of the user without omitting any of the original English content. '
+                    .'Rule 4. "analysis_translated" is your analysis on all of the relevant data retrieved from calling "get_crypto_data", "get_latest_price" and "get_recommendation_status". The analysis should be at least 4 sentences long and be presented sd translated plain text. It is important that the "recommend_reason" should be considered in creating the analysis. '
+                    .'Rule 5. "interval" is an integer value of the parameter "hours" passed when calling [get_crypto_data]. '
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to recommend cryptocurrencies, then always call the function [get_recommended_symbols]. If the user did not specify the number, then pass 3 as the "limit" parameter. Pass an empty array to the "already_recommended" parameter. The response "format_type" should be "recommendations". '
+                'content' => 'When the user asks to recommend cryptocurrencies, then always call the function "get_recommended_symbols". If the user did not specify the number, then pass 3 as the "limit" parameter. Pass an empty array to the "already_recommended" parameter. The response "format_type" should be "recommendations". '
             ],
             [
                 'role' => 'system',
-                'content' => 'Every time the user asks for additional recommendations, then call the function [get_recommended_symbols] with the parameter "already_recommended" with already recommended symbols after checking the conversation history. If the user did not specify the number, then pass 3 as the "limit" parameter. If the user specified a specific number, then pass it as the limit parameter. Look up the previous conversation between the user and pass the previously recommended symbols as the "already_recommended" parameter. The response "format_type" should be "recommendations". '
+                'content' => 'Every time the user asks for additional recommendations, then call the function "get_recommended_symbols" with the parameter "already_recommended" with already recommended symbols after checking the conversation history. If the user did not specify the number, then pass 3 as the "limit" parameter. If the user specified a specific number, then pass it as the limit parameter. Look up the previous conversation between the user and pass the previously recommended symbols as the "already_recommended" parameter. The response "format_type" should be "recommendations". '
             ],
-//            [
-//              'role' => 'system',
-//              'content' => 'When the user asks for additional cryptocurrency recommendation, always call [get_recommended_symbols] with the increased "limit" parameter value. If the user did not specify the additional limit, then add 2.'
-//              .'For example, when you previously recommended 3 symbols but the user asks for additional recommendation call [get_recommended_symbols] with limit of 5. When the user asks again for additional recommendation this time the limit will be 7.'
-//              .'After calling [get_recommended_symbols], compare the newly retrieved data with all of the previously recommended symbols. From the retrieved data, delete the elements whose symbol is already included in the previous list and make a response. '
-//            ],
             [
                 'role' => 'system',
-                'content' => 'When the response "format_type" is "recommendations" follow the next rules to generate the response. '
-                .'Rule 1."symbol", "datetime", "time_gap", "image_url" values can be retrieved by calling function [get_recommended_symbols]. '
-                .'Rule 2. "content_translated" is the content retrieved from calling function [get_recommended_symbols] translated into the local language of the user. The original content must not be omitted during the translation process.'
+                'content' => 'When your response "format_type" is "recommendations", follow the next rules to generate the response. '
+                .'Rule 1."symbol", "datetime", "time_gap", "image_url" values can be retrieved by calling the function "get_recommended_symbols". The value of "symbol" should be capitalized. '
+                .'Rule 2. "recommended_reason_translated" is the translation of recommended_reason retrieved from calling function "get_recommended_symbols". The original content must not be omitted during the translation process.'
                 .'Rule 3. Check if the "image_url" value correctly matches the retrieved url. '
             ],
             [
@@ -111,7 +105,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'The score values returned from the function calls [get_crypto_data] is called a "Goya score". It is translate as ゴヤースコア in Japanese, and 고야 스코어 in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
+                'content' => 'The score values returned from the function calls [get_crypto_data] is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
                     'When the Goya score is on a downward trend, the price of the cryptocurrency is likely go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
                     'Goya score is derived from collecting and analyzing objective blockchain transaction activity data of the symbol cryptocurrency focused mainly on the movements that has positive or negative impacts on the price of the cryptocurrency. However, there are many other objective indicators from which the Goya score is derived from. '
             ],
@@ -163,7 +157,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_crypto_data',
-                    'description' => 'Get the price and score data of the cryptocurrency symbol from given hours ago. Required parameters are "symbol","hours", and  "timezone".  The returned price unit is in USD. If the passed "hours" is bigger than 48, then the returned data will be on a daily interval. Else, the returned data will be on an hourly interval',
+                    'description' => 'The function to get the price and score data of the crypto symbol from given hours ago. Required parameters are "symbol","hours", and  "timezone".  The returned price unit is in USD. If the passed "hours" is bigger than 48, then the returned data will be on a daily interval. Else, the returned data will be on an hourly interval',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -193,7 +187,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_current_time',
-                    'description' => 'Returns the current local time',
+                    'description' => 'The function to get the current local time given the timezone',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -267,8 +261,8 @@ class MessageProcessingService
             [
                 'type' => 'function',
                 'function' => [
-                    'name' => 'check_recommendation_status',
-                    'description' => "This function checks the symbol cryptocurrency from the recommendation list and returns the relevant data if the symbol is in the list.",
+                    'name' => 'get_recommendation_status',
+                    'description' => "This function checks the symbol cryptocurrency from the recommendation list and returns the relevant data if the symbol is in the list. Call this function to get the recommendation status data of a crypto symbol. ",
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -322,136 +316,6 @@ class MessageProcessingService
             : array_merge($systems, $userMessage);
     }
 
-//    private function getResponseFormat($functionList)
-//    {
-//        if (in_array('get_crypto_data', $functionList)) {
-//            return [
-//                'type' => 'json_schema',
-//                'json_schema' => [
-//                    'name' => 'symbols_format',
-//                    'schema' => [
-//                        'type' => 'object',
-//                        'properties' => [
-//                            'symbols' => [
-//                                'type' => 'array',
-//                                'items' => [
-//                                    'type' => 'object',
-//                                    'properties' => [
-//                                        'symbol' => ['type' => 'string'],
-//                                        'latest_time' => ['type' => 'string'],
-//                                        'latest_price' => ['type' => 'number'],
-//                                        'time_gap' => [
-//                                            'type' => 'object',
-//                                            'properties' => [
-//                                                'hours' => ['type' => 'integer'],
-//                                                'minutes' => ['type' => 'integer']
-//                                            ],
-//                                            'required' => ['hours', 'minutes'],
-//                                            'additionalProperties' => false
-//                                        ],
-//                                        'price_movement' => [
-//                                            'type' => 'array',
-//                                            'items' => ['type' => 'number']
-//                                        ],
-//                                        'score_movement' => [
-//                                            'type' => 'array',
-//                                            'items' => ['type' => 'number']
-//                                        ],
-//                                        'time_labels' => [
-//                                            'type' => 'array',
-//                                            'items' => ['type' => 'string']
-//                                        ],
-//                                        'analysis_translated' => ['type' => 'string'],
-//                                        'is_recommended' => ['type' => 'boolean'],
-//                                        'recommend_time' => ['type' => 'string'],
-//                                        'recommend_reason_translated' => ['type' => 'string'],
-//                                        'recommend_image_url' => ['type' => 'string'],
-//                                        'recommend_time_gap' => [
-//                                            'type' => 'object',
-//                                            'properties' => [
-//                                                'hours' => ['type' => 'integer'],
-//                                                'minutes' => ['type' => 'integer']
-//                                            ],
-//                                            'required' => ['hours', 'minutes'],
-//                                            'additionalProperties' => false
-//                                        ],
-//                                        'interval' => ['type' => 'integer']
-//                                    ],
-//                                    'required' => [
-//                                        'symbol', 'latest_price', 'latest_time', 'time_gap', 'price_movement',
-//                                        'score_movement', 'time_labels', 'analysis_translated', 'is_recommended',
-//                                        'recommend_time', 'recommend_reason_translated', 'recommend_image_url',
-//                                        'recommend_time_gap', 'interval'
-//                                    ],
-//                                    'additionalProperties' => false
-//                                ]
-//                            ],
-//                        ],
-//                        'required' => ['symbols'],
-//                        'additionalProperties' => false
-//                    ],
-//                    'strict' => true
-//                ],
-//            ];
-//        }
-//        elseif (in_array('get_recommended_symbols', $functionList)) {
-//            return [
-//                'type' => 'json_schema',
-//                'json_schema' => [
-//                    'name' => 'recommendation_format',
-//                    'schema' => [
-//                        'type' => 'object',
-//                        'properties' => [
-//                            'recommendations' => [
-//                                'type' => 'array',
-//                                'items' => [
-//                                    'type' => 'object',
-//                                    'properties' => [
-//                                        'symbol' => ['type' => 'string'],
-//                                        'datetime' => ['type' => 'string'],
-//                                        'time_gap' => [
-//                                            'type' => 'object',
-//                                            'properties' => [
-//                                                'hours' => ['type' => 'integer'],
-//                                                'minutes' => ['type' => 'integer']
-//                                            ],
-//                                            'required' => ['hours', 'minutes'],
-//                                            'additionalProperties' => false
-//                                        ],
-//                                        'image_url' => ['type' => 'string'],
-//                                        'content_translated' => ['type' => 'string']
-//                                    ],
-//                                    'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'content_translated'],
-//                                    'additionalProperties' => false
-//                                ]
-//                            ]
-//                        ],
-//                        'required' => ['recommendations'],  // This specifies that the "recommendations" array is required
-//                        'additionalProperties' => false
-//                    ],
-//                    'strict' => true
-//                ]
-//            ];
-//
-//        } else {
-//            return [
-//                'type' => 'json_schema',
-//                'json_schema' => [
-//                    'name' => 'default_format',
-//                    'schema' => [
-//                        'type' => 'object',
-//                        'properties' => [
-//                            'default' => ['type' => 'string']
-//                        ],
-//                        'required' => ['commons'],
-//                        'additionalProperties' => false
-//                    ]
-//                ]
-//            ];
-//        }
-//
-//    }
-
     private function getResponseFormat()
     {
         return [
@@ -487,39 +351,57 @@ class MessageProcessingService
                                                         'required' => ['hours', 'minutes'],
                                                         'additionalProperties' => false
                                                     ],
-                                                    'price_movement' => [
+                                                    'crypto_data' => [
                                                         'type' => 'array',
-                                                        'items' => ['type' => 'number']
+                                                        'items' => [
+                                                            'type' => 'object',
+                                                            'properties' => [
+                                                                'datetime' => ['type' => 'string'],
+                                                                'score' => ['type' => 'number'],
+                                                                'price' => ['type' => 'number']
+                                                            ],
+                                                            'required' => ['datetime', 'score', 'price'],
+                                                            'additionalProperties' => false
+                                                        ]
                                                     ],
-                                                    'score_movement' => [
-                                                        'type' => 'array',
-                                                        'items' => ['type' => 'number']
-                                                    ],
-                                                    'time_labels' => [
-                                                        'type' => 'array',
-                                                        'items' => ['type' => 'string']
-                                                    ],
-                                                    'analysis_translated' => ['type' => 'string'],
-                                                    'is_recommended' => ['type' => 'boolean'],
-                                                    'recommend_time' => ['type' => 'string'],
-                                                    'recommend_reason_translated' => ['type' => 'string'],
-                                                    'recommend_image_url' => ['type' => 'string'],
-                                                    'recommend_time_gap' => [
+                                                    "recommendation_status" => [
                                                         'type' => 'object',
                                                         'properties' => [
-                                                            'hours' => ['type' => 'integer'],
-                                                            'minutes' => ['type' => 'integer']
+                                                            'is_recommended' => ['type' => 'boolean'],
+                                                            'recommended_datetime' => ['type' => 'string'],
+                                                            'recommended_reason_translated' => ['type' => 'string'],
+                                                            'image_url' => ['type' => 'string'],
+                                                            'time_gap' => [
+                                                                'type' => 'object',
+                                                                'properties' => [
+                                                                    'hours' => ['type' => 'number'],
+                                                                    'minutes' => ['type' => 'number']
+                                                                ],
+                                                                'required' => ['hours', 'minutes'],
+                                                                'additionalProperties' => false
+                                                            ],
                                                         ],
-                                                        'required' => ['hours', 'minutes'],
+                                                        'required' => ['is_recommended', 'recommended_datetime', 'recommended_reason_translated', 'image_url', 'time_gap'],
                                                         'additionalProperties' => false
                                                     ],
+                                                    'analysis_translated' => ['type' => 'string'],
+//                                                    'is_recommended' => ['type' => 'boolean'],
+//                                                    'recommend_time' => ['type' => 'string'],
+//                                                    'recommend_reason_translated' => ['type' => 'string'],
+//                                                    'recommend_image_url' => ['type' => 'string'],
+//                                                    'recommend_time_gap' => [
+//                                                        'type' => 'object',
+//                                                        'properties' => [
+//                                                            'hours' => ['type' => 'integer'],
+//                                                            'minutes' => ['type' => 'integer']
+//                                                        ],
+//                                                        'required' => ['hours', 'minutes'],
+//                                                        'additionalProperties' => false
+//                                                    ],
                                                     'interval' => ['type' => 'integer']
                                                 ],
                                                 'required' => [
-                                                    'symbol', 'latest_price', 'latest_time', 'time_gap', 'price_movement',
-                                                    'score_movement', 'time_labels', 'analysis_translated', 'is_recommended',
-                                                    'recommend_time', 'recommend_reason_translated', 'recommend_image_url',
-                                                    'recommend_time_gap', 'interval'
+                                                    'symbol', 'latest_price', 'latest_time', 'time_gap', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
                                                 ],
                                                 'additionalProperties' => false
                                             ]
@@ -552,9 +434,9 @@ class MessageProcessingService
                                                         'additionalProperties' => false
                                                     ],
                                                     'image_url' => ['type' => 'string'],
-                                                    'content_translated' => ['type' => 'string']
+                                                    'recommended_reason_translated' => ['type' => 'string']
                                                 ],
-                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'content_translated'],
+                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason_translated'],
                                                 'additionalProperties' => false
                                             ]
                                         ]
@@ -599,9 +481,9 @@ class MessageProcessingService
             $tools = array_values($tools);
             $toolChoice = 'none';
         } elseif (in_array('get_crypto_data', $functionList)) {
-            // Filter tools to include only 'get_crypto_data', 'get_latest_price', 'check_recommendation_status'
+            // Filter tools to include only 'get_crypto_data', 'get_latest_price', 'get_recommendation_status'
             $tools = array_filter($tools, function ($tool) {
-                return in_array($tool['function']['name'], ['get_crypto_data', 'get_latest_price', 'check_recommendation_status']);
+                return in_array($tool['function']['name'], ['get_crypto_data', 'get_latest_price', 'get_recommendation_status']);
             });
             // Reindex the array to ensure it's not associative after filtering
             $tools = array_values($tools);
@@ -643,27 +525,28 @@ class MessageProcessingService
 
             // Append the message
             $messages[] = $responseMessage;
-            Log::info('response message: ', ["responseMessage" => $responseMessage]);
+            //  Log::info('response message: ', ["responseMessage" => $responseMessage]);
             // Recurse logic
             $toolCalls = $responseMessage['tool_calls'] ?? [];
             if (empty($toolCalls)) { // Return final response
-//                Log::info('response content: ', ["responseContent" => $responseMessage['content']]);
+                Log::info("functionList(plain)", ["functionList" => $functionList]);
+                Log::info('response message: ', ["message" => $responseMessage]);
                 return [
                     'responseText' => $responseMessage['content']
                 ];
             } elseif (count($functionList) > 20) { // Stop recursion if functionList length exceeds 12
                 Log::warning('Function list length exceeded 12, stopping recursion.');
                 return [
-                    'responseText' => $responseMessage['content']
+                    'responseMessage' => $responseMessage
                 ];
             } else { // Continue recursion
                 $availableFunctions = [
                     'get_latest_price' => [$this->cryptoService, 'getLatestPrice'],
                     'get_crypto_data' => [$this->cryptoService, 'getCryptoData'],
-//                    'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
+                     // 'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
                     'get_current_time' => [$this->cryptoService, 'getCurrentTime'],
                     'get_recommended_symbols' => [$this->cryptoService, 'getRecommendation'],
-                    'check_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus']
+                    'get_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus']
                 ];
 
                 foreach ($toolCalls as $toolCall) {
@@ -688,7 +571,7 @@ class MessageProcessingService
                         Log::warning("Function name is null in toolCall: ", ["toolCall" => $toolCall]);
                     }
                 }
-                Log::info("functionList: ", ["functionList" => $functionList]);
+                Log::info("functionList(recurse): ", ["functionList" => $functionList]);
                 return $this->sendMessageToOpenAI($messages, $tools, $userId, $functionList);
             }
         } catch (\Exception $e) {
