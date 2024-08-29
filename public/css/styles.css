@@ -175,7 +175,7 @@ body {
     padding: .5rem;
     border-radius: 4px;
     transition: .5s;
-    flex-basis: 450px;
+    flex-basis: 100px;
     flex-grow: 1;
 }
 
@@ -216,7 +216,6 @@ body {
     max-height: 200px;
     border: 0;
     padding: 0;
-    height: auto;
 }
 .send-button-wrapper {
     text-align: right;

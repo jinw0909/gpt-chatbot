@@ -102,7 +102,7 @@
                                 <form id="chat-form" action="{{ route('conversation') }}" method="POST">
                                     @csrf
                                     <div class="message-input-wrapper">
-                                        <textarea id="message-input" name="message" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
+                                        <textarea id="message-input" rows="3" name="message" class="textarea-custom" placeholder="Enter your message here...">{{ old('message', session('inputMessage')) }}</textarea>
                                         <input type="hidden" name="userId" id="user-id" value="1">
                                         <input type="hidden" name="maxUsage" id="max-usage" value="0">
                                     </div>
@@ -290,9 +290,10 @@
 
                     recommendations.forEach(parsed => {
                         console.log("parsed recommendation: ", parsed);
+                        parsed.symbol = parsed.symbol.toUpperCase();
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.textContent = `${parsed.symbol.toUpperCase()}`;
+                        symbolDiv.textContent = `${parsed.symbol}`;
                         symbolDiv.style.fontWeight = 'bold';
 
                         // Create div for datetime
@@ -355,9 +356,9 @@
                             parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                         }
 
-                        question1.textContent = `${parsed.symbol.toUpperCase()} 24시간 스코어 및 가격 분석`;
-                        question2.textContent = `${parsed.symbol.toUpperCase()} 한 달간 스코어 및 가격 분석`;
-                        question3.textContent = `${parsed.symbol.toUpperCase()}에 대해 알려줘`;
+                        question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
+                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
+                        question3.textContent = `${parsed.symbol}에 대해 알려줘`;
 
                         question1.addEventListener('click', function() {
                             executeQuestion(this);
@@ -416,11 +417,12 @@
                 } else if (parsedResponse.data.format_type === 'crypto_analyses') {
                     const symbols = parsedResponse.data.content;
                     symbols.forEach((parsed) => {
-                        console.log("parsed symbol: ", parsed);
+                        console.log("parsed crypto_analysis: ", parsed);
+                        parsed.symbol = parsed.symbol.toUpperCase();
                         const canvas = document.createElement('canvas');
 
                         const symbolDiv = document.createElement('div');
-                        symbolDiv.textContent = parsed.symbol.toUpperCase();
+                        symbolDiv.textContent = parsed.symbol;
 
                         const priceDiv = document.createElement('div');
                         if (parsed.latest_price !== null && !isNaN(parsed.latest_price)) {
