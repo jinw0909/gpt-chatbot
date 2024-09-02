@@ -312,8 +312,9 @@ class CryptoService
     }
 
 
-    public function getRecommendation($limit, $timezone, $already_recommended = []) {
-
+    public function getRecommendation($timezone, $limit = 3, $already_recommended = []) {
+        if ($limit === 0) { $limit = 3; }
+        if ($limit > 10) { $limit = 10; }
         // Normalize each element in the coin_list and remove 'USDT' suffix
         $sanitizedCoinList = array_map(function($coin) {
             $normalizedCoin = $this->normalizeSymbol($coin);
@@ -473,7 +474,7 @@ class CryptoService
                 ->select('simbol as symbol', 'score', 'price', 'regdate')
                 ->get();
 
-            $formattedData = $this->formatDataWithTimezone($data, $symbol, $timezone);
+            $formattedData = $this->formatDataWithTimezone($data, $timezone);
         } else {
 
             // Logic for daily interval (more than 48 hours)
@@ -484,7 +485,7 @@ class CryptoService
                 ->select('simbol as symbol', 'score', 'price', 'regdate')
                 ->get();
 
-            $formattedData = $this->averageAndFormatData($data, $symbol, $timezone);
+            $formattedData = $this->averageAndFormatData($data, $timezone);
         }
 
         // Add the formatted data to the results array

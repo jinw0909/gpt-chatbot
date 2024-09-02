@@ -393,7 +393,7 @@
                     const question2 = document.createElement('p');
                     const question3 = document.createElement('p');
 
-                    question1.textContent = `몇 개만 더 추천 해줘`;
+                    question1.textContent = `다른 코인 추천`;
                     question2.textContent = `추천 리스트 중에서 하나 골라줘`;
                     question3.textContent = `추천 기준이 뭐야?`;
 
