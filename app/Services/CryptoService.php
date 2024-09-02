@@ -71,164 +71,246 @@ class CryptoService
 
         return json_encode(['symbol' => $symbol, 'data' => $data]);
     }
-
-    public function getLatestPrice($symbols, $timezone)
+//
+//    public function getLatestPrice($symbols, $timezone)
+//    {
+//        $results = [];
+//        foreach ($symbols as $symbol) {
+//            $symbol = $this->normalizeSymbol($symbol);
+//            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+//                ->where('simbol', $symbol)
+//                ->orderBy('idx', 'desc')
+//                ->select('simbol as symbol', 'score', 'price', 'regdate as datetime')
+//                ->first();
+//
+//            if ($data) {
+//                $convertedDatetime = $this->convertTimeToTimezone($data->datetime, $timezone);
+//                $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
+//
+//                $results[] = [
+//                    'symbol' => strtoupper($data->symbol),
+//                    'score' => $data->score,
+//                    'price' => $data->price,
+//                    'datetime' => $convertedDatetime,
+//                    'time_gap' => $timeGap
+//                ];
+//            }
+//        }
+//
+//        return json_encode($results);
+//
+//    }
+    public function getLatestPrice(string $symbol, $timezone)
     {
-        $results = [];
-        foreach ($symbols as $symbol) {
-            $symbol = $this->normalizeSymbol($symbol);
-            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-                ->where('simbol', $symbol)
-                ->orderBy('idx', 'desc')
-                ->select('simbol as symbol', 'score', 'price', 'regdate as datetime')
-                ->first();
+        $symbol = $this->normalizeSymbol($symbol);
+        $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+            ->where('simbol', $symbol)
+            ->orderBy('idx', 'desc')
+            ->select('simbol as symbol', 'score', 'price', 'regdate as datetime')
+            ->first();
 
-            if ($data) {
-                $convertedDatetime = $this->convertTimeToTimezone($data->datetime, $timezone);
-                $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
+        $result = null;
 
-                $results[] = [
-                    'symbol' => strtoupper($data->symbol),
-                    'score' => $data->score,
-                    'price' => $data->price,
-                    'datetime' => $convertedDatetime,
-                    'time_gap' => $timeGap
-                ];
-            }
+        if ($data) {
+            $convertedDatetime = $this->convertTimeToTimezone($data->datetime, $timezone);
+            $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
+
+
+
+            $result = [
+                'symbol' => strtoupper($data->symbol),
+                'score' => $data->score,
+                'price' => $data->price,
+                'datetime' => $convertedDatetime,
+                'time_gap' => $timeGap
+            ];
         }
+        Log::info("get latest price result: ", ['result' => $result]);
 
-        return json_encode($results);
-
+        return json_encode($result);
     }
+
 
     public function convertToLocalTime($utc_time, $timezone)
     {
         return $this->convertTimeToTimezone($utc_time, $timezone);
     }
-
-    public function checkRecommendationStatus(array $symbols, $timezone)
+//
+//    public function checkRecommendationStatus(array $symbols, $timezone)
+//    {
+//        $results = [];
+//
+//        foreach ($symbols as $symbol) {
+//            $normalizedSymbol = $this->normalizeSymbol($symbol, false);
+//
+//            // Remove the appended 'USDT' from the symbol if it exists
+//            if (str_ends_with($normalizedSymbol, 'USDT')) {
+//                $normalizedSymbol = substr($normalizedSymbol, 0, -4); // Remove 'USDT' (4 characters)
+//            }
+//
+//            $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
+//            $twelveHoursAgoKST = clone $currentKST;
+//            $twelveHoursAgoKST->modify('-12 hours');
+//            Log::info("current KST: ", ["currentKST" => $currentKST]);
+//            Log::info("12 hours ago KST: ", ["12HoursAgoKST" => $twelveHoursAgoKST]);
+//
+//            // Build the query
+//            $query = DB::connection('mysql2')->table('beuliping')
+//                ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+//                ->where('beuliping.symbol', $normalizedSymbol)
+//                ->whereBetween('beuliping.datetime', [$twelveHoursAgoKST, $currentKST])
+//                ->orderBy('beuliping.id', 'desc')
+//                ->select(
+//                    'beuliping.id',
+//                    'beuliping.symbol',
+//                    DB::raw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime"),
+//                    'beuliping.images',
+//                    'vm_beuliping_EN.content'
+//                );
+//
+//            // Log the raw SQL query
+//            Log::info("SQL Query: ", [
+//                'sql' => $query->toSql(),
+//                'bindings' => $query->getBindings()
+//            ]);
+//
+//            // Execute the query
+//            $result = $query->first();
+//
+//            // Determine if a recommendation was found
+//            $isRecommended = $result ? true : false;
+//
+//            // Initialize recommendTimeGap as null
+//            $recommendTimeGap = null;
+//
+//            // Calculate recommendTime and recommendTimeGap if there is a recommendation
+//            if ($isRecommended) {
+//                $recommendTime = $this->convertTimeToTimezone($result->datetime, $timezone);
+//                $recommendTimeGap = $this->calculateTimeGap($recommendTime, $timezone);
+//            } else {
+//                $recommendTime = null;
+//            }
+//
+//            // Prepare the response for the current symbol
+//            $response = [
+//                'symbol' => $normalizedSymbol . 'USDT',
+//                'is_recommended' => $isRecommended,
+//                'recommend_time' => $recommendTime,
+//                'image_url' => $isRecommended ? $result->images : null,
+//                'recommended_reason' => $isRecommended ? $result->content : null,
+//                'time_gap' => $recommendTimeGap
+//            ];
+//
+//            // Log the result
+//            Log::info("check_recommendation_status result for symbol: ", ["symbol" => $normalizedSymbol, "result" => $response]);
+//
+//            // Add the response to the results array
+//            $results[] = $response;
+//        }
+//
+//        // Return the results array as JSON
+//        return json_encode($results);
+//    }
+    public function checkRecommendationStatus(string $symbol, $timezone)
     {
-        $results = [];
+        $normalizedSymbol = $this->normalizeSymbol($symbol, false);
 
-        foreach ($symbols as $symbol) {
-            $normalizedSymbol = $this->normalizeSymbol($symbol, false);
+        // Remove the appended 'USDT' from the symbol if it exists
+        if (str_ends_with($normalizedSymbol, 'USDT')) {
+            $normalizedSymbol = substr($normalizedSymbol, 0, -4); // Remove 'USDT' (4 characters)
+        }
 
-            // Remove the appended 'USDT' from the symbol if it exists
-            if (str_ends_with($normalizedSymbol, 'USDT')) {
-                $normalizedSymbol = substr($normalizedSymbol, 0, -4); // Remove 'USDT' (4 characters)
-            }
+        $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
+        $twelveHoursAgoKST = clone $currentKST;
+        $twelveHoursAgoKST->modify('-12 hours');
+        Log::info("current KST: ", ["currentKST" => $currentKST]);
+        Log::info("12 hours ago KST: ", ["12HoursAgoKST" => $twelveHoursAgoKST]);
 
-            $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
-            $twelveHoursAgoKST = clone $currentKST;
-            $twelveHoursAgoKST->modify('-12 hours');
-            Log::info("current KST: ", ["currentKST" => $currentKST]);
-            Log::info("12 hours ago KST: ", ["12HoursAgoKST" => $twelveHoursAgoKST]);
+        // Build the query
+        $query = DB::connection('mysql2')->table('beuliping')
+            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+            ->where('beuliping.symbol', $normalizedSymbol)
+            ->whereBetween('beuliping.datetime', [$twelveHoursAgoKST, $currentKST])
+            ->orderBy('beuliping.id', 'desc')
+            ->select(
+                'beuliping.id',
+                'beuliping.symbol',
+                DB::raw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime"),
+                'beuliping.images',
+                'vm_beuliping_EN.content'
+            );
 
-            // Build the query
-            $query = DB::connection('mysql2')->table('beuliping')
-                ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-                ->where('beuliping.symbol', $normalizedSymbol)
-                ->whereBetween('beuliping.datetime', [$twelveHoursAgoKST, $currentKST])
-                ->orderBy('beuliping.id', 'desc')
-                ->select(
-                    'beuliping.id',
-                    'beuliping.symbol',
-                    DB::raw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime"),
-                    'beuliping.images',
-                    'vm_beuliping_EN.content'
-                );
+        // Log the raw SQL query
+        Log::info("SQL Query: ", [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
 
-            // Log the raw SQL query
-            Log::info("SQL Query: ", [
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings()
-            ]);
+        // Execute the query
+        $result = $query->first();
 
-            // Execute the query
-            $result = $query->first();
+        // Determine if a recommendation was found
+        $isRecommended = $result ? true : false;
 
-            // Determine if a recommendation was found
-            $isRecommended = $result ? true : false;
+        // Initialize recommendTimeGap as null
+        $recommendTimeGap = null;
 
-            // Initialize recommendTimeGap as null
-            $recommendTimeGap = null;
+        // Calculate recommendTime and recommendTimeGap if there is a recommendation
+        if ($isRecommended) {
+            $recommendTime = $this->convertTimeToTimezone($result->datetime, $timezone);
+            $recommendTimeGap = $this->calculateTimeGap($recommendTime, $timezone);
+        } else {
+            $recommendTime = null;
+        }
 
-            // Calculate recommendTime and recommendTimeGap if there is a recommendation
-            if ($isRecommended) {
-                $recommendTime = $this->convertTimeToTimezone($result->datetime, $timezone);
-                $recommendTimeGap = $this->calculateTimeGap($recommendTime, $timezone);
-            } else {
-                $recommendTime = null;
-            }
+        // Prepare the response for the current symbol
+        $response = [
+            'symbol' => $normalizedSymbol . 'USDT',
+            'is_recommended' => $isRecommended,
+            'recommend_time' => $recommendTime,
+            'image_url' => $isRecommended ? $result->images : null,
+            'recommended_reason' => $isRecommended ? $result->content : null,
+            'time_gap' => $recommendTimeGap
+        ];
 
-            // Prepare the response for the current symbol
-            $response = [
-                'symbol' => $normalizedSymbol . 'USDT',
-                'is_recommended' => $isRecommended,
-                'recommend_time' => $recommendTime,
-                'image_url' => $isRecommended ? $result->images : null,
-                'recommended_reason' => $isRecommended ? $result->content : null,
-                'time_gap' => $recommendTimeGap
+        // Log the result
+        Log::info("check_recommendation_status result for symbol: ", ["symbol" => $normalizedSymbol, "result" => $response]);
+
+        // Return the result as JSON
+        return json_encode($response);
+    }
+
+    public function analyzeCrypto($symbol, $hours = 24, $timezone = 'UTC')
+    {
+        // Initialize the results array
+        $combinedResults = [];
+
+        // Loop through each symbol and get the data
+
+            $normalizedSymbol = strtoupper($this->normalizeSymbol($symbol));
+
+            // Call each function for the current symbol
+            $latestPriceData = json_decode($this->getLatestPrice($symbol, $timezone), true);
+            $cryptoData = json_decode($this->getCryptoData($symbol, $hours, $timezone), true);
+            $recommendationStatus = json_decode($this->checkRecommendationStatus($symbol, $timezone), true);
+
+            // Combine the results for the current symbol
+            $symbolResult = [
+                'symbol' => $normalizedSymbol,
+                'symbol_data' => $latestPriceData,
+                'crypto_data' => $cryptoData,
+                'recommendation_status' => $recommendationStatus,
+                'interval' => $hours
             ];
 
-            // Log the result
-            Log::info("check_recommendation_status result for symbol: ", ["symbol" => $normalizedSymbol, "result" => $response]);
+            // Add the result for the current symbol to the combined results array
+            $combinedResults[] = $symbolResult;
 
-            // Add the response to the results array
-            $results[] = $response;
-        }
 
-        // Return the results array as JSON
-        return json_encode($results);
+        // Return the combined results as JSON
+        return json_encode($combinedResults);
     }
 
-
-    public function getRecommendations($limit, $timezone)
-    {
-        $totalResults = collect();
-        $initialQueryLimit = $limit * 2;
-        $offset = 0;
-        $selectedSymbols = [];
-
-        $timezoneObj = $this->getTimezoneObject($timezone);
-
-        while ($totalResults->count() < $limit) {
-            $initialResults = DB::connection('mysql2')->table('beuliping')
-                ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-                ->orderBy('beuliping.id', 'desc')
-                ->offset($offset)
-                ->limit($initialQueryLimit)
-                ->select('beuliping.id', 'beuliping.symbol', 'beuliping.images', 'vm_beuliping_EN.content', DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate'))
-                ->get();
-
-            $filteredResults = $initialResults->filter(function($item) use ($selectedSymbols) {
-                return $item->symbol !== '1000BONK' && !str_starts_with($item->content, 'No') && !is_null($item->images) && !in_array($item->symbol, $selectedSymbols);
-            });
-
-            $formattedResults = $filteredResults->map(function($item) use ($timezone, $timezoneObj, &$selectedSymbols) {
-                $dateTime = new DateTime($item->datetime, new DateTimeZone('UTC'));
-                $dateTime->setTimezone($timezoneObj);
-                $item->datetime = $dateTime->format('Y-m-d\TH:i:sP');
-                //calculate the time gap
-                $item->timeGap = $this->calculateTimeGap($item->datetime, $timezone);
-                $selectedSymbols[] = $item->symbol;
-                return $item;
-            });
-
-            $totalResults = $totalResults->merge($formattedResults);
-
-            if ($initialResults->count() < $initialQueryLimit) {
-                break;
-            }
-
-            $offset += $initialQueryLimit;
-        }
-
-        $result = json_encode($totalResults->take($limit)->values());
-        Log::info("Recommendations", ["recommendations" => $result]);
-
-        return $result;
-    }
 
     public function getRecommendation($limit, $timezone, $already_recommended = []) {
 
@@ -295,7 +377,7 @@ class CryptoService
                 && !is_null($item->image_url)
                 && !in_array($item->symbol, $coin_list)
                 && stripos($item->recommended_reason, 'no') !== 0
-                && stripos($item->recommended_reason, 'there are no') === false;
+                && stripos($item->recommended_reason, 'there') === false;
         });
 
         // Add new results to the accumulated results
@@ -317,10 +399,60 @@ class CryptoService
     }
 
 
-
-    public function getCryptoData(array $symbols, $hours = 24, $timezone = 'UTC')
+//
+//    public function getCryptoData(array $symbols, $hours = 24, $timezone = 'UTC')
+//    {
+//        $results = [];
+//
+//        $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
+//        $startDateTime = clone $currentDateTime;
+//        $startDateTime->modify('-' . $hours . ' hours');
+//
+//        $startTimeFormatted = $startDateTime->format('Y-m-d H:i:s');
+//        $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
+//        Log::info("start and end: ", ["start" => $startTimeFormatted, "end" => $endTimeFormatted]);
+//
+//        foreach ($symbols as $symbol) {
+//            $symbol = $this->normalizeSymbol($symbol);
+//
+//            if ($hours <= 48) {
+//                // Logic for hourly interval
+//                if ($hours == 1) {
+//                    $hours = 24;
+//                }
+//                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+//                    ->where('simbol', $symbol)
+//                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+//                    ->orderBy('regdate')
+//                    ->select('simbol as symbol', 'score', 'price', 'regdate')
+//                    ->get();
+//
+//                $formattedData = $this->formatDataWithTimezone($data, $symbol, $timezone);
+//            } else {
+//                if ($hours > 720) { $hours = 720; }
+//                // Logic for daily interval (more than 48 hours)
+//                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+//                    ->where('simbol', $symbol)
+//                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+//                    ->orderBy('regdate')
+//                    ->select('simbol as symbol', 'score', 'price', 'regdate')
+//                    ->get();
+//
+//                $formattedData = $this->averageAndFormatData($data, $symbol, $timezone);
+//            }
+//
+//            // Add the formatted data to the results array
+//            $results[$symbol] = $formattedData;
+//        }
+//
+//        Log::info("get_crypto_data results: ", ["results" => $results]);
+//
+//        return json_encode($results);
+//    }
+    public function getCryptoData(string $symbol, $hours = 24, $timezone = 'UTC')
     {
-        $results = [];
+        if ($hours < 2) { $hours = 24; }
+        if ($hours > 720) { $hours = 720; }
 
         $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));
         $startDateTime = clone $currentDateTime;
@@ -330,44 +462,33 @@ class CryptoService
         $endTimeFormatted = $currentDateTime->format('Y-m-d H:i:s');
         Log::info("start and end: ", ["start" => $startTimeFormatted, "end" => $endTimeFormatted]);
 
-        foreach ($symbols as $symbol) {
-            $symbol = $this->normalizeSymbol($symbol);
+        $symbol = $this->normalizeSymbol($symbol);
 
-            if ($hours <= 48) {
-                // Logic for hourly interval
-                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-                    ->where('simbol', $symbol)
-                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-                    ->orderBy('regdate')
-                    ->select('simbol as symbol', 'score', 'price', 'regdate')
-                    ->get();
+        if ($hours <= 48) {
+            // Logic for hourly interval
+            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+                ->where('simbol', $symbol)
+                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+                ->orderBy('regdate')
+                ->select('simbol as symbol', 'score', 'price', 'regdate')
+                ->get();
 
-                $formattedData = $this->formatDataWithTimezone($data, $symbol, $timezone);
-            } else {
-                if ($hours > 720) { $hours = 720; }
-                // Logic for daily interval (more than 48 hours)
-                $data = DB::connection('mysql')->table('trsi.retri_chart_data')
-                    ->where('simbol', $symbol)
-                    ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
-                    ->orderBy('regdate')
-                    ->select('simbol as symbol', 'score', 'price', 'regdate')
-                    ->get();
+            $formattedData = $this->formatDataWithTimezone($data, $symbol, $timezone);
+        } else {
 
-                $formattedData = $this->averageAndFormatData($data, $symbol, $timezone);
-            }
+            // Logic for daily interval (more than 48 hours)
+            $data = DB::connection('mysql')->table('trsi.retri_chart_data')
+                ->where('simbol', $symbol)
+                ->whereBetween('regdate', [$startTimeFormatted, $endTimeFormatted])
+                ->orderBy('regdate')
+                ->select('simbol as symbol', 'score', 'price', 'regdate')
+                ->get();
 
-            // Add the formatted data to the results array
-            $results[$symbol] = $formattedData;
+            $formattedData = $this->averageAndFormatData($data, $symbol, $timezone);
         }
 
-        Log::info("get_crypto_data results: ", ["results" => $results]);
-
-        return json_encode($results);
-    }
-
-    public function subtractHoursFromTime($time, $hours)
-    {
-        return $this->subtractHours($time, $hours);
+        // Add the formatted data to the results array
+        return $formattedData;
     }
 
     // Private helper functions
@@ -441,7 +562,7 @@ class CryptoService
         return $dateTime->format('Y-m-d\TH:i:s\Z');
     }
 
-    private function formatDataWithTimezone($data, $symbol, $timezone)
+    private function formatDataWithTimezone($data, $timezone)
     {
         $timezoneObj = $this->getTimezoneObject($timezone);
         $resultData = [];
@@ -455,35 +576,100 @@ class CryptoService
                 'datetime' => $regDate->format('Y-m-d\TH:i:sP'),
             ];
         }
-//        Log::info("format data with timezone", ["symboldata" => $resultData, "symbol" => $symbol]);
-//        return json_encode(['symbol' => $symbol, 'data' => $resultData]);
+        Log::info("hourlySymbolData", ["symboldata" => $resultData]);
         return json_encode($resultData);
     }
 
-    private function averageAndFormatData($data, $symbol, $timezone)
+//    private function averageAndFormatData($data, $symbol, $timezone)
+//    {
+////        $timezoneObj = $this->getTimezoneObject($timezone);
+////        $averagedData = [];
+////        $chunk = [];
+////        foreach ($data as $key => $item) {
+////            $chunk[] = $item;
+////            if (count($chunk) == 24 || $key == $data->count() - 1) {
+////                $avgPrice = round(collect($chunk)->avg('price'), 4);
+////                $avgScore = round(collect($chunk)->avg('score'), 4);
+////                $lastDate = new DateTime(end($chunk)->regdate, new DateTimeZone('UTC'));
+////                $lastDate->setTimezone($timezoneObj);
+////                $averagedData[] = [
+////                    'symbol' => $symbol,
+////                    'average_price' => $avgPrice,
+////                    'average_score' => $avgScore,
+////                    'datetime' => $lastDate->format('Y-m-d\TH:i:sP'),
+////                ];
+////                $chunk = [];
+////            }
+////        }
+////        Log::info("Averaged symbol data", ["symboldata" => $averagedData, "symbol" => $symbol]);
+////        return ['symbol' => $symbol, 'data' => $averagedData];
+//        // Check if the data is not empty
+//        if ($data->isEmpty()) {
+//            return ['symbol' => $symbol, 'data' => []]; // Return an empty array if no data is present
+//        }
+//
+//        // Get the last element from the data
+//        $lastItem = $data->last();
+//
+//        // Convert the datetime to the desired timezone
+//        $timezoneObj = $this->getTimezoneObject($timezone);
+//        $dateTime = new DateTime($lastItem->regdate, new DateTimeZone('UTC'));
+//        $dateTime->setTimezone($timezoneObj);
+//
+//        // Format the result with the last element's data
+//        $formattedData = [
+//            [
+//                'symbol' => $symbol,
+//                'price' => $lastItem->price,
+//                'score' => $lastItem->score,
+//                'datetime' => $dateTime->format('Y-m-d\TH:i:sP'),
+//            ]
+//        ];
+//
+//        // Log the last element's data
+//        Log::info("Last element symbol data", ["symboldata" => $formattedData, "symbol" => $symbol]);
+//
+//        // Return the result as an array
+//        return ['symbol' => $symbol, 'data' => $formattedData];
+//    }
+    private function averageAndFormatData($data, $timezone)
     {
-        $timezoneObj = $this->getTimezoneObject($timezone);
-        $averagedData = [];
-        $chunk = [];
-        foreach ($data as $key => $item) {
-            $chunk[] = $item;
-            if (count($chunk) == 24 || $key == $data->count() - 1) {
-                $avgPrice = round(collect($chunk)->avg('price'), 4);
-                $avgScore = round(collect($chunk)->avg('score'), 4);
-                $lastDate = new DateTime(end($chunk)->regdate, new DateTimeZone('UTC'));
-                $lastDate->setTimezone($timezoneObj);
-                $averagedData[] = [
-                    'symbol' => $symbol,
-                    'average_price' => $avgPrice,
-                    'average_score' => $avgScore,
-                    'datetime' => $lastDate->format('Y-m-d\TH:i:sP'),
-                ];
-                $chunk = [];
-            }
+        // Check if the collection is not empty
+        if ($data->isEmpty()) {
+            return json_encode([]); // Return an empty array if no data is present
         }
-        Log::info("Averaged symbol data", ["symboldata" => $averagedData, "symbol" => $symbol]);
-        return ['symbol' => $symbol, 'data' => $averagedData];
+
+        // Initialize variables
+        $formattedData = [];
+        $timezoneObj = $this->getTimezoneObject($timezone);
+        $chunkSize = 24;
+
+        // Process data in chunks of 24 using the collection's chunk method
+        $data->chunk($chunkSize)->each(function ($chunk) use (&$formattedData, $timezoneObj) {
+            // Get the last element of the chunk
+            $lastItem = $chunk->last();
+
+            // Convert the datetime of the last element to the desired timezone
+            $dateTime = new DateTime($lastItem->regdate, new DateTimeZone('UTC'));
+            $dateTime->setTimezone($timezoneObj);
+
+            // Format the chunk data
+            $formattedData[] = [
+                'symbol' => $lastItem->symbol,
+                'score' => $lastItem->score,
+                'price' => $lastItem->price,
+                'datetime' => $dateTime->format('Y-m-d\TH:i:sP'),
+            ];
+        });
+
+        // Log the formatted symbol data
+        Log::info("Formatted symbol data", ["dailySymboldata" => $formattedData]);
+
+        // Return the result as an array
+        return json_encode($formattedData);
     }
+
+
 
     private function calculateTimeGap($recommendTime, $timezone)
     {

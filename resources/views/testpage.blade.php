@@ -425,23 +425,23 @@
                         symbolDiv.textContent = parsed.symbol;
 
                         const priceDiv = document.createElement('div');
-                        if (parsed.latest_price !== null && !isNaN(parsed.latest_price)) {
-                            priceDiv.textContent = `$${Number(parsed.latest_price).toLocaleString()}`;
+                        if (parsed.symbol_price !== null && !isNaN(parsed.symbol_data.symbol_price)) {
+                            priceDiv.textContent = `$${Number(parsed.symbol_data.symbol_price).toLocaleString()}`;
                         } else {
                             priceDiv.textContent = '$0'; // or any default text you want to show when the price is null
                         }
 
                         const timeDiv = document.createElement('div');
-                        timeDiv.textContent = parsed.latest_time;
+                        timeDiv.textContent = parsed.symbol_data.record_time;
 
                         const gapDiv = document.createElement('div');
 
                         let timeGapText = '';
-                        if (parsed.time_gap.hours) {
-                            timeGapText += `${parsed.time_gap.hours} ${parsed.time_gap.hours === 1 ? 'hour' : 'hours'} `;
+                        if (parsed.symbol_data.time_gap.hours) {
+                            timeGapText += `${parsed.symbol_data.time_gap.hours} ${parsed.symbol_data.time_gap.hours === 1 ? 'hour' : 'hours'} `;
                         }
-                        if (parsed.time_gap.minutes) {
-                            timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
+                        if (parsed.symbol_data.time_gap.minutes) {
+                            timeGapText += `${parsed.symbol_data.time_gap.minutes} ${parsed.symbol_data.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                         }
                         if (timeGapText) {
                             timeGapText += 'ago';
@@ -481,7 +481,7 @@
                             closeBtn.classList.add('recommend-btn');
                             const recommendDiv = document.createElement('div');
                             const recommendTimeDiv = document.createElement('div');
-                            recommendTimeDiv.textContent = status.recommended_time;
+                            recommendTimeDiv.textContent = status.recommended_datetime;
                             const recommendImageDiv = document.createElement('img');
                             recommendImageDiv.src = status.image_url;
                             recommendImageDiv.style.width = '100%';
