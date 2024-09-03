@@ -115,8 +115,6 @@ class CryptoService
             $convertedDatetime = $this->convertTimeToTimezone($data->datetime, $timezone);
             $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
 
-
-
             $result = [
                 'symbol' => strtoupper($data->symbol),
                 'score' => $data->score,
@@ -335,69 +333,12 @@ class CryptoService
             return $item;
         });
 
-        Log::info("after conversion: ", ["after" => $result]);
+        $jsonResult = json_encode($result);
+        Log::info($jsonResult);
 
-        return json_encode($result);
+        return $jsonResult;
     }
-//    private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
-//    {
-//        // Initialize the accumulated results if not already initialized
-//        if ($accumulatedResults === null) {
-//            $accumulatedResults = collect();
-//        }
-//
-//        // Base case 1: If the limit is reached or no more rows to query, return the accumulated results
-//        if ($limit <= 0) {
-//            return $accumulatedResults;
-//        }
-//
-//        // Query 7 rows from the database starting from the given offset
-//        $queryResults = DB::connection('mysql2')->table('beuliping')
-//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-//            ->orderBy('beuliping.id', 'desc')
-//            ->offset($offset)
-//            ->limit(100)
-//            ->select(
-//                'beuliping.id',
-//                'beuliping.symbol',
-//                'beuliping.images as image_url',
-//                'vm_beuliping_EN.content as recommended_reason',
-//                DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
-//            )
-//            ->get();
-//
-//        // Base case 2: If there are no more rows to query, return the accumulated results
-//        if ($queryResults->isEmpty()) {
-//            return $accumulatedResults;
-//        }
-//
-//        // Filter out coins that are already in the coin list
-//        $newResults = $queryResults->filter(function ($item) use ($coin_list) {
-//            return $item->symbol !== '1000BONK'
-//                && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
-//                && !is_null($item->image_url)
-//                && !in_array($item->symbol, $coin_list)
-//                && stripos($item->recommended_reason, 'no') !== 0
-//                && stripos($item->recommended_reason, 'there') === false;
-//        });
-//
-//        // Add new results to the accumulated results
-//        $accumulatedResults = $accumulatedResults->merge($newResults);
-//
-//        // Update the coin list with new symbols
-//        $newCoinList = array_merge($coin_list, $newResults->pluck('symbol')->toArray());
-//
-//        // Calculate the remaining limit after adding the new results
-//        $remainingLimit = $limit - $newResults->count();
-//
-//        // Base case 3: If we have reached the limit or there is no remaining limit, return the accumulated results
-//        if ($remainingLimit <= 0) {
-//            return $accumulatedResults;
-//        } else {
-//            // Recursive call logic if we still need more results
-//            return $this->getRecommendationsRecursive($remainingLimit, $newCoinList, $offset + 100, $accumulatedResults);
-//        }
-//    }
+
     private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
     {
         // Initialize the accumulated results if not already initialized
@@ -417,7 +358,6 @@ class CryptoService
             ->offset($offset)
             ->limit(10)
             ->select(
-                'beuliping.id',
                 'beuliping.symbol',
                 'beuliping.images as image_url',
                 'vm_beuliping_EN.content as recommended_reason',
@@ -434,6 +374,7 @@ class CryptoService
         $newResults = $queryResults->filter(function ($item) use ($coin_list) {
             return $item->symbol !== '1000BONK'
                 && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
+                && $item->symbol !== 'BANANA' // Exclude symbol 'BANANA'
                 && !is_null($item->image_url)
                 && !in_array($item->symbol, $coin_list)
                 && stripos($item->recommended_reason, 'no') !== 0

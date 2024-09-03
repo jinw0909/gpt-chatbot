@@ -61,7 +61,7 @@
                         <div class="chat-box-header">
                             <h3 class="chat-box-title">
                                 <i></i>
-                                Goya Chat AI
+                                <a href="/test">Goya Chat AI</a>
                             </h3>
                             <div class="charge-wrapper">
                                 <div class="remaining">Remaining 0</div>
@@ -220,6 +220,8 @@
         inputOpen.style.display = 'block';
     });
 
+    let recommendedSymbols = [];
+
     //function to send message
     let sendMessage = async (custom) => {
 
@@ -231,6 +233,7 @@
         let message = messageInput.value;
         let userId = userIdInput.value;
         let maxUsage = maxUsageInput.value;
+        let flattenedSymbols = recommendedSymbols.flat();
 
         if (!custom) {
             // Clear the input field
@@ -276,7 +279,8 @@
                     message: message,
                     userId: userId,
                     maxUsage: maxUsage,
-                    conversation: conversation
+                    conversation: conversation,
+                    recommended: flattenedSymbols
                 })
             });
 
@@ -285,12 +289,13 @@
                 const data = await response.json();
                 const parsedResponse = JSON.parse(data.responseText);
 
-                if (parsedResponse.data.format_type === 'recommendations') {
+                if (parsedResponse.data.format_type === 'crypto_recommendations') {
                     const recommendations = parsedResponse.data.content;
-
+                    const symbols = [];
                     recommendations.forEach(parsed => {
                         console.log("parsed recommendation: ", parsed);
                         parsed.symbol = parsed.symbol.toUpperCase();
+                        symbols.push(parsed.symbol);
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
                         symbolDiv.textContent = `${parsed.symbol}`;
@@ -381,6 +386,9 @@
                         chatBox.appendChild(queryDiv);
                     });
 
+                    recommendedSymbols.push(symbols);
+                    console.log("recommendedSymbols: ", recommendedSymbols);
+
                     //create query options
                     const queryDiv = document.createElement('div');
                     queryDiv.classList.add('message', 'right');
@@ -416,6 +424,7 @@
                     chatBox.appendChild(queryDiv);
                 } else if (parsedResponse.data.format_type === 'crypto_analyses') {
                     const symbols = parsedResponse.data.content;
+                    recommendedSymbols.shift();
                     symbols.forEach((parsed) => {
                         console.log("parsed crypto_analysis: ", parsed);
                         parsed.symbol = parsed.symbol.toUpperCase();
@@ -607,15 +616,18 @@
                     role: "user",
                     content: message
                 };
-                conversation.push(userMessage);
 
-                // Create the assistant message object
-                const assistantMessage = {
-                    role: "assistant",
-                    content: data.responseText
-                };
-                conversation.push(assistantMessage);
-                console.log("conversation: ", conversation);
+                if (!data.functionCall) {
+                    conversation.push(userMessage);
+
+                    // Create the assistant message object
+                    const assistantMessage = {
+                        role: "assistant",
+                        content: data.responseText
+                    };
+                    conversation.push(assistantMessage);
+                    console.log("conversation: ", conversation);
+                }
 
                 //finally set the maxUsage input value
                 // Convert to a number, default to 0 if conversion results in NaN
