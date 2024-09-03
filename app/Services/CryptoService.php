@@ -339,6 +339,65 @@ class CryptoService
 
         return json_encode($result);
     }
+//    private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
+//    {
+//        // Initialize the accumulated results if not already initialized
+//        if ($accumulatedResults === null) {
+//            $accumulatedResults = collect();
+//        }
+//
+//        // Base case 1: If the limit is reached or no more rows to query, return the accumulated results
+//        if ($limit <= 0) {
+//            return $accumulatedResults;
+//        }
+//
+//        // Query 7 rows from the database starting from the given offset
+//        $queryResults = DB::connection('mysql2')->table('beuliping')
+//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+//            ->orderBy('beuliping.id', 'desc')
+//            ->offset($offset)
+//            ->limit(100)
+//            ->select(
+//                'beuliping.id',
+//                'beuliping.symbol',
+//                'beuliping.images as image_url',
+//                'vm_beuliping_EN.content as recommended_reason',
+//                DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
+//            )
+//            ->get();
+//
+//        // Base case 2: If there are no more rows to query, return the accumulated results
+//        if ($queryResults->isEmpty()) {
+//            return $accumulatedResults;
+//        }
+//
+//        // Filter out coins that are already in the coin list
+//        $newResults = $queryResults->filter(function ($item) use ($coin_list) {
+//            return $item->symbol !== '1000BONK'
+//                && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
+//                && !is_null($item->image_url)
+//                && !in_array($item->symbol, $coin_list)
+//                && stripos($item->recommended_reason, 'no') !== 0
+//                && stripos($item->recommended_reason, 'there') === false;
+//        });
+//
+//        // Add new results to the accumulated results
+//        $accumulatedResults = $accumulatedResults->merge($newResults);
+//
+//        // Update the coin list with new symbols
+//        $newCoinList = array_merge($coin_list, $newResults->pluck('symbol')->toArray());
+//
+//        // Calculate the remaining limit after adding the new results
+//        $remainingLimit = $limit - $newResults->count();
+//
+//        // Base case 3: If we have reached the limit or there is no remaining limit, return the accumulated results
+//        if ($remainingLimit <= 0) {
+//            return $accumulatedResults;
+//        } else {
+//            // Recursive call logic if we still need more results
+//            return $this->getRecommendationsRecursive($remainingLimit, $newCoinList, $offset + 100, $accumulatedResults);
+//        }
+//    }
     private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
     {
         // Initialize the accumulated results if not already initialized
@@ -346,17 +405,17 @@ class CryptoService
             $accumulatedResults = collect();
         }
 
-        // Base case 1: If the limit is reached or no more rows to query, return the accumulated results
-        if ($limit <= 0) {
-            return $accumulatedResults;
+        // Base case: If the accumulated results have reached the limit, return them
+        if ($accumulatedResults->count() >= $limit) {
+            return $accumulatedResults->take($limit);
         }
 
-        // Query 7 rows from the database starting from the given offset
+        // Query 100 rows from the database starting from the given offset
         $queryResults = DB::connection('mysql2')->table('beuliping')
             ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
             ->orderBy('beuliping.id', 'desc')
             ->offset($offset)
-            ->limit(7)
+            ->limit(10)
             ->select(
                 'beuliping.id',
                 'beuliping.symbol',
@@ -366,12 +425,12 @@ class CryptoService
             )
             ->get();
 
-        // Base case 2: If there are no more rows to query, return the accumulated results
+        // Base case: If there are no more rows to query, return the accumulated results
         if ($queryResults->isEmpty()) {
-            return $accumulatedResults;
+            return $accumulatedResults->take($limit); // Return what we have so far up to the limit
         }
 
-        // Filter out coins that are already in the coin list
+        // Filter out coins that are already in the coin list and meet the criteria
         $newResults = $queryResults->filter(function ($item) use ($coin_list) {
             return $item->symbol !== '1000BONK'
                 && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
@@ -387,17 +446,10 @@ class CryptoService
         // Update the coin list with new symbols
         $newCoinList = array_merge($coin_list, $newResults->pluck('symbol')->toArray());
 
-        // Calculate the remaining limit after adding the new results
-        $remainingLimit = $limit - $newResults->count();
-
-        // Base case 3: If we have reached the limit or there is no remaining limit, return the accumulated results
-        if ($remainingLimit <= 0) {
-            return $accumulatedResults;
-        } else {
-            // Recursive call logic if we still need more results
-            return $this->getRecommendationsRecursive($remainingLimit, $newCoinList, $offset + 7, $accumulatedResults);
-        }
+        // Recursive call logic to keep fetching more results until we have enough
+        return $this->getRecommendationsRecursive($limit, $newCoinList, $offset + 10, $accumulatedResults);
     }
+
 
 
 //
@@ -452,7 +504,7 @@ class CryptoService
 //    }
     public function getCryptoData(string $symbol, $hours = 24, $timezone = 'UTC')
     {
-        if ($hours < 2) { $hours = 24; }
+        if ($hours < 12) { $hours = 24; }
         if ($hours > 720) { $hours = 720; }
 
         $currentDateTime = new DateTime('now', new DateTimeZone('UTC'));

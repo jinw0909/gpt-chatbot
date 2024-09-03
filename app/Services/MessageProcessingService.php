@@ -52,15 +52,11 @@ class MessageProcessingService
         return [
             [
                 'role' => 'system',
-                'content' => 'You are a crypto market specialist who can deliberately transfer your analysis on more than 200 crypto symbols, utilizing various indicators such as market price, Goya score (indicator to predict the price movement of the symbol), and the crypto recommendation list that changes every hour. If you need to analyze crypto symbols, you can call the function "analyze_crypto" to get all the required data to create the analysis. If you need to recommend cryptos to users you can call the function "get_recommended_cryptos" to return the currently recommended cryptos. Many of following system messages define how you can generate and format your response on some typical user inquiries. '
+                'content' => 'You are a crypto market specialist who can deliberately transfer your analysis on more than 200 crypto symbols, utilizing various indicators such as market price, Goya score (indicator to predict the price movement of the symbol), and the crypto recommendation list that changes every hour. If you need to analyze crypto symbols, you should ALWAYS call the function "analyze_crypto" to get all the required data to create the analysis. If you need to recommend cryptos to users you MUST ALWAYS make the tool call "get_recommended_cryptos".'
             ],
             [
                 'role' => 'system',
-                'content' => "If you cannot infer the locale of the user from the language, then use 'KST' as the default local timezone of the user."
-            ],
-            [
-                'role' => 'system',
-                'content' => "By default the language of your response assistant message should match the language of the last user message. "
+                'content' => "If you cannot infer the locale of the user from the language, then use 'KST' and Korean as the default local timezone and the language of the user."
             ],
             [
                 'role' => 'system',
@@ -87,7 +83,7 @@ class MessageProcessingService
 //            ],
             [
                 'role' => 'system',
-                'content' => 'WHENEVER a cryptocurrency recommendation needs to be made to the user, never recommend a cryptocurrency based on internal criteria and ALWAYS call the function "get_recommended_cryptos", and recommend only the cryptocurrencies returned by this function. Check the conversation history and include the previously recommended coins as the "previously_recommended" argument. '
+                'content' => 'WHENEVER the user requests for crypto recommendation, ALWAYS make a function call "get_recommended_cryptos", and respond only with the cryptocurrencies returned by this function. DO NOT HALLUCINATE the recommendation result.'
             ],
 //            [
 //              'role' => 'system',
@@ -152,7 +148,7 @@ class MessageProcessingService
                             ],
                             'hours' => [
                                 'type' => 'number',
-                                'description' => 'The number of hours ago from the current time from when the price and score data will be retrieved.'
+                                'description' => 'The number of hours ago from the current time from when the price and score data will be retrieved. If you cannot infer the value from the user message use 24 as a default value. '
                             ],
                             'timezone' => [
                                 'type' => 'string',
@@ -241,7 +237,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_recommended_cryptos',
-                    'description' => "Get the current recommendation data."
+                    'description' => "This function returns the currently recommended crypto symbols and its recommended reason given the limit."
                         . "Returns a JSON-encoded array of recommended cryptocurrencies and their recommendation data. The 'datetime' is the time when the recommendation was made. ",
                     'strict' => true,
                     'parameters' => [
@@ -260,9 +256,9 @@ class MessageProcessingService
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'string',
-                                    'description' => 'The symbol of cryptocurrency already recommended previously (e.g., btc, eth, sol, ...)'
+                                    'description' => 'The symbol of cryptocurrency already recommended previously.'
                                 ],
-                                'description' => 'The list of cryptocurrency symbols that has been recommended consecutively. Used to filter the recommendation result when the user consecutively asks for crypto recommendation.'
+                                'description' => 'The list of cryptocurrency symbols that has been previously recommended. You can freely create this list by checking the previous conversation history and the user message. '
                             ]
                         ],
                         'required' => ['limit', 'timezone', 'previously_recommended'],
@@ -511,29 +507,33 @@ class MessageProcessingService
 
             // Limit additional function calls for functions with final shape
             // Determine if specific functions are present in the functionList
+//            if (in_array('get_recommended_cryptos', $functionList)) {
+//                // Filter tools to only include those with function.name 'get_recommended_symbols'
+//                $tools = array_values(array_filter($tools, function ($tool) {
+//                    return isset($tool['function']['name']) && $tool['function']['name'] === 'get_recommended_cryptos';
+//                }));
+//            } elseif (in_array('analyze_crypto', $functionList)) {
+//                // Filter tools to only include those with function.name 'analyze_crypto'
+//                $tools = array_values(array_filter($tools, function ($tool) {
+//                    return isset($tool['function']['name']) && $tool['function']['name'] === 'analyze_crypto';
+//                }));
+//            }
+            $toolChoice = 'auto';
             if (in_array('get_recommended_cryptos', $functionList)) {
-                // Filter tools to only include those with function.name 'get_recommended_symbols'
-                $tools = array_values(array_filter($tools, function ($tool) {
-                    return isset($tool['function']['name']) && $tool['function']['name'] === 'get_recommended_cryptos';
-                }));
-            } elseif (in_array('analyze_crypto', $functionList)) {
-                // Filter tools to only include those with function.name 'analyze_crypto'
-                $tools = array_values(array_filter($tools, function ($tool) {
-                    return isset($tool['function']['name']) && $tool['function']['name'] === 'analyze_crypto';
-                }));
+                $toolChoice = 'none';
             }
 
             // Ensure tools is an array of objects
-            if (!is_array($tools)) {
-                $tools = [];
-            }
+//            if (!is_array($tools)) {
+//                $tools = [];
+//            }
 
             $response = OpenAI::chat()->create([
 //                'model' => 'gpt-4o-2024-08-06',
                 'model' => 'gpt-4o-mini',
                 'messages' => $messages,
                 'tools' => $tools,
-                'tool_choice' => 'auto',
+                'tool_choice' => $toolChoice,
 //                'response_format' => ['type' => 'json_object'],
                 'response_format' => $responseFormat,
                 'parallel_tool_calls' => false
