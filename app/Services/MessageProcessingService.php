@@ -126,11 +126,11 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving any inquiry related to the prospect or the viewpoint of the cryptocurrency market, call the function "show_viewpoint" and respond in a format_type of "articles". The "language" value of the response should represent the language of the user. '
+                'content' => 'If the user asks for the prospect or the viewpoint of the cryptocurrency market, call the function "show_viewpoint" and respond in a format_type of "articles". The "language" value of the response should represent the language of the user. '
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving any kind of request from the user provide articles or news related to cryptocurrency, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then return in the format_type of "commons". '
+                'content' => 'Upon receiving request from the user to provide articles or news related to the cryptocurrency market, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then respond in the format_type of "commons". It is important to check "previously_shown" article ids from the system messages to prevent showing the same article again. '
             ],
 //            [
 //                'role' => 'system',
@@ -156,7 +156,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'If there is no instruction on the response format, then the response format_type should be "commons" and its content should be in plain text not in JSON. '
+                    'the default format_type is "commons" if there are no specific instruction on the response format_type, and the content should be in plain text not in JSON. For example when the user says "hello" your response should be in a format_type of "commons". '
             ],
             [
                 'role' => 'system',
@@ -340,7 +340,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'show_viewpoint',
-                    'description' => 'This function returns the most recent viewpoint towards the current cryptocurrency market given the timezone and the language.',
+                    'description' => 'This function returns the most recent viewpoint towards the current cryptocurrency market given the timezone and the language. Call this function only when the user asks for the viewpoint or the perspectives of the crypto market. ',
                     'strict' => true,
                     'parameters' => [
                         'type' => 'object',
@@ -715,7 +715,7 @@ class MessageProcessingService
                 // Check if the last element in the functionList is 'get_viewpoint'
                 if ($functionCall === 'show_viewpoint') {
                     // Parse the responseMessage['content'] JSON
-                    Log::info("retrieving article from db...");
+                    Log::info("retrieving article from db to complete the viewpoint response...");
                     Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
                     $parsedContent = json_decode($responseMessage['content'], true);
                     Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
@@ -734,7 +734,7 @@ class MessageProcessingService
 
                         // Extract all 'id' values from the parsed content
                         $ids = array_column($parsedContent['data']['content'], 'id');
-                        Log::info('ids: ', ['ids' => $ids]);
+                        Log::info(' column ids: ', ['ids' => $ids]);
 
                         // Run a query to retrieve rows from the db using these ids
                         $rows = DB::connection('mysql3')
@@ -760,8 +760,8 @@ class MessageProcessingService
                     }
                 }
                 // Check if the last element in the functionList is 'show_articles'
-                if (!empty($functionList) && end($functionList) === 'show_articles') {
-                    Log::info("retrieving articles from db...");
+                else if ($functionCall === 'show_articles') {
+                    Log::info("retrieving articles from db to complete the show_articles response...");
                     Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
                     $parsedContent = json_decode($responseMessage['content'], true);
                     Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
@@ -830,6 +830,9 @@ class MessageProcessingService
                     }
                 }
 
+                if ($functionCall === 'none') {
+                    $this->tokenService->setCostToZero($userId);
+                }
                 return [
                     'responseText' => $responseText,
                     'functionCall' => $functionCall
