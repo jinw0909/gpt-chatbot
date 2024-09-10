@@ -250,13 +250,13 @@ class CryptoService
         return json_encode($response);
     }
 
-    public function analyzeCrypto($symbol, $hours = 24, $timezone = 'UTC')
+    public function analyzeCrypto(array $symbols, $hours = 24, $timezone = 'UTC')
     {
         // Initialize the results array
         $combinedResults = [];
 
         // Loop through each symbol and get the data
-
+        foreach ($symbols as $symbol) {
             $normalizedSymbol = strtoupper($this->normalizeSymbol($symbol));
 
             // Call each function for the current symbol
@@ -275,6 +275,7 @@ class CryptoService
 
             // Add the result for the current symbol to the combined results array
             $combinedResults[] = $symbolResult;
+        }
 
         // Return the combined results as JSON
         return json_encode($combinedResults);
@@ -365,7 +366,7 @@ class CryptoService
     private function getRecommendations($limit, $coin_list = [])
     {
         // Define the excluded symbols directly in the SQL query
-        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA'];
+        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS'];
 
         // Get the current UTC time
         $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));

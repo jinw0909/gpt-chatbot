@@ -88,7 +88,7 @@
                                 <div class="message right">
                                     <div class="user">
                                         <span>Chat AI 질문하기</span>
-                                        <p id="question-a" class="question">암호 화폐 추천</p>
+                                        <p id="question-a" class="question">진입하기 좋은 암호 화폐 추천</p>
                                         <p id="question-b" class="question">암호 화폐 시장 동향</p>
                                         <p id="question-c" class="question">고야 스코어란?</p>
                                     </div>
@@ -366,7 +366,7 @@
                             parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                         }
 
-                        question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
+                        question1.textContent = `${parsed.symbol} 스코어 및 가격 분석`;
                         question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
                         question3.textContent = `${parsed.symbol}에 대해 알려줘`;
 
@@ -511,7 +511,7 @@
                                 recommendGapText += `${status.time_gap.minutes} ${status.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                             }
                             if (recommendGapText) {
-                                recommendGapText += 'ago';
+                                recommendGapText += 'ago (Price Signal)';
                             }
 
                             recommendGapDiv.textContent = recommendGapText;
@@ -562,12 +562,12 @@
                         }
 
                         if (parsed.interval > 48) {
-                            question1.textContent = `${parsed.symbol} 24시간 스코어 및 가격 분석`;
+                            question1.textContent = `${parsed.symbol} 스코어 및 가격 분석`;
                         } else {
                             question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
                         }
                         question2.textContent = `${parsed.symbol}에 대해 알려줘`;
-                        question3.textContent = `현재 진입하기 좋은 코인 추천`;
+                        question3.textContent = `진입하기 좋은 암호 화폐 추천`;
 
                         question1.addEventListener('click', function() {
                             executeQuestion(this);
@@ -729,11 +729,11 @@
                         if (parsed.type === 'viewpoint') {
                             question1.textContent = `암화 화폐 관련 주요 뉴스`;
                             question2.textContent = `고야 스코어란?`;
-                            question3.textContent = `암호 화폐 추천`;
+                            question3.textContent = `진입하기 좋은 암호 화폐 추천`;
                         } else if (parsed.type === 'article') {
                             question1.textContent = `다른 주요 암호 화폐 뉴스`;
                             question2.textContent = `비트코인 스코어 및 가격 분석`;
-                            question3.textContent = `암호 화폐 추천`;
+                            question3.textContent = `진입하기 졶은 암호 화폐 추천`;
                         }
 
                         question1.addEventListener('click', function() {

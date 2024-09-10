@@ -61,7 +61,7 @@ class MessageProcessingService
         return [
 //            [
 //                'role' => 'system',
-//                'content' => 'You are a crypto market specialist who can deliberately transfer your analysis on more than 200 crypto symbols, utilizing various indicators such as market price, Goya score (indicator to predict the price movement of the symbol), and the crypto recommendation list that changes every hour. If you need to analyze crypto symbols, you should ALWAYS call the function "analyze_crypto" to get all the required data to create the analysis. If you need to recommend cryptos to users you MUST ALWAYS make the tool call "recommend_cryptos".'
+//                'content' => 'You are a crypto market specialist who can deliberately transfer your analysis on more than 200 crypto symbols, utilizing various indicators such as market price, Goya score (indicator to predict the price movement of the symbol), and the crypto recommendation list that changes every hour. If you need to analyze crypto symbols, you should ALWAYS call the function "analyze_cryptos" to get all the required data to create the analysis. If you need to recommend cryptos to users you MUST ALWAYS make the tool call "recommend_cryptos".'
 //            ],
 //            [
 //                'role' => 'system',
@@ -69,16 +69,16 @@ class MessageProcessingService
 //            ],
             [
                 'role' => 'system',
-                'content' => 'When passing "symbols" parameter to the function "analyze_crypto", MAKE SURE that the last letter of the symbol is not missing or altered. '
+                'content' => 'When passing "symbols" parameter to the function "analyze_cryptos", MAKE SURE that the last letter of the symbol is not missing or altered. '
             ],
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_crypto", pass the given symbol as the argument in order to get all the relevant data to generate response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before passed as an "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
+                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. If you fail to retrieve data of the symbol or fail to generate the response, make response with a format_type of "commons". '
             ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_analyses", you must call the function "analyze_crypto" to complete the response. The last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
+                'content' => 'When your response "format_type" is "crypto_analyses", you must call the function "analyze_cryptos" to complete the response. The last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
             ],
             [
                 'role' => 'system',
@@ -118,7 +118,7 @@ class MessageProcessingService
 //            ],
             [
               'role' => 'system',
-              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_crypto". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analyses". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. '
+              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analyses". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. '
             ],
             [
                 'role' => 'system',
@@ -145,7 +145,7 @@ class MessageProcessingService
 //            ],
             [
                 'role' => 'system',
-                'content' => 'The score values returned when calling the function "analyze_crypto" is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
+                'content' => 'The score values returned when calling the function "analyze_cryptos" is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
                     'When the Goya score is on a downward trend, the price of the cryptocurrency is likely to go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
                     'Goya score is derived from collecting and analyzing objective blockchain transaction activity data of the symbol cryptocurrency focused mainly on the movements that has positive or negative impacts on the price of the cryptocurrency. However, there are many other objective indicators from which the Goya score is derived from. '
             ],
@@ -203,15 +203,19 @@ class MessageProcessingService
             [
                 'type' => 'function',
                 'function' => [
-                    'name' => 'analyze_crypto',
+                    'name' => 'analyze_cryptos',
                     'description' => 'The function to get the overall data of the given cryptocurrency symbol including price data, score data and the recommendation status.',
                     'strict' => false,
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
-                            'symbol' => [
-                                'type' => 'string',
-                                'description' => 'A cryptocurrency symbol to analyze (e.g., btc, eth, xrp, ...).'
+                            'symbols' => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'string',
+                                    'description' => 'Each crypto symbol in the array to analyze (e.g., btc)'
+                                ],
+                                'description' => 'A list cryptocurrency symbols to analyze (e.g., [btc, eth, xrp, ...] ).'
                             ],
                             'hours' => [
                                 'type' => 'number',
@@ -669,7 +673,7 @@ class MessageProcessingService
             $responseFormat = $this->getResponseFormat();
 
             $toolChoice = 'auto';
-            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList)) {
+            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList) || in_array('analyze_cryptoss', $functionList)) {
                 $toolChoice = 'none';
             }
 
@@ -703,7 +707,7 @@ class MessageProcessingService
             if (empty($toolCalls)) { // Return final response
                 Log::info("functionList(plain)", ["functionList" => $functionList]);
                 Log::info('response message: ', ["message" => $responseMessage]);
-                // Check if functionList contains 'analyze_crypto' or 'get_recommended_cryptos'
+                // Check if functionList contains 'analyze_cryptoss' or 'get_recommended_cryptos'
 
                 $functionCall = !empty($functionList) ? end($functionList) : 'none';
 
@@ -838,7 +842,7 @@ class MessageProcessingService
                 ];
             } else { // Continue recursion
                 $availableFunctions = [
-                    'analyze_crypto' => [$this->cryptoService, 'analyzeCrypto'],
+                    'analyze_cryptos' => [$this->cryptoService, 'analyzeCrypto'],
                     'get_symbol_price' => [$this->cryptoService, 'getLatestPrice'],
                     'get_crypto_data' => [$this->cryptoService, 'getCryptoData'],
                      // 'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
