@@ -17,6 +17,7 @@ class CryptoService
         // Create a DateTime object with the current time in the specified timezone
         $dateTime = new DateTime('now', $timezoneObj);
         // Format the time as needed, for example, in 'Y-m-d H:i:s' format
+        Log::info("time", ["time" => $dateTime]);
         return $dateTime->format('Y-m-d H:i:s');
     }
 
@@ -366,7 +367,7 @@ class CryptoService
     private function getRecommendations($limit, $coin_list = [])
     {
         // Define the excluded symbols directly in the SQL query
-        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS'];
+        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS', 'DOGS', 'SUN'];
 
         // Get the current UTC time
         $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));

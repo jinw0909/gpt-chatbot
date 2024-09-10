@@ -304,7 +304,7 @@
                         // Create div for symbol
                         const symbolDiv = document.createElement('div');
                         symbolDiv.textContent = `${parsed.symbol}`;
-                        symbolDiv.style.fontWeight = 'bold';
+                        symbolDiv.style.color = 'aqua';
 
                         // Create div for datetime
                         const datetimeDiv = document.createElement('div');
@@ -438,6 +438,7 @@
 
                         const symbolDiv = document.createElement('div');
                         symbolDiv.textContent = parsed.symbol;
+                        symbolDiv.style.color = 'aqua';
 
                         const priceDiv = document.createElement('div');
                         if (parsed.symbol_price !== null && !isNaN(parsed.symbol_data.symbol_price)) {
@@ -537,7 +538,6 @@
                                closeBtn.style.display = 'none';
                                openBtn.style.display = 'block';
                             });
-
                             assistantDiv.appendChild(recommendComment);
                             assistantDiv.appendChild(recommendDiv);
                             assistantDiv.appendChild(openBtn);
@@ -595,6 +595,7 @@
                     });
                 }
                 else if (parsedResponse.data.format_type === 'articles') {
+                    recommendedSymbols.unshift();
                     const articles = parsedResponse.data.content;
                     articles.forEach(parsed => {
                         console.log("parsed article: ", parsed);
@@ -607,6 +608,7 @@
                         }
 
                         const titleDiv = document.createElement('div');
+                        titleDiv.style.color = 'aqua';
 
                         // Check if the type is "viewpoint"
                         if (parsed.type === 'viewpoint') {
@@ -771,7 +773,7 @@
                     })
 
                 }
-                else if (parsedResponse.data.format_type === 'commons') {
+                else if (parsedResponse.data.format_type === 'default') {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message left';
@@ -810,26 +812,6 @@
                     conversation.push(assistantMessage);
                     console.log("conversation: ", conversation);
                 }
-                // else if (data.functionCall === 'show_articles') {
-                //     conversation.push(userMessage);
-                //     const assistantMessage = {
-                //         role: "assistant",
-                //         content: `Article IDs : ${articleList.join(', ')}`
-                //     }
-                //     conversation.push(assistantMessage);
-                //     console.log("conversation: ", conversation);
-                //     articleList = [];
-                // } else if (data.functionCall === 'show_viewpoint') {
-                //     conversation.push(userMessage);
-                //     const assistantMessage = {
-                //         role: "assistant",
-                //         content : `Viewpoint ID : ${viewpointList.join(', ')}`
-                //     }
-                //     conversation.push(assistantMessage);
-                //     console.log("conversation: ", conversation);
-                //     viewpointList = [];
-                // }
-
                 //finally set the maxUsage input value
                 // Convert to a number, default to 0 if conversion results in NaN
                 maxUsageInput.value = isNaN(Number(data.maxUsage)) ? 0 : Number(data.maxUsage);

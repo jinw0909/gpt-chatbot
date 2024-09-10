@@ -74,7 +74,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. If you fail to retrieve data of the symbol or fail to generate the response, make response with a format_type of "commons". '
+                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. If you fail to retrieve data of the symbol or fail to generate the response, make response with a format_type of "default". '
             ],
             [
                 'role' => 'system',
@@ -82,7 +82,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "commons". '
+                'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
             ],
             [
                 'role' => 'system',
@@ -122,15 +122,16 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then respond in the format_type of "commons". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
+                'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then respond in the format_type of "default". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
             ],
             [
                 'role' => 'system',
-                'content' => 'If the user asks for the prospect or the viewpoint of the cryptocurrency market, call the function "show_viewpoint" and respond in a format_type of "articles". The "language" value of the response should represent the language of the user. '
+                'content' => 'If the user asks for the prospect or the viewpoint of the cryptocurrency market respond in a format_type of "articles".'.
+                    'The "language" value of the response should represent the language of the user. '
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving request from the user to provide articles or news related to the cryptocurrency market, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then respond in the format_type of "commons". It is important to check "previously_shown" article ids from the system messages to prevent showing the same article again. '
+                'content' => 'Upon receiving request from the user to provide articles or news related to the cryptocurrency market, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then respond in the format_type of "default". It is important to check "previously_shown" article ids from the system messages to prevent showing the same article again. '
             ],
 //            [
 //                'role' => 'system',
@@ -156,11 +157,12 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'the default format_type is "commons" if there are no specific instruction on the response format_type, and the content should be in plain text not in JSON. For example when the user says "hello" your response should be in a format_type of "commons". '
+                    'Your default response format_type is "default" when there is no specific instruction on the response format_type, and in this case, the content should be in a plain text format not in JSON. '
             ],
             [
                 'role' => 'system',
-                'content' => 'If the user says "We live in a twilight world", respond with "And there are no friends at dusk". '
+                'content' =>
+                    'If the user greets or simply asks how you are, do not call any functions and respond in a plain text in a format_type of "default". '
             ],
             [
                 'role' => 'system',
@@ -264,7 +266,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_current_time',
-                    'description' => 'The function to get the current local time given the timezone',
+                    'description' => 'The function to get the current local time given the timezone. Call this function only when the user asks for the current time. ',
                     'strict' => true,
                     'parameters' => [
                         'type' => 'object',
@@ -340,7 +342,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'show_viewpoint',
-                    'description' => 'This function returns the most recent viewpoint towards the current cryptocurrency market given the timezone and the language. Call this function only when the user asks for the viewpoint or the perspectives of the crypto market. ',
+                    'description' => 'This function returns the most recent viewpoint towards the current cryptocurrency market given the timezone and the language. Call this function only when the user explicitly asks for the viewpoint or the perspectives related to the crypto market. ',
                     'strict' => true,
                     'parameters' => [
                         'type' => 'object',
@@ -616,13 +618,13 @@ class MessageProcessingService
 
                                 ],
                                 [
-                                    'title' => 'Commons Format',
+                                    'title' => 'default Format',
                                     'description' => 'This format is used for general text content.',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
                                             'type' => 'string',
-                                            'enum' => ['commons']
+                                            'enum' => ['default']
                                         ],
                                         'content' => ['type' => 'string']
                                     ],
@@ -840,6 +842,7 @@ class MessageProcessingService
 
             } elseif (count($functionList) > 10) { // Stop recursion if functionList length exceeds 12
                 Log::warning('Function list length exceeded 12, stopping recursion.');
+                $this->tokenService->setCostToZero($userId);
                 return [
                     'responseMessage' => $responseMessage
                 ];
