@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\ArticleService;
 use App\Services\CryptoService;
 use App\Services\MessageProcessingService;
 use App\Services\TokenService;
@@ -26,9 +27,15 @@ class AppServiceProvider extends ServiceProvider
             return new CryptoService();
         });
 
-        $this->app->singleton(MessageProcessingService::class, function($app) {
-            return new MessageProcessingService($app->make(TokenService::class), $app->make(CryptoService::class));
+        $this->app->singleton(ArticleService::class, function($app) {
+            return new ArticleService();
         });
+
+        $this->app->singleton(MessageProcessingService::class, function($app) {
+            return new MessageProcessingService($app->make(TokenService::class), $app->make(CryptoService::class), $app->make(ArticleService::class));
+        });
+
+
 
     }
 

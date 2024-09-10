@@ -88,9 +88,9 @@
                                 <div class="message right">
                                     <div class="user">
                                         <span>Chat AI 질문하기</span>
-                                        <p id="question-a" class="question">현재 진입하기 좋은 코인 추천</p>
-                                        <p id="question-b" class="question">비트코인 스코어 및 가격 분석</p>
-                                        <p id="question-c" class="question">고야 스코어가 뭐야?</p>
+                                        <p id="question-a" class="question">암호 화폐 추천</p>
+                                        <p id="question-b" class="question">암호 화폐 시장 동향</p>
+                                        <p id="question-c" class="question">고야 스코어란?</p>
                                     </div>
                                 </div>
                             </div>
@@ -221,6 +221,9 @@
     });
 
     let recommendedSymbols = [];
+    let revealedArticles = [];
+    let articleList = [];
+    let viewpointList = [];
 
     //function to send message
     let sendMessage = async (custom) => {
@@ -280,7 +283,8 @@
                     userId: userId,
                     maxUsage: maxUsage,
                     conversation: conversation,
-                    recommended: flattenedSymbols
+                    symbols: flattenedSymbols,
+                    articles: revealedArticles
                 })
             });
 
@@ -290,6 +294,7 @@
                 const parsedResponse = JSON.parse(data.responseText);
 
                 if (parsedResponse.data.format_type === 'crypto_recommendations') {
+                    revealedArticles.shift();
                     const recommendations = parsedResponse.data.content;
                     const symbols = [];
                     recommendations.forEach(parsed => {
@@ -315,7 +320,7 @@
                             timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                         }
                         if (timeGapText) {
-                            timeGapText += 'ago';
+                            timeGapText += 'ago (Price Signal)';
                         }
                         gapDiv.textContent = timeGapText;
                         gapDiv.style.color = '#bbb';
@@ -387,7 +392,6 @@
                     });
 
                     recommendedSymbols.push(symbols);
-                    console.log("recommendedSymbols: ", recommendedSymbols);
 
                     //create query options
                     const queryDiv = document.createElement('div');
@@ -401,9 +405,9 @@
                     const question2 = document.createElement('p');
                     const question3 = document.createElement('p');
 
-                    question1.textContent = `다른 코인 추천`;
-                    question2.textContent = `추천 리스트 중에서 하나 골라줘`;
-                    question3.textContent = `추천 기준이 뭐야?`;
+                    question1.textContent = `다른 암호 화폐 추천`;
+                    question2.textContent = `추천 기준에 대해 알려줘`;
+                    question3.textContent = `암호 화폐 시장 동향`;
 
                     question1.addEventListener('click', function() {
                         executeQuestion(this);
@@ -422,9 +426,11 @@
                     queryDiv.appendChild(userDiv);
 
                     chatBox.appendChild(queryDiv);
-                } else if (parsedResponse.data.format_type === 'crypto_analyses') {
+                }
+                else if (parsedResponse.data.format_type === 'crypto_analyses') {
                     const symbols = parsedResponse.data.content;
                     recommendedSymbols.shift();
+                    revealedArticles.shift();
                     symbols.forEach((parsed) => {
                         console.log("parsed crypto_analysis: ", parsed);
                         parsed.symbol = parsed.symbol.toUpperCase();
@@ -453,7 +459,7 @@
                             timeGapText += `${parsed.symbol_data.time_gap.minutes} ${parsed.symbol_data.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
                         }
                         if (timeGapText) {
-                            timeGapText += 'ago';
+                            timeGapText += 'ago (Last Score/Price)';
                         }
                         gapDiv.textContent = timeGapText;
                         gapDiv.style.color = '#bbb';
@@ -476,7 +482,7 @@
                         if (parsed.recommendation_status.is_recommended) {
                             const status = parsed.recommendation_status;
                             const recommendComment = document.createElement('div');
-                            recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 12 hours`
+                            recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 6 hours`
                             recommendComment.style.color = 'orange';
                             recommendComment.style.margin = '.25rem 0';
                             const openBtn = document.createElement('button');
@@ -587,7 +593,185 @@
                         const priceMovement = parsed.crypto_data.map(item => item.price);
                         drawChart(priceMovement, scoreMovement, timeLabels, canvas);
                     });
-                } else if (parsedResponse.data.format_type === 'commons') {
+                }
+                else if (parsedResponse.data.format_type === 'articles') {
+                    const articles = parsedResponse.data.content;
+                    articles.forEach(parsed => {
+                        console.log("parsed article: ", parsed);
+
+                        if (parsed.type === 'article') {
+                            const articleId = parseInt(parsed.id);
+                            if (!revealedArticles.includes(articleId)) {
+                                revealedArticles.push(articleId);
+                            }
+                        }
+
+                        const titleDiv = document.createElement('div');
+
+                        // Check if the type is "viewpoint"
+                        if (parsed.type === 'viewpoint') {
+                            titleDiv.textContent = formatDateTimeToWords(parsed.id);
+                        } else {
+                            // Default title if type is not "viewpoint"
+                            titleDiv.textContent = parsed.title;
+                        }
+
+                        const datetimeDiv = document.createElement('div');
+                        datetimeDiv.textContent = parsed.datetime;
+                        const timegapDiv = document.createElement('div');
+
+                        let timeGapText = '';
+                        if (parsed.time_gap.hours) {
+                            timeGapText += `${parsed.time_gap.hours} ${parsed.time_gap.hours === 1 ? 'hour' : 'hours'} `;
+                        }
+                        if (parsed.time_gap.minutes) {
+                            timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
+                        }
+                        if (timeGapText) {
+                            timeGapText += 'ago (Time Written)';
+                        }
+
+                        timegapDiv.textContent = timeGapText;
+                        timegapDiv.style.color = '#bbb';
+
+
+                        // Create div for image
+                        const imageDiv = document.createElement('div');
+                        const imageElement = document.createElement('img');
+                        imageElement.src = parsed.image_url;
+                        imageElement.style.width = '100%';
+                        imageElement.style.borderRadius = '8px';
+                        imageDiv.appendChild(imageElement);
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.textContent = parsed.content;
+                        contentDiv.style.marginTop = '.5rem';
+
+                        const summaryDiv = document.createElement('div');
+                        summaryDiv.textContent = parsed.summary;
+                        summaryDiv.style.display = 'none';
+                        summaryDiv.style.marginTop = '.5rem';
+
+                        const articleDiv = document.createElement('div');
+                        articleDiv.textContent = parsed.article;
+                        articleDiv.style.display = 'none';
+                        articleDiv.style.marginTop = '.5rem';
+
+                        // Create a container for buttons
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.style.display = 'flex';  // Use flexbox to align buttons horizontally
+                        buttonContainer.style.gap = '0.5rem';
+
+                        // Create buttons
+                        const contentButton = document.createElement('button');
+                        contentButton.textContent = 'Analysis';
+                        contentButton.style.width = '5rem';
+                        contentButton.classList.add('active', 'article-button');
+
+                        const summaryButton = document.createElement('button');
+                        summaryButton.textContent = 'Summary';
+                        summaryButton.style.width = '5rem';
+                        summaryButton.classList.add('article-button');
+
+                        const articleButton = document.createElement('button');
+                        articleButton.textContent = 'Article';
+                        articleButton.style.width = '5rem';
+                        articleButton.classList.add('article-button');
+
+                        // Append buttons to the button container
+                        if (parsed.type !== 'viewpoint') {
+                            buttonContainer.appendChild(contentButton);
+                            buttonContainer.appendChild(summaryButton);
+                            buttonContainer.appendChild(articleButton);
+                        }
+
+
+                        // Add event listeners for buttons
+                        contentButton.addEventListener('click', () => {
+                            contentButton.classList.add('active');
+                            summaryButton.classList.remove('active');
+                            articleButton.classList.remove('active');
+                            contentDiv.style.display = 'block';
+                            summaryDiv.style.display = 'none';
+                            articleDiv.style.display = 'none';
+                        });
+
+                        summaryButton.addEventListener('click', () => {
+                            summaryButton.classList.add('active');
+                            contentButton.classList.remove('active');
+                            articleButton.classList.remove('active');
+                            contentDiv.style.display = 'none';
+                            summaryDiv.style.display = 'block';
+                            articleDiv.style.display = 'none';
+                        });
+
+                        articleButton.addEventListener('click', () => {
+                            articleButton.classList.add('active');
+                            contentButton.classList.remove('active');
+                            summaryButton.classList.remove('active');
+                            contentDiv.style.display = 'none';
+                            summaryDiv.style.display = 'none';
+                            articleDiv.style.display = 'block';
+                        });
+
+                        //create query options
+                        const queryDiv = document.createElement('div');
+                        queryDiv.classList.add('message', 'right');
+                        queryDiv.style.marginTop = '0';
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'user';
+                        const expected = document.createElement('span');
+                        expected.textContent = 'Expected Questions';
+                        const question1 = document.createElement('p');
+                        const question2 = document.createElement('p');
+                        const question3 = document.createElement('p');
+
+                        if (parsed.type === 'viewpoint') {
+                            question1.textContent = `암화 화폐 관련 주요 뉴스`;
+                            question2.textContent = `고야 스코어란?`;
+                            question3.textContent = `암호 화폐 추천`;
+                        } else if (parsed.type === 'article') {
+                            question1.textContent = `다른 주요 암호 화폐 뉴스`;
+                            question2.textContent = `비트코인 스코어 및 가격 분석`;
+                            question3.textContent = `암호 화폐 추천`;
+                        }
+
+                        question1.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question2.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+                        question3.addEventListener('click', function() {
+                            executeQuestion(this);
+                        });
+
+                        // userDiv.appendChild(expected);
+                        userDiv.appendChild(question1);
+                        userDiv.appendChild(question2);
+                        userDiv.appendChild(question3);
+                        queryDiv.appendChild(userDiv);
+
+                        const wrapperDiv = document.createElement('div');
+                        wrapperDiv.className = 'message left';
+                        const assistantMessageDiv = document.createElement('div');
+                        assistantMessageDiv.className = 'assistant';
+                        assistantMessageDiv.appendChild(titleDiv);
+                        assistantMessageDiv.appendChild(datetimeDiv);
+                        assistantMessageDiv.appendChild(timegapDiv);
+                        assistantMessageDiv.appendChild(imageDiv);
+                        assistantMessageDiv.appendChild(buttonContainer);
+                        assistantMessageDiv.appendChild(contentDiv);
+                        assistantMessageDiv.appendChild(summaryDiv);
+                        assistantMessageDiv.appendChild(articleDiv);
+                        wrapperDiv.appendChild(assistantMessageDiv);
+                        chatBox.appendChild(wrapperDiv);
+                        chatBox.appendChild(queryDiv);
+
+                    })
+
+                }
+                else if (parsedResponse.data.format_type === 'commons') {
                     // Add the assistant's message to the chat box
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message left';
@@ -617,10 +801,8 @@
                     content: message
                 };
 
-                if (!data.functionCall) {
+                if (data.functionCall === 'none') {
                     conversation.push(userMessage);
-
-                    // Create the assistant message object
                     const assistantMessage = {
                         role: "assistant",
                         content: data.responseText
@@ -628,6 +810,25 @@
                     conversation.push(assistantMessage);
                     console.log("conversation: ", conversation);
                 }
+                // else if (data.functionCall === 'show_articles') {
+                //     conversation.push(userMessage);
+                //     const assistantMessage = {
+                //         role: "assistant",
+                //         content: `Article IDs : ${articleList.join(', ')}`
+                //     }
+                //     conversation.push(assistantMessage);
+                //     console.log("conversation: ", conversation);
+                //     articleList = [];
+                // } else if (data.functionCall === 'show_viewpoint') {
+                //     conversation.push(userMessage);
+                //     const assistantMessage = {
+                //         role: "assistant",
+                //         content : `Viewpoint ID : ${viewpointList.join(', ')}`
+                //     }
+                //     conversation.push(assistantMessage);
+                //     console.log("conversation: ", conversation);
+                //     viewpointList = [];
+                // }
 
                 //finally set the maxUsage input value
                 // Convert to a number, default to 0 if conversion results in NaN
@@ -654,6 +855,8 @@
         } finally {
             messageInput.readOnly = false;
             messageInput.classList.remove('locked');
+            console.log("symbols: ", recommendedSymbols);
+            console.log("articles: ", revealedArticles);
         }
     }
 
@@ -728,20 +931,39 @@
         })
     }
 
+    function formatDateTimeToWords(dateTimeString) {
+        // Split the input string into date part and time part
+        const [dateString, timePart] = dateTimeString.split('_'); // ["20240908", "AM"]
+
+        // Extract year, month, and day from the date string
+        const year = dateString.substring(0, 4);   // "2024"
+        const month = dateString.substring(4, 6);  // "09"
+        const day = dateString.substring(6, 8);    // "08"
+
+        // Convert month number to month name
+        const monthNumber = parseInt(month, 10);
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        // Get month name from the month number
+        const monthName = monthNumber <= 12 ? monthNames[monthNumber - 1] : '';
+
+        // Convert day to a number to handle suffix
+        const dayNumber = parseInt(day, 10);
+
+        // Add the appropriate suffix to the day
+        const suffix = (dayNumber === 1 || dayNumber === 21 || dayNumber === 31) ? 'st' :
+            (dayNumber === 2 || dayNumber === 22) ? 'nd' :
+                (dayNumber === 3 || dayNumber === 23) ? 'rd' : 'th';
+
+        // Format the final string with the prefix and time first
+        // Return the formatted string
+        return monthName ? `Goya AI Market Analysis, ${timePart} ${monthName} ${dayNumber}${suffix}` : 'Invalid Date';
+    }
+
     let executeQuestion = (elem) => {
-        // if (elem.id === 'question-a') {
-        //     message = "지금 진입하기 좋은 코인을 추천해줘";
-        //     console.log('question-a');
-        //     sendMessage(message);
-        // } else if (elem.id === 'question-b') {
-        //     message = "비트코인 스코어 분석해줘"
-        //     console.log('question-b');
-        //     sendMessage(message);
-        // } else if (elem.id === 'question-c') {
-        //     message = "고야 스코어가 뭐야?"
-        //     console.log('question-c');
-        //     sendMessage(message);
-        // }
         if (elem.textContent !== '') {
             message = elem.textContent;
             console.log("user message: ", message);

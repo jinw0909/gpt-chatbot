@@ -82,6 +82,26 @@ return [
             ]) : [],
         ],
 
+        'mysql3' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('P_DB_HOST', 'app-chart.ccjdvtwjk9lh.ap-northeast-2.rds.amazonaws.com'),
+            'port' => env('P_DB_PORT', '3306'),
+            'database' => env('P_DB_DATABASE', 'bu'),
+            'username' => env('P_DB_USERNAME', 'chartuser'),
+            'password' => env('P_DB_PASSWORD', 'Ap!Pc#haR$tDa#Ta!dB'),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

@@ -306,6 +306,11 @@ footer {
     margin-top: 1rem;
 }
 
+.article-button { transition: .5s; }
+.article-button.active {
+    background-color: black;
+    color: white;
+}
 
 @keyframes typing {
     0% { width: 0 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenAI\Laravel\Facades\OpenAI;
 
@@ -9,19 +10,24 @@ class MessageProcessingService
 {
     private $tokenService;
     private $cryptoService;
+    private $articleService;
 
     /**
      * @param $tokenService
      * @param $cryptoService
      */
-    public function __construct(TokenService $tokenService, CryptoService $cryptoService)
+    public function __construct(TokenService $tokenService, CryptoService $cryptoService, ArticleService $articleService)
     {
         $this->tokenService = $tokenService;
         $this->cryptoService = $cryptoService;
+        $this->articleService = $articleService;
     }
 
-    public function processMessage($message, $userId, $conversation, $token, $recommended) {
-        $systems = $this->getSystemMessages($recommended);
+    public function processMessage($message, $userId, $conversation, $token, $recommended, $revealed) {
+        Log::info("recommended symbols: ", ["symbols" => implode(', ', $recommended)]);
+        Log::info("revealed articles: ", ["articles" => implode(', ', $revealed)]);
+
+        $systems = $this->getSystemMessages($recommended, $revealed);
         $tools = $this->getTools();
 
         $userId = (string) $userId;
@@ -33,6 +39,8 @@ class MessageProcessingService
             $summary = $this->summarizeConversation($conversation);
             $conversation = [$summary];
         }
+
+
 
         $messages = $this->prepareMessages($message, $systems, $conversation);
         $response = $this->sendMessageToOpenAI($messages, $tools, $userId, $functionList = []);
@@ -48,17 +56,17 @@ class MessageProcessingService
         ]);
     }
 
-    private function getSystemMessages($recommended) {
+    private function getSystemMessages($recommended, $revealed) {
         // Define system messages logic here
         return [
 //            [
 //                'role' => 'system',
 //                'content' => 'You are a crypto market specialist who can deliberately transfer your analysis on more than 200 crypto symbols, utilizing various indicators such as market price, Goya score (indicator to predict the price movement of the symbol), and the crypto recommendation list that changes every hour. If you need to analyze crypto symbols, you should ALWAYS call the function "analyze_crypto" to get all the required data to create the analysis. If you need to recommend cryptos to users you MUST ALWAYS make the tool call "recommend_cryptos".'
 //            ],
-            [
-                'role' => 'system',
-                'content' => "If you cannot infer the locale of the user from the language, then use 'KST' and Korean as the default local timezone and the language of the user."
-            ],
+//            [
+//                'role' => 'system',
+//                'content' => "If you cannot infer the locale of the user from the language, then use 'KST' and Korean as the default local timezone and the language of the user."
+//            ],
             [
                 'role' => 'system',
                 'content' => 'When passing "symbols" parameter to the function "analyze_crypto", MAKE SURE that the last letter of the symbol is not missing or altered. '
@@ -66,7 +74,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_crypto", pass the given symbol as the argument in order to get all the relevant data to generate response for these type of inquiries. '
+                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_crypto", pass the given symbol as the argument in order to get all the relevant data to generate response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before passed as an "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
             ],
             [
                 'role' => 'system',
@@ -74,7 +82,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend other cryptocurrencies, or to recommend more cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If you did not call this function, respond with "There are no more available recommendation."'
+                'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "commons". '
             ],
             [
                 'role' => 'system',
@@ -116,14 +124,29 @@ class MessageProcessingService
                 'role' => 'system',
                 'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then respond in the format_type of "commons". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
             ],
+            [
+                'role' => 'system',
+                'content' => 'Upon receiving any inquiry related to the prospect or the viewpoint of the cryptocurrency market, call the function "show_viewpoint" and respond in a format_type of "articles". The "language" value of the response should represent the language of the user. '
+            ],
+            [
+                'role' => 'system',
+                'content' => 'Upon receiving any kind of request from the user provide articles or news related to cryptocurrency, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then return in the format_type of "commons". '
+            ],
 //            [
 //                'role' => 'system',
+//                'content' => 'When the format_type of the response is "articles", The "language" value should be the language of the user. '
+//            ],
+//            [
+//                'role' => 'system',[
+//                'role' => 'system',
+//                'content' => 'When the user asks for the overall prospect of the cryptocurrency market, call the function "get_viewpoint" and response in a format_type of "articles". '
+//            ]
 //                'content' => "Map the following coin names to their symbols: bitcoin -> btcusdt, ethereum -> ethusdt, solana -> solusdt, ripple or xrp -> xrpusdt. When the user gives symbol that does not end with the word 'usdt', then map it with 'usdt' appended. You can also map any other crypto name and it's symbol that you are already aware of with this rule. "
 //            ],
             [
                 'role' => 'system',
-                'content' => 'The score values returned from the function calls [get_crypto_data] is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
-                    'When the Goya score is on a downward trend, the price of the cryptocurrency is likely go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
+                'content' => 'The score values returned when calling the function "analyze_crypto" is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
+                    'When the Goya score is on a downward trend, the price of the cryptocurrency is likely to go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
                     'Goya score is derived from collecting and analyzing objective blockchain transaction activity data of the symbol cryptocurrency focused mainly on the movements that has positive or negative impacts on the price of the cryptocurrency. However, there are many other objective indicators from which the Goya score is derived from. '
             ],
             [
@@ -133,12 +156,20 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'If there is no instruction on the response format, then return the response format_type should be "commons" and its content type should be in plain text not JSON. '
+                    'If there is no instruction on the response format, then the response format_type should be "commons" and its content should be in plain text not in JSON. '
             ],
             [
                 'role' => 'system',
-                'content' => 'These are the list of previously recommended coins. ' . implode(', ', $recommended)
+                'content' => 'If the user says "We live in a twilight world", respond with "And there are no friends at dusk". '
             ],
+            [
+                'role' => 'system',
+                'content' => 'This is the list of previously recommended coins. ' . implode(', ', $recommended)
+            ],
+            [
+                'role' => 'system',
+                'content' => 'This is the list of article IDs that is already shown to the user. ' . implode(', ', $revealed)
+            ]
 //            [
 //                'role' => 'user',
 //                'content' => '현재 진입하기 좋은 코인 추천'
@@ -184,7 +215,7 @@ class MessageProcessingService
                             ],
                             'hours' => [
                                 'type' => 'number',
-                                'description' => 'The number of hours ago from the current time from when the price and score data will be retrieved. If you cannot infer the value from the user message use 24 as a default value. '
+                                'description' => 'The number of hours specified in the user message from when the price and score data is retrieved. If you cannot infer the hours from the user message, then use 24. Every time unit (e.g., months, weeks, days) should be calculated into the hours unit. '
                             ],
                             'timezone' => [
                                 'type' => 'string',
@@ -301,6 +332,58 @@ class MessageProcessingService
                     ]
                 ]
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'show_viewpoint',
+                    'description' => 'This function returns the most recent viewpoint towards the current cryptocurrency market given the timezone and the language.',
+                    'strict' => true,
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'timezone' => [
+                                'type' => 'string',
+                                'description' => 'The local timezone of the user',
+                                'enum' => ['UTC', 'JST', 'KST']
+                            ],
+                        ],
+                        'required' => ['timezone'],
+                        'additionalProperties' => false
+                    ]
+                ]
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'show_articles',
+                    'description' => 'This function returns the most recent and relevant articles of the cryptocurrency market given the timezone and the limit. Call this function when the user asked for crypto related articles. If the user did not specified the limit, then pass 2.',
+                    'strict' => true,
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'timezone' => [
+                                'type' => 'string',
+                                'description' => 'The local timezone of the user',
+                                'enum' => ['UTC', 'JST', 'KST']
+                            ],
+                            'previously_shown' => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'string',
+                                    'description' => "The id of the article which is already shown to the user. "
+                                ],
+                                'description' => 'The array of article ids that have been already shown to the user. Search the previously shown article ids from the system message. This list is Used to prevent from showing duplicate articles to the user. '
+                            ],
+                            'limit' => [
+                                'type' => 'number',
+                                'description' => 'The number of articles to show to the user. If the user did not specify the limit, then pass 2. '
+                            ]
+                        ],
+                        'required' => ['timezone', 'previously_shown', 'limit'],
+                        'additionalProperties' => false
+                    ]
+                ]
+            ]
 //            [
 //                'type' => 'function',
 //                'function' => [
@@ -484,8 +567,53 @@ class MessageProcessingService
                                     'additionalProperties' => false
                                 ],
                                 [
+                                    'title' => 'Articles Format',
+                                    'description' => 'This format is used for viewpoints or articles.',
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'format_type' => [
+                                            'type' => 'string',
+                                            'enum' => ['articles']
+                                        ],
+                                        'content' => [
+                                            'type' => 'array',
+                                            'items' => [
+                                                'type' => 'object',
+                                                'properties' => [
+                                                    'title' => ['type' => 'string'],
+                                                    'datetime' => ['type' => 'string'],
+                                                    'time_gap' => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'hours' => ['type' => 'number'],
+                                                            'minutes' => ['type' => 'number'],
+                                                        ],
+                                                        'required' => ['hours', 'minutes'],
+                                                        'additionalProperties' => false
+                                                    ],
+                                                    'image_url' => ['type' => 'string'],
+                                                    'content' => ['type' => 'string'],
+                                                    'summary' => ['type' => 'string'],
+                                                    'article' => ['type' => 'string'],
+                                                    'id' => ['type' => 'string'],
+                                                    'type' => ['type' => 'string']
+                                                ],
+                                                'required' => ['title', 'datetime', 'time_gap', 'image_url', 'content', 'summary', 'article', 'id', 'type'],
+                                                'additionalProperties' => false
+                                            ],
+                                        ],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['en', 'jp', 'kr']
+                                        ]
+                                    ],
+                                    'required' => ['format_type', 'content', 'language'],
+                                    'additionalProperties' => false
+
+                                ],
+                                [
                                     'title' => 'Commons Format',
-                                    'description' => 'This format is used for general text content',
+                                    'description' => 'This format is used for general text content.',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
@@ -540,28 +668,10 @@ class MessageProcessingService
             // Get the response format based on the functionList
             $responseFormat = $this->getResponseFormat();
 
-            // Limit additional function calls for functions with final shape
-            // Determine if specific functions are present in the functionList
-//            if (in_array('recommend_cryptos', $functionList)) {
-//                // Filter tools to only include those with function.name 'get_recommended_symbols'
-//                $tools = array_values(array_filter($tools, function ($tool) {
-//                    return isset($tool['function']['name']) && $tool['function']['name'] === 'recommend_cryptos';
-//                }));
-//            } elseif (in_array('analyze_crypto', $functionList)) {
-//                // Filter tools to only include those with function.name 'analyze_crypto'
-//                $tools = array_values(array_filter($tools, function ($tool) {
-//                    return isset($tool['function']['name']) && $tool['function']['name'] === 'analyze_crypto';
-//                }));
-//            }
             $toolChoice = 'auto';
-            if (in_array('recommend_cryptos', $functionList)) {
+            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList)) {
                 $toolChoice = 'none';
             }
-
-            // Ensure tools is an array of objects
-//            if (!is_array($tools)) {
-//                $tools = [];
-//            }
 
             $response = OpenAI::chat()->create([
 //                'model' => 'gpt-4o-2024-08-06',
@@ -569,9 +679,9 @@ class MessageProcessingService
                 'messages' => $messages,
                 'tools' => $tools,
                 'tool_choice' => $toolChoice,
-//                'response_format' => ['type' => 'json_object'],
                 'response_format' => $responseFormat,
                 'parallel_tool_calls' => true,
+                'temperature' => 0
             ]);
 
             $responseMessage = $response['choices'][0]['message'];
@@ -588,15 +698,140 @@ class MessageProcessingService
             //  Log::info('response message: ', ["responseMessage" => $responseMessage]);
             // Recurse logic
             $toolCalls = $responseMessage['tool_calls'] ?? [];
+            $responseText = $responseMessage['content'];
+
             if (empty($toolCalls)) { // Return final response
                 Log::info("functionList(plain)", ["functionList" => $functionList]);
                 Log::info('response message: ', ["message" => $responseMessage]);
-                $functionCall = !(count($functionList) === 0);
+                // Check if functionList contains 'analyze_crypto' or 'get_recommended_cryptos'
+
+                $functionCall = !empty($functionList) ? end($functionList) : 'none';
+
+                // Check if the last element in the functionList is 'get_viewpoint'
+                // Check if the last element in the functionList is 'get_viewpoint'
+                if ($functionCall === 'show_viewpoint') {
+                    // Parse the responseMessage['content'] JSON
+                    Log::info("retrieving article from db...");
+                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
+                    $parsedContent = json_decode($responseMessage['content'], true);
+                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
+
+                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
+                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
+                        Log::info('Language detected: ', ['language' => $language]);
+
+                        // Determine the column to query based on the language value
+                        $columnToQuery = match ($language) {
+                            'jp' => 'viewpoint_jp',
+                            'kr' => 'viewpoint_kr',
+                            default => 'viewpoint', // Default to 'viewpoint' for 'en' or any unexpected value
+                        };
+                        Log::info('columnToQuery: ', ['columnToQuery' => $columnToQuery]);
+
+                        // Extract all 'id' values from the parsed content
+                        $ids = array_column($parsedContent['data']['content'], 'id');
+                        Log::info('ids: ', ['ids' => $ids]);
+
+                        // Run a query to retrieve rows from the db using these ids
+                        $rows = DB::connection('mysql3')
+                            ->table('bu.Viewpoints')
+                            ->whereIn('id', $ids)
+                            ->select('id', $columnToQuery, DB::raw('imageUrl as image_url')) // Select both viewpoint and imageUrl
+                            ->get()
+                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
+                        Log::info("rows: ", ["rows" => $rows]);
+
+                        // Append the retrieved content values to the parsed response
+                        foreach ($parsedContent['data']['content'] as &$item) {
+                            if (isset($item['id']) && isset($rows[$item['id']])) {
+                                $item['content'] = $rows[$item['id']]->$columnToQuery; // Retrieve the content
+                                $item['image_url'] = $rows[$item['id']]->image_url; // Retrieve the imageUrl
+                            }
+                        }
+                        unset($item); // Unset reference to avoid potential side effects
+                        Log::info('Modified parsedContent: ', ['parsedContent' => $parsedContent]);
+
+                        // Encode the modified content back to JSON
+                        $responseText = json_encode($parsedContent);
+                    }
+                }
+                // Check if the last element in the functionList is 'show_articles'
+                if (!empty($functionList) && end($functionList) === 'show_articles') {
+                    Log::info("retrieving articles from db...");
+                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
+                    $parsedContent = json_decode($responseMessage['content'], true);
+                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
+
+                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
+                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
+                        Log::info('Language detected: ', ['language' => $language]);
+
+                        // Determine the columns to query based on the language value
+                        $columnsToQuery = match ($language) {
+                            'jp' => [
+                                'id',
+                                DB::raw('imageUrl as image_url'),
+                                DB::raw('analysis_jp as content'), // Alias 'analysis_jp' as 'content_jp'
+                                DB::raw('content_jp as article'),  // Alias 'content_jp' as 'article_jp'
+                                DB::raw('title_jp as title'),  // Alias 'content_jp' as 'article_jp'
+                                DB::raw('summary_jp as summary')
+                            ],
+                            'kr' => [
+                                'id',
+                                DB::raw('imageUrl as image_url'),
+                                DB::raw('analysis_kr as content'), // Alias 'analysis_kr' as 'content_kr'
+                                DB::raw('content_kr as article'),  // Alias 'content_kr' as 'article_kr'
+                                DB::raw('title_kr as title'),  // Alias 'content_kr' as 'article_kr'
+                                DB::raw('summary_kr as summary')
+                            ],
+                            default => [
+                                'id',
+                                DB::raw('imageUrl as image_url'),
+                                DB::raw('analysis as content'),       // Alias 'analysis' as 'content'
+                                DB::raw('content as article'),        // Alias 'content' as 'article'
+                                'title',
+                                'summary'
+                            ], // Default columns for 'en' or any unexpected value
+                        };
+
+                        // Extract all 'id' values from the parsed content
+                        $ids = array_column($parsedContent['data']['content'], 'id');
+                        Log::info('ids: ', ['ids' => $ids]);
+
+                        // Run a query to retrieve rows from the db using these ids
+                        $rows = DB::connection('mysql3')
+                            ->table('bu.Translations')
+                            ->whereIn('id', $ids)
+                            ->select($columnsToQuery) // Select id, imageUrl, and language-specific columns
+                            ->get()
+                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
+                        Log::info("rows: ", ["rows" => $rows]);
+
+                        // Append the retrieved content values to the parsed response
+                        // Append the retrieved content values to the parsed response
+                        foreach ($parsedContent['data']['content'] as &$item) {
+                            if (isset($item['id']) && isset($rows[$item['id']])) {
+                                $item['content'] = $rows[$item['id']]->content ?? ''; // Retrieve the aliased content
+                                $item['article'] = $rows[$item['id']]->article ?? ''; // Retrieve the aliased article
+                                $item['summary'] = $rows[$item['id']]->summary ?? ''; // Retrieve the summary
+                                $item['title'] = $rows[$item['id']]->title ?? ''; // Retrieve the title
+                                $item['image_url'] = $rows[$item['id']]->image_url ?? ''; // Retrieve the imageUrl
+                            }
+                        }
+                        unset($item); // Unset reference to avoid potential side effects
+                        Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
+
+                        // Encode the modified content back to JSON
+                        $responseText = json_encode($parsedContent);
+                    }
+                }
+
                 return [
-                    'responseText' => $responseMessage['content'],
+                    'responseText' => $responseText,
                     'functionCall' => $functionCall
                 ];
-            } elseif (count($functionList) > 20) { // Stop recursion if functionList length exceeds 12
+
+            } elseif (count($functionList) > 10) { // Stop recursion if functionList length exceeds 12
                 Log::warning('Function list length exceeded 12, stopping recursion.');
                 return [
                     'responseMessage' => $responseMessage
@@ -609,7 +844,9 @@ class MessageProcessingService
                      // 'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
                     'get_current_time' => [$this->cryptoService, 'getCurrentTime'],
                     'recommend_cryptos' => [$this->cryptoService, 'getRecommendation'],
-                    'get_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus']
+                    'get_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus'],
+                    'show_viewpoint' => [$this->articleService, 'getViewpoint'],
+                    'show_articles' => [$this->articleService, 'getArticles']
                 ];
 
                 foreach ($toolCalls as $toolCall) {
@@ -643,9 +880,5 @@ class MessageProcessingService
             return ['error' => 'Error: ', $e->getMessage()];
         }
     }
-
-
-
-
 
 }
