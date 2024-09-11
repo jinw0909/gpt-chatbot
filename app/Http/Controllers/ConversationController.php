@@ -32,11 +32,12 @@ class ConversationController extends Controller
         $token = intval($request->input('maxUsage', 0));
         $recommended = $request->input('symbols');
         $revealed = $request->input('articles');
+        $lang = $request->input('lang');
         Log::info("userId: ", ["userId" => $userId]);
         Log::info("message: ", ["message" => $message]);
         Log::info("token: ", ["token" => $token]);
 
-        $response = $this->messageProcessingService->processMessage($message, $userId, $conversation, $token, $recommended, $revealed);
+        $response = $this->messageProcessingService->processMessage($message, $userId, $conversation, $token, $recommended, $revealed, $lang);
 
         return $response;
     }

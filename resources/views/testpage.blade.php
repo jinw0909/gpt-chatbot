@@ -63,6 +63,14 @@
                                 <i></i>
                                 <a href="/test">Goya Chat AI</a>
                             </h3>
+                            <div class="language-wrapper">
+                                <input name="language" type="radio" id="jp" value="jp">
+                                <label for="jp">JP</label>
+                                <input name="language" type="radio" id="kr" value="kr">
+                                <label for="kr">KR</label>
+                                <input name="language" type="radio" id="kr" value="en">
+                                <label for="kr">EN</label>
+                            </div>
                             <div class="charge-wrapper">
                                 <div class="remaining">Remaining 0</div>
                                 <button type="button" id="add-button" class="button-custom">충전</button>
@@ -135,6 +143,16 @@
 </div>
 <script>
     let conversation = [];
+    let selectedLanguage = 'kr';
+
+    function handleLanguageChange(event) {
+        selectedLanguage = event.target.value;
+        console.log("Selected Language:", selectedLanguage);
+    }
+
+    document.querySelectorAll('input[name="language"]').forEach((radio) => {
+        radio.addEventListener('change', handleLanguageChange);
+    });
 
     async function fetchUserCharge() {
         try {
@@ -284,7 +302,8 @@
                     maxUsage: maxUsage,
                     conversation: conversation,
                     symbols: flattenedSymbols,
-                    articles: revealedArticles
+                    articles: revealedArticles,
+                    lang: selectedLanguage
                 })
             });
 
@@ -597,26 +616,20 @@
                 else if (parsedResponse.data.format_type === 'articles') {
                     recommendedSymbols.unshift();
                     const articles = parsedResponse.data.content;
+                    let articleType = '';
                     articles.forEach(parsed => {
                         console.log("parsed article: ", parsed);
 
-                        if (parsed.type === 'article') {
-                            const articleId = parseInt(parsed.id);
-                            if (!revealedArticles.includes(articleId)) {
-                                revealedArticles.push(articleId);
-                            }
+                        const articleId = parseInt(parsed.id);
+                        if (!revealedArticles.includes(articleId)) {
+                            revealedArticles.push(articleId);
                         }
 
                         const titleDiv = document.createElement('div');
                         titleDiv.style.color = 'aqua';
 
                         // Check if the type is "viewpoint"
-                        if (parsed.type === 'viewpoint') {
-                            titleDiv.textContent = formatDateTimeToWords(parsed.id);
-                        } else {
-                            // Default title if type is not "viewpoint"
-                            titleDiv.textContent = parsed.title;
-                        }
+                        titleDiv.textContent = parsed.title;
 
                         const datetimeDiv = document.createElement('div');
                         datetimeDiv.textContent = parsed.datetime;
@@ -635,7 +648,6 @@
 
                         timegapDiv.textContent = timeGapText;
                         timegapDiv.style.color = '#bbb';
-
 
                         // Create div for image
                         const imageDiv = document.createElement('div');
@@ -681,13 +693,9 @@
                         articleButton.classList.add('article-button');
 
                         // Append buttons to the button container
-                        if (parsed.type !== 'viewpoint') {
-                            buttonContainer.appendChild(contentButton);
-                            buttonContainer.appendChild(summaryButton);
-                            buttonContainer.appendChild(articleButton);
-                        }
-
-
+                        buttonContainer.appendChild(contentButton);
+                        buttonContainer.appendChild(summaryButton);
+                        buttonContainer.appendChild(articleButton);
                         // Add event listeners for buttons
                         contentButton.addEventListener('click', () => {
                             contentButton.classList.add('active');
@@ -716,44 +724,6 @@
                             articleDiv.style.display = 'block';
                         });
 
-                        //create query options
-                        const queryDiv = document.createElement('div');
-                        queryDiv.classList.add('message', 'right');
-                        queryDiv.style.marginTop = '0';
-                        const userDiv = document.createElement('div');
-                        userDiv.className = 'user';
-                        const expected = document.createElement('span');
-                        expected.textContent = 'Expected Questions';
-                        const question1 = document.createElement('p');
-                        const question2 = document.createElement('p');
-                        const question3 = document.createElement('p');
-
-                        if (parsed.type === 'viewpoint') {
-                            question1.textContent = `암화 화폐 관련 주요 뉴스`;
-                            question2.textContent = `고야 스코어란?`;
-                            question3.textContent = `진입하기 좋은 암호 화폐 추천`;
-                        } else if (parsed.type === 'article') {
-                            question1.textContent = `다른 주요 암호 화폐 뉴스`;
-                            question2.textContent = `비트코인 스코어 및 가격 분석`;
-                            question3.textContent = `진입하기 졶은 암호 화폐 추천`;
-                        }
-
-                        question1.addEventListener('click', function() {
-                            executeQuestion(this);
-                        });
-                        question2.addEventListener('click', function() {
-                            executeQuestion(this);
-                        });
-                        question3.addEventListener('click', function() {
-                            executeQuestion(this);
-                        });
-
-                        // userDiv.appendChild(expected);
-                        userDiv.appendChild(question1);
-                        userDiv.appendChild(question2);
-                        userDiv.appendChild(question3);
-                        queryDiv.appendChild(userDiv);
-
                         const wrapperDiv = document.createElement('div');
                         wrapperDiv.className = 'message left';
                         const assistantMessageDiv = document.createElement('div');
@@ -768,10 +738,141 @@
                         assistantMessageDiv.appendChild(articleDiv);
                         wrapperDiv.appendChild(assistantMessageDiv);
                         chatBox.appendChild(wrapperDiv);
-                        chatBox.appendChild(queryDiv);
 
-                    })
+                    });
 
+                    //create query options
+                    const queryDiv = document.createElement('div');
+                    queryDiv.classList.add('message', 'right');
+                    queryDiv.style.marginTop = '0';
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    const expected = document.createElement('span');
+                    expected.textContent = 'Expected Questions';
+                    const question1 = document.createElement('p');
+                    const question2 = document.createElement('p');
+                    const question3 = document.createElement('p');
+
+                    question1.textContent = `다른 주요 암호 화폐 뉴스`;
+                    question2.textContent = `비트코인 스코어 및 가격 분석`;
+                    question3.textContent = `진입하기 좋은 암호 화폐 추천`;
+
+                    question1.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question2.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question3.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+
+                    // userDiv.appendChild(expected);
+                    userDiv.appendChild(question1);
+                    userDiv.appendChild(question2);
+                    userDiv.appendChild(question3);
+                    queryDiv.appendChild(userDiv);
+                    chatBox.appendChild(queryDiv);
+                }
+                else if (parsedResponse.data.format_type === 'viewpoint') {
+                    recommendedSymbols.unshift();
+                    revealedArticles.unshift();
+                    const parsed = parsedResponse.data.content;
+
+                    console.log("parsed viewpoint: ", parsed);
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.style.color = 'aqua';
+
+                    titleDiv.textContent = formatDateTimeToWords(parsed.id);
+
+                    const datetimeDiv = document.createElement('div');
+                    datetimeDiv.textContent = parsed.datetime;
+                    const timegapDiv = document.createElement('div');
+
+                    let timeGapText = '';
+                    if (parsed.time_gap.hours) {
+                        timeGapText += `${parsed.time_gap.hours} ${parsed.time_gap.hours === 1 ? 'hour' : 'hours'} `;
+                    }
+                    if (parsed.time_gap.minutes) {
+                        timeGapText += `${parsed.time_gap.minutes} ${parsed.time_gap.minutes === 1 ? 'minute' : 'minutes'} `;
+                    }
+                    if (timeGapText) {
+                        timeGapText += 'ago (Time Written)';
+                    }
+
+                    timegapDiv.textContent = timeGapText;
+                    timegapDiv.style.color = '#bbb';
+
+                    // Create div for image
+                    const imageDiv = document.createElement('div');
+                    const imageElement = document.createElement('img');
+                    imageElement.src = parsed.image_url;
+                    imageElement.style.width = '100%';
+                    imageElement.style.borderRadius = '8px';
+                    imageDiv.appendChild(imageElement);
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.textContent = parsed.content;
+                    contentDiv.style.marginTop = '.5rem';
+
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.textContent = parsed.summary;
+                    summaryDiv.style.display = 'none';
+                    summaryDiv.style.marginTop = '.5rem';
+
+                    const articleDiv = document.createElement('div');
+                    articleDiv.textContent = parsed.article;
+                    articleDiv.style.display = 'none';
+                    articleDiv.style.marginTop = '.5rem';
+
+
+                    const wrapperDiv = document.createElement('div');
+                    wrapperDiv.className = 'message left';
+                    const assistantMessageDiv = document.createElement('div');
+                    assistantMessageDiv.className = 'assistant';
+                    assistantMessageDiv.appendChild(titleDiv);
+                    assistantMessageDiv.appendChild(datetimeDiv);
+                    assistantMessageDiv.appendChild(timegapDiv);
+                    assistantMessageDiv.appendChild(imageDiv);
+                    assistantMessageDiv.appendChild(contentDiv);
+                    assistantMessageDiv.appendChild(summaryDiv);
+                    assistantMessageDiv.appendChild(articleDiv);
+                    wrapperDiv.appendChild(assistantMessageDiv);
+                    chatBox.appendChild(wrapperDiv);
+
+                    //create query options
+                    const queryDiv = document.createElement('div');
+                    queryDiv.classList.add('message', 'right');
+                    queryDiv.style.marginTop = '0';
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    const expected = document.createElement('span');
+                    expected.textContent = 'Expected Questions';
+                    const question1 = document.createElement('p');
+                    const question2 = document.createElement('p');
+                    const question3 = document.createElement('p');
+
+                    question1.textContent = `암호 화폐 관련 주요 뉴스`;
+                    question2.textContent = `고야 스코어란?`;
+                    question3.textContent = `진입하기 좋은 암호 화폐 추천`;
+
+                    question1.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question2.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+                    question3.addEventListener('click', function() {
+                        executeQuestion(this);
+                    });
+
+                    // userDiv.appendChild(expected);
+                    userDiv.appendChild(question1);
+                    userDiv.appendChild(question2);
+                    userDiv.appendChild(question3);
+                    queryDiv.appendChild(userDiv);
+                    chatBox.appendChild(queryDiv);
                 }
                 else if (parsedResponse.data.format_type === 'default') {
                     // Add the assistant's message to the chat box
@@ -803,7 +904,7 @@
                     content: message
                 };
 
-                if (data.functionCall === 'none') {
+                if (!data.functionCall) {
                     conversation.push(userMessage);
                     const assistantMessage = {
                         role: "assistant",

@@ -23,11 +23,21 @@ class MessageProcessingService
         $this->articleService = $articleService;
     }
 
-    public function processMessage($message, $userId, $conversation, $token, $recommended, $revealed) {
+    public function processMessage($message, $userId, $conversation, $token, $recommended, $revealed, $lang) {
         Log::info("recommended symbols: ", ["symbols" => implode(', ', $recommended)]);
         Log::info("revealed articles: ", ["articles" => implode(', ', $revealed)]);
 
-        $systems = $this->getSystemMessages($recommended, $revealed);
+        // Determine the timezone based on the language
+        $timezone = match ($lang) {
+            'kr' => 'KST',
+            'jp' => 'JST',
+            'en' => 'UST',
+            default => 'UST' // Default to 'UST' if the language is not one of the specified
+        };
+
+        Log::info("timezone determined: ", ["timezone" => $timezone]);
+
+        $systems = $this->getSystemMessages($recommended, $revealed, $lang, $timezone);
         $tools = $this->getTools();
 
         $userId = (string) $userId;
@@ -39,8 +49,6 @@ class MessageProcessingService
             $summary = $this->summarizeConversation($conversation);
             $conversation = [$summary];
         }
-
-
 
         $messages = $this->prepareMessages($message, $systems, $conversation);
         $response = $this->sendMessageToOpenAI($messages, $tools, $userId, $functionList = []);
@@ -56,7 +64,7 @@ class MessageProcessingService
         ]);
     }
 
-    private function getSystemMessages($recommended, $revealed) {
+    private function getSystemMessages($recommended, $revealed, $lang, $timezone) {
         // Define system messages logic here
         return [
 //            [
@@ -88,7 +96,6 @@ class MessageProcessingService
                 'role' => 'system',
                 'content' => 'When your response "format_type" is "crypto_recommendations", you must call the function "recommend_cryptos" to complete the response. "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
             ],
-
 //            [
 //                'role' => 'system',
 //                'content' => 'When your response "format_type" is "crypto_analyses", you must call functions "get_symbol_price", "get_crypto_data" , "get_recommendation_status" and follow the next rules to generate the response.'
@@ -114,7 +121,6 @@ class MessageProcessingService
 //                .'Rule 1."symbol", "datetime", "time_gap", "image_url" values can be retrieved by calling the function "recommend_cryptos". The value of "symbol" should be capitalized. '
 //                .'Rule 2. "recommended_reason_translated" is the translation of recommended_reason retrieved from calling function "recommend_cryptos". The original recommended_reason content must not be omitted during the translation process.'
 //                .'Rule 3. Check if the "image_url" value correctly matches the retrieved url. '
-//
 //            ],
             [
               'role' => 'system',
@@ -126,12 +132,19 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'If the user asks for the prospect or the viewpoint of the cryptocurrency market respond in a format_type of "articles".'.
-                    'The "language" value of the response should represent the language of the user. '
+                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, respond with a format_type of "viewpoint".'
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving request from the user to provide articles or news related to the cryptocurrency market, call the function "show_articles" and response in a format_type of "articles". If there are no more articles to show, then respond in the format_type of "default". It is important to check "previously_shown" article ids from the system messages to prevent showing the same article again. '
+                'content' => "When your response's format_type is 'viewpoint', you must call the function 'show_viewpoint' to generate the response. "
+            ],
+            [
+                'role' => 'system',
+                'content' => 'Upon receiving request from the user to provide major news or issues, respond with a format_type of "articles".'
+            ],
+            [
+                'role' => 'system',
+                'content' => "When your response's format type is 'articles', you must call the function 'show_articles' to generate the response. Check the previously_shown article ids and pass it as an argument. . "
             ],
 //            [
 //                'role' => 'system',
@@ -162,7 +175,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'If the user greets or simply asks how you are, do not call any functions and respond in a plain text in a format_type of "default". '
+                    'If the user greets or simply says hello, do not call any functions and respond in a plain text in a format_type of "default". '
             ],
             [
                 'role' => 'system',
@@ -171,7 +184,7 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' => 'This is the list of article IDs that is already shown to the user. ' . implode(', ', $revealed)
-            ]
+            ],
 //            [
 //                'role' => 'user',
 //                'content' => '현재 진입하기 좋은 코인 추천'
@@ -197,6 +210,10 @@ class MessageProcessingService
 //                'role' => 'assistant',
 //                'content' => "{\"data\":{\"format_type\":\"crypto_recommendations\",\"content\":[{\"symbol\":\"BOME\",\"datetime\":\"2024-09-03T11:59:05+09:00\",\"time_gap\":{\"hours\":1,\"minutes\":2},\"image_url\":\"https://gpt-premium-charts.s3.ap-northeast-2.amazonaws.com/premiumchart-e11b27d1-32d0-45b4-ab9b-4a6c49c20e31.png\",\"recommended_reason_translated\":\"BOME 신호 L3 및 RSI L 신호. 0.00596997 라인을 돌파하면 상승 가능성이 높습니다. 0.00582219로 하락하면 손절매 추천.\"},{\"symbol\":\"ROSE\",\"datetime\":\"2024-09-03T11:59:05+09:00\",\"time_gap\":{\"hours\":1,\"minutes\":2},\"image_url\":\"https://gpt-premium-charts.s3.ap-northeast-2.amazonaws.com/premiumchart-1876d03a-bcef-4926-8983-4b12de106e21.png\",\"recommended_reason_translated\":\"ROSE 신호 L2 및 RSI L 신호가 활성화되었습니다. 0.0548213 고야선을 돌파하면 상승세가 높을 것으로 예상됩니다. 0.0537372 아래로 하락하면 손절매 추천.\"},{\"symbol\":\"ADA\",\"datetime\":\"2024-09-03T11:59:05+09:00\",\"time_gap\":{\"hours\":1,\"minutes\":2},\"image_url\":\"https://gpt-premium-charts.s3.ap-northeast-2.amazonaws.com/premiumchart-00348809-c7c4-4e49-b31f-1903786eb288.png\",\"recommended_reason_translated\":\"ADA 신호 L2 및 RSI L 신호가 감지되었습니다. 0.334135 고야선을 돌파하면 상승이 기대됩니다. 0.326205 아래로 하락할 경우 손절매를 추천합니다.\"}]}}"
 //            ],
+            [
+                'role' => 'system',
+                'content' => 'The default language of the user is ' . $lang . ' and the default timezone of the user is ' . $timezone . '. '
+            ]
         ];
     }
 
@@ -458,6 +475,20 @@ class MessageProcessingService
                         'data' => [
                             'anyOf' => [
                                 [
+                                    'title' => 'default Format',
+                                    'description' => 'This format is used for general text content.',
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'format_type' => [
+                                            'type' => 'string',
+                                            'enum' => ['default']
+                                        ],
+                                        'content' => ['type' => 'string']
+                                    ],
+                                    'required' => ['format_type', 'content'],
+                                    'additionalProperties' => false
+                                ],
+                                [
                                     'title' => 'Crypto Analyses Format',
                                     'description' => 'This format is used for detailed crypto analyses',
                                     'type' => 'object',
@@ -537,8 +568,8 @@ class MessageProcessingService
                                     'additionalProperties' => false
                                 ],
                                 [
-                                    'title' => 'crypto_recommendations Format',
-                                    'description' => 'This format is used for crypto_recommendations data',
+                                    'title' => 'Crypto Recommendations Format',
+                                    'description' => 'This format is used to recommend cryptos to the user. ',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
@@ -573,8 +604,8 @@ class MessageProcessingService
                                     'additionalProperties' => false
                                 ],
                                 [
-                                    'title' => 'Articles Format',
-                                    'description' => 'This format is used for viewpoints or articles.',
+                                    'title' => 'Crypto Articles Format',
+                                    'description' => 'Use this format to present crypto related articles to the user.',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
@@ -601,36 +632,61 @@ class MessageProcessingService
                                                     'content' => ['type' => 'string'],
                                                     'summary' => ['type' => 'string'],
                                                     'article' => ['type' => 'string'],
-                                                    'id' => ['type' => 'string'],
-                                                    'type' => ['type' => 'string']
+                                                    'id' => ['type' => 'number'],
+                                                    'language' => [
+                                                        'type' => 'string',
+                                                        'enum' => ['kr', 'jp', 'en']
+                                                    ]
                                                 ],
-                                                'required' => ['title', 'datetime', 'time_gap', 'image_url', 'content', 'summary', 'article', 'id', 'type'],
+                                                'required' => ['title', 'datetime', 'time_gap', 'image_url', 'content', 'summary', 'article', 'id', 'language'],
                                                 'additionalProperties' => false
                                             ],
                                         ],
-                                        'language' => [
-                                            'type' => 'string',
-                                            'enum' => ['en', 'jp', 'kr']
-                                        ]
                                     ],
-                                    'required' => ['format_type', 'content', 'language'],
+                                    'required' => ['format_type', 'content'],
+//                                    'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
-
                                 ],
                                 [
-                                    'title' => 'default Format',
-                                    'description' => 'This format is used for general text content.',
+                                    'title' => 'Viewpoint Format',
+                                    'description' => 'This format is used for crypto market viewpoints.',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
                                             'type' => 'string',
-                                            'enum' => ['default']
+                                            'enum' => ['viewpoint']
                                         ],
-                                        'content' => ['type' => 'string']
+                                        'content' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'title' => ['type' => 'string'],
+                                                'datetime' => ['type' => 'string'],
+                                                'time_gap' => [
+                                                    'type' => 'object',
+                                                    'properties' => [
+                                                        'hours' => ['type' => 'number'],
+                                                        'minutes' => ['type' => 'number'],
+                                                    ],
+                                                    'required' => ['hours', 'minutes'],
+                                                    'additionalProperties' => false
+                                                ],
+                                                'image_url' => ['type' => 'string'],
+                                                'content' => ['type' => 'string'],
+                                                'summary' => ['type' => 'string'],
+                                                'article' => ['type' => 'string'],
+                                                'id' => ['type' => 'string'],
+                                                'language' => [
+                                                    'type' => 'string',
+                                                    'enum' => ['kr', 'jp', 'en']
+                                                ]
+                                            ],
+                                            'required' => ['title', 'datetime', 'time_gap', 'image_url', 'content', 'summary', 'article', 'id', 'language'],
+                                            'additionalProperties' => false
+                                        ],
                                     ],
                                     'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
-                                ]
+                                ],
                             ]
                         ]
                     ],
@@ -675,7 +731,8 @@ class MessageProcessingService
             $responseFormat = $this->getResponseFormat();
 
             $toolChoice = 'auto';
-            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList) || in_array('analyze_cryptoss', $functionList)) {
+            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('get_current_time', $functionList)
+                || in_array('show_articles', $functionList) || in_array('analyze_cryptoss', $functionList)) {
                 $toolChoice = 'none';
             }
 
@@ -687,7 +744,7 @@ class MessageProcessingService
                 'tool_choice' => $toolChoice,
                 'response_format' => $responseFormat,
                 'parallel_tool_calls' => true,
-                'temperature' => 0
+                'temperature' => 0.2
             ]);
 
             $responseMessage = $response['choices'][0]['message'];
@@ -711,130 +768,233 @@ class MessageProcessingService
                 Log::info('response message: ', ["message" => $responseMessage]);
                 // Check if functionList contains 'analyze_cryptoss' or 'get_recommended_cryptos'
 
-                $functionCall = !empty($functionList) ? end($functionList) : 'none';
+                $functionCall = !empty($functionList);
+                $parsedContent = json_decode($responseMessage['content'], true);
+                Log::info("parsedContent: ", ["parsedContent" => $parsedContent]);
 
+                //Viewpoint
+                if (isset($parsedContent['data']['content']['id']) && $parsedContent['data']['format_type'] === 'viewpoint') { // Check if a single ID is set
+                    $language = $parsedContent['data']['content']['language'] ?? 'en'; // Default to 'en' if not set
+                    Log::info('language detected: ', ['language' => $language]);
+
+                    // Determine the column to query based on the language value
+                    $columnToQuery = match ($language) {
+                        'jp' => 'viewpoint_jp',
+                        'kr' => 'viewpoint_kr',
+                        default => 'viewpoint', // Default to 'viewpoint' for 'en' or any unexpected value
+                    };
+                    Log::info('columnToQuery: ', ['columnToQuery' => $columnToQuery]);
+
+                    // Get the single ID value
+                    $id = $parsedContent['data']['content']['id'];
+                    Log::info('id: ', ['id' => $id]);
+
+                    // Run a query to retrieve the single row from the db using this ID
+                    $row = DB::connection('mysql3')
+                        ->table('bu.Viewpoints')
+                        ->where('id', $id)
+                        ->select('id', $columnToQuery, DB::raw('imageUrl as image_url')) // Select both viewpoint and imageUrl
+                        ->first(); // Fetch a single row
+                    Log::info("row: ", ["row" => $row]);
+
+                    // Check if the row is found and append the retrieved content values to the parsed response
+                    if ($row) {
+                        $parsedContent['data']['content']['content'] = $row->$columnToQuery; // Retrieve the content
+                        $parsedContent['data']['content']['image_url'] = $row->image_url; // Retrieve the imageUrl
+                    }
+
+                    Log::info('Modified parsedContent: ', ['parsedContent' => $parsedContent]);
+
+                    // Encode the modified content back to JSON
+                    $responseText = json_encode($parsedContent);
+                }
+                if (isset($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'articles') {
+                    $firstContentItem = reset($parsedContent['data']['content']); // Get the first element of the content array
+                    $language = $firstContentItem['language'] ?? 'en'; // Default to 'en' if the language key is not set
+                    Log::info('language detected: ', ['language' => $language]);
+
+                    // Determine the columns to query based on the language value
+                    $columnsToQuery = match ($language) {
+                        'jp' => [
+                            'id',
+                            DB::raw('imageUrl as image_url'),
+                            DB::raw('analysis_jp as content'), // Alias 'analysis_jp' as 'content_jp'
+                            DB::raw('content_jp as article'),  // Alias 'content_jp' as 'article_jp'
+                            DB::raw('title_jp as title'),  // Alias 'content_jp' as 'article_jp'
+                            DB::raw('summary_jp as summary')
+                        ],
+                        'kr' => [
+                            'id',
+                            DB::raw('imageUrl as image_url'),
+                            DB::raw('analysis_kr as content'), // Alias 'analysis_kr' as 'content_kr'
+                            DB::raw('content_kr as article'),  // Alias 'content_kr' as 'article_kr'
+                            DB::raw('title_kr as title'),  // Alias 'content_kr' as 'article_kr'
+                            DB::raw('summary_kr as summary')
+                        ],
+                        default => [
+                            'id',
+                            DB::raw('imageUrl as image_url'),
+                            DB::raw('analysis as content'),       // Alias 'analysis' as 'content'
+                            DB::raw('content as article'),        // Alias 'content' as 'article'
+                            'title',
+                            'summary'
+                        ], // Default columns for 'en' or any unexpected value
+                    };
+
+                    // Extract all 'id' values from the parsed content
+                    $ids = array_column($parsedContent['data']['content'], 'id');
+                    Log::info('ids: ', ['ids' => $ids]);
+
+                    // Run a query to retrieve rows from the db using these ids
+                    $rows = DB::connection('mysql3')
+                        ->table('bu.Translations')
+                        ->whereIn('id', $ids)
+                        ->select($columnsToQuery) // Select id, imageUrl, and language-specific columns
+                        ->get()
+                        ->keyBy('id'); // Key the collection by 'id' for easy lookup
+                    Log::info("rows: ", ["rows" => $rows]);
+
+                    // Append the retrieved content values to the parsed response
+                    // Append the retrieved content values to the parsed response
+                    foreach ($parsedContent['data']['content'] as &$item) {
+                        if (isset($item['id']) && isset($rows[$item['id']])) {
+                            $item['content'] = $rows[$item['id']]->content ?? ''; // Retrieve the aliased content
+                            $item['article'] = $rows[$item['id']]->article ?? ''; // Retrieve the aliased article
+                            $item['summary'] = $rows[$item['id']]->summary ?? ''; // Retrieve the summary
+                            $item['title'] = $rows[$item['id']]->title ?? ''; // Retrieve the title
+                            $item['image_url'] = $rows[$item['id']]->image_url ?? ''; // Retrieve the imageUrl
+                        }
+                    }
+                    unset($item); // Unset reference to avoid potential side effects
+                    Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
+
+                    // Encode the modified content back to JSON
+                    $responseText = json_encode($parsedContent);
+
+                }
                 // Check if the last element in the functionList is 'get_viewpoint'
                 // Check if the last element in the functionList is 'get_viewpoint'
-                if ($functionCall === 'show_viewpoint') {
-                    // Parse the responseMessage['content'] JSON
-                    Log::info("retrieving article from db to complete the viewpoint response...");
-                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
-                    $parsedContent = json_decode($responseMessage['content'], true);
-                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
+//                if ($functionCall === 'show_viewpoint') {
+//                    // Parse the responseMessage['content'] JSON
+//                    Log::info("retrieving article from db to complete the viewpoint response...");
+//                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
+//                    $parsedContent = json_decode($responseMessage['content'], true);
+//                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
+//
+//                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
+//                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
+//                        Log::info('language detected: ', ['language' => $language]);
+//
+//                        // Determine the column to query based on the language value
+//                        $columnToQuery = match ($language) {
+//                            'jp' => 'viewpoint_jp',
+//                            'kr' => 'viewpoint_kr',
+//                            default => 'viewpoint', // Default to 'viewpoint' for 'en' or any unexpected value
+//                        };
+//                        Log::info('columnToQuery: ', ['columnToQuery' => $columnToQuery]);
+//
+//                        // Extract all 'id' values from the parsed content
+//                        $ids = array_column($parsedContent['data']['content'], 'id');
+//                        Log::info('ids: ', ['ids' => $ids]);
+//
+//                        // Run a query to retrieve rows from the db using these ids
+//                        $rows = DB::connection('mysql3')
+//                            ->table('bu.Viewpoints')
+//                            ->whereIn('id', $ids)
+//                            ->select('id', $columnToQuery, DB::raw('imageUrl as image_url')) // Select both viewpoint and imageUrl
+//                            ->get()
+//                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
+//                        Log::info("rows: ", ["rows" => $rows]);
+//
+//                        // Append the retrieved content values to the parsed response
+//                        foreach ($parsedContent['data']['content'] as &$item) {
+//                            if (isset($item['id']) && isset($rows[$item['id']])) {
+//                                $item['content'] = $rows[$item['id']]->$columnToQuery; // Retrieve the content
+//                                $item['image_url'] = $rows[$item['id']]->image_url; // Retrieve the imageUrl
+//                            }
+//                        }
+//                        unset($item); // Unset reference to avoid potential side effects
+//                        Log::info('Modified parsedContent: ', ['parsedContent' => $parsedContent]);
+//
+//                        // Encode the modified content back to JSON
+//                        $responseText = json_encode($parsedContent);
+//                    }
+//                }
+//                // Check if the last element in the functionList is 'show_articles'
+//                else if ($functionCall === 'show_articles') {
+//                    Log::info("retrieving articles from db to complete the show_articles response...");
+//                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
+//                    $parsedContent = json_decode($responseMessage['content'], true);
+//                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
+//
+//                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
+//                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
+//                        Log::info('Language detected: ', ['language' => $language]);
+//
+//                        // Determine the columns to query based on the language value
+//                        $columnsToQuery = match ($language) {
+//                            'jp' => [
+//                                'id',
+//                                DB::raw('imageUrl as image_url'),
+//                                DB::raw('analysis_jp as content'), // Alias 'analysis_jp' as 'content_jp'
+//                                DB::raw('content_jp as article'),  // Alias 'content_jp' as 'article_jp'
+//                                DB::raw('title_jp as title'),  // Alias 'content_jp' as 'article_jp'
+//                                DB::raw('summary_jp as summary')
+//                            ],
+//                            'kr' => [
+//                                'id',
+//                                DB::raw('imageUrl as image_url'),
+//                                DB::raw('analysis_kr as content'), // Alias 'analysis_kr' as 'content_kr'
+//                                DB::raw('content_kr as article'),  // Alias 'content_kr' as 'article_kr'
+//                                DB::raw('title_kr as title'),  // Alias 'content_kr' as 'article_kr'
+//                                DB::raw('summary_kr as summary')
+//                            ],
+//                            default => [
+//                                'id',
+//                                DB::raw('imageUrl as image_url'),
+//                                DB::raw('analysis as content'),       // Alias 'analysis' as 'content'
+//                                DB::raw('content as article'),        // Alias 'content' as 'article'
+//                                'title',
+//                                'summary'
+//                            ], // Default columns for 'en' or any unexpected value
+//                        };
+//
+//                        // Extract all 'id' values from the parsed content
+//                        $ids = array_column($parsedContent['data']['content'], 'id');
+//                        Log::info('ids: ', ['ids' => $ids]);
+//
+//                        // Run a query to retrieve rows from the db using these ids
+//                        $rows = DB::connection('mysql3')
+//                            ->table('bu.Translations')
+//                            ->whereIn('id', $ids)
+//                            ->select($columnsToQuery) // Select id, imageUrl, and language-specific columns
+//                            ->get()
+//                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
+//                        Log::info("rows: ", ["rows" => $rows]);
+//
+//                        // Append the retrieved content values to the parsed response
+//                        // Append the retrieved content values to the parsed response
+//                        foreach ($parsedContent['data']['content'] as &$item) {
+//                            if (isset($item['id']) && isset($rows[$item['id']])) {
+//                                $item['content'] = $rows[$item['id']]->content ?? ''; // Retrieve the aliased content
+//                                $item['article'] = $rows[$item['id']]->article ?? ''; // Retrieve the aliased article
+//                                $item['summary'] = $rows[$item['id']]->summary ?? ''; // Retrieve the summary
+//                                $item['title'] = $rows[$item['id']]->title ?? ''; // Retrieve the title
+//                                $item['image_url'] = $rows[$item['id']]->image_url ?? ''; // Retrieve the imageUrl
+//                            }
+//                        }
+//                        unset($item); // Unset reference to avoid potential side effects
+//                        Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
+//
+//                        // Encode the modified content back to JSON
+//                        $responseText = json_encode($parsedContent);
+//                    }
 
-                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
-                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
-                        Log::info('Language detected: ', ['language' => $language]);
 
-                        // Determine the column to query based on the language value
-                        $columnToQuery = match ($language) {
-                            'jp' => 'viewpoint_jp',
-                            'kr' => 'viewpoint_kr',
-                            default => 'viewpoint', // Default to 'viewpoint' for 'en' or any unexpected value
-                        };
-                        Log::info('columnToQuery: ', ['columnToQuery' => $columnToQuery]);
-
-                        // Extract all 'id' values from the parsed content
-                        $ids = array_column($parsedContent['data']['content'], 'id');
-                        Log::info(' column ids: ', ['ids' => $ids]);
-
-                        // Run a query to retrieve rows from the db using these ids
-                        $rows = DB::connection('mysql3')
-                            ->table('bu.Viewpoints')
-                            ->whereIn('id', $ids)
-                            ->select('id', $columnToQuery, DB::raw('imageUrl as image_url')) // Select both viewpoint and imageUrl
-                            ->get()
-                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
-                        Log::info("rows: ", ["rows" => $rows]);
-
-                        // Append the retrieved content values to the parsed response
-                        foreach ($parsedContent['data']['content'] as &$item) {
-                            if (isset($item['id']) && isset($rows[$item['id']])) {
-                                $item['content'] = $rows[$item['id']]->$columnToQuery; // Retrieve the content
-                                $item['image_url'] = $rows[$item['id']]->image_url; // Retrieve the imageUrl
-                            }
-                        }
-                        unset($item); // Unset reference to avoid potential side effects
-                        Log::info('Modified parsedContent: ', ['parsedContent' => $parsedContent]);
-
-                        // Encode the modified content back to JSON
-                        $responseText = json_encode($parsedContent);
-                    }
-                }
-                // Check if the last element in the functionList is 'show_articles'
-                else if ($functionCall === 'show_articles') {
-                    Log::info("retrieving articles from db to complete the show_articles response...");
-                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
-                    $parsedContent = json_decode($responseMessage['content'], true);
-                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
-
-                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
-                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
-                        Log::info('Language detected: ', ['language' => $language]);
-
-                        // Determine the columns to query based on the language value
-                        $columnsToQuery = match ($language) {
-                            'jp' => [
-                                'id',
-                                DB::raw('imageUrl as image_url'),
-                                DB::raw('analysis_jp as content'), // Alias 'analysis_jp' as 'content_jp'
-                                DB::raw('content_jp as article'),  // Alias 'content_jp' as 'article_jp'
-                                DB::raw('title_jp as title'),  // Alias 'content_jp' as 'article_jp'
-                                DB::raw('summary_jp as summary')
-                            ],
-                            'kr' => [
-                                'id',
-                                DB::raw('imageUrl as image_url'),
-                                DB::raw('analysis_kr as content'), // Alias 'analysis_kr' as 'content_kr'
-                                DB::raw('content_kr as article'),  // Alias 'content_kr' as 'article_kr'
-                                DB::raw('title_kr as title'),  // Alias 'content_kr' as 'article_kr'
-                                DB::raw('summary_kr as summary')
-                            ],
-                            default => [
-                                'id',
-                                DB::raw('imageUrl as image_url'),
-                                DB::raw('analysis as content'),       // Alias 'analysis' as 'content'
-                                DB::raw('content as article'),        // Alias 'content' as 'article'
-                                'title',
-                                'summary'
-                            ], // Default columns for 'en' or any unexpected value
-                        };
-
-                        // Extract all 'id' values from the parsed content
-                        $ids = array_column($parsedContent['data']['content'], 'id');
-                        Log::info('ids: ', ['ids' => $ids]);
-
-                        // Run a query to retrieve rows from the db using these ids
-                        $rows = DB::connection('mysql3')
-                            ->table('bu.Translations')
-                            ->whereIn('id', $ids)
-                            ->select($columnsToQuery) // Select id, imageUrl, and language-specific columns
-                            ->get()
-                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
-                        Log::info("rows: ", ["rows" => $rows]);
-
-                        // Append the retrieved content values to the parsed response
-                        // Append the retrieved content values to the parsed response
-                        foreach ($parsedContent['data']['content'] as &$item) {
-                            if (isset($item['id']) && isset($rows[$item['id']])) {
-                                $item['content'] = $rows[$item['id']]->content ?? ''; // Retrieve the aliased content
-                                $item['article'] = $rows[$item['id']]->article ?? ''; // Retrieve the aliased article
-                                $item['summary'] = $rows[$item['id']]->summary ?? ''; // Retrieve the summary
-                                $item['title'] = $rows[$item['id']]->title ?? ''; // Retrieve the title
-                                $item['image_url'] = $rows[$item['id']]->image_url ?? ''; // Retrieve the imageUrl
-                            }
-                        }
-                        unset($item); // Unset reference to avoid potential side effects
-                        Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
-
-                        // Encode the modified content back to JSON
-                        $responseText = json_encode($parsedContent);
-                    }
-                }
-
-                if ($functionCall === 'none') {
+                if (!$functionCall) {
                     $this->tokenService->setCostToZero($userId);
                 }
+
                 return [
                     'responseText' => $responseText,
                     'functionCall' => $functionCall

@@ -411,8 +411,6 @@ class CryptoService
         return $finalResults->values(); // Return as a collection or array
     }
 
-
-//
 //    public function getCryptoData(array $symbols, $hours = 24, $timezone = 'UTC')
 //    {
 //        $results = [];
@@ -462,6 +460,7 @@ class CryptoService
 //
 //        return json_encode($results);
 //    }
+
     public function getCryptoData(string $symbol, $hours = 24, $timezone = 'UTC')
     {
         if ($hours < 12) { $hours = 24; }

@@ -70,6 +70,14 @@ class ArticleService
         // Initialize the result array
         $results = [];
 
+        // Determine the language based on the timezone
+        $language = match ($timezone) {
+            'KST' => 'kr',
+            'JST' => 'jp',
+            'UST' => 'en',
+            default => 'en' // Default to 'en' if the timezone is not one of the specified
+        };
+
         // Process each fetched article
         foreach ($articles as $article) {
             // Convert createdAt to the specified timezone using PHP's DateTime
@@ -86,7 +94,6 @@ class ArticleService
                 'content' => '',
                 'summary' => '',
                 'article' => '',
-                'type' => 'article'
             ];
 
             $results[] = $result;
@@ -98,6 +105,7 @@ class ArticleService
         // Return the results, regardless of the count
         return json_encode($results);
     }
+
 
     private function convertTimeToTimezone($time, $timezone)
     {
