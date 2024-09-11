@@ -732,7 +732,7 @@ class MessageProcessingService
 
             $toolChoice = 'auto';
             if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('get_current_time', $functionList)
-                || in_array('show_articles', $functionList) || in_array('analyze_cryptoss', $functionList)) {
+                || in_array('show_articles', $functionList) || in_array('analyze_cryptos', $functionList)) {
                 $toolChoice = 'none';
             }
 

@@ -64,12 +64,18 @@
                                 <a href="/test">Goya Chat AI</a>
                             </h3>
                             <div class="language-wrapper">
-                                <input name="language" type="radio" id="jp" value="jp">
-                                <label for="jp">JP</label>
-                                <input name="language" type="radio" id="kr" value="kr">
-                                <label for="kr">KR</label>
-                                <input name="language" type="radio" id="kr" value="en">
-                                <label for="kr">EN</label>
+<!--                                <input name="language" type="radio" id="jp" value="jp">-->
+<!--                                <label for="jp">JP</label>-->
+<!--                                <input name="language" type="radio" id="kr" value="kr">-->
+<!--                                <label for="kr">KR</label>-->
+<!--                                <input name="language" type="radio" id="kr" value="en">-->
+<!--                                <label for="kr">EN</label>-->
+<!--                                <label for="language-select">Lan</label>-->
+                                <select name="language" id="language-select">
+                                    <option value="jp">JP</option>
+                                    <option value="kr">KR</option>
+                                    <option value="en">EN</option>
+                                </select>
                             </div>
                             <div class="charge-wrapper">
                                 <div class="remaining">Remaining 0</div>
@@ -143,16 +149,15 @@
 </div>
 <script>
     let conversation = [];
-    let selectedLanguage = 'kr';
+    let selectedLanguage = 'kr'; // Default selected language
 
     function handleLanguageChange(event) {
         selectedLanguage = event.target.value;
         console.log("Selected Language:", selectedLanguage);
     }
 
-    document.querySelectorAll('input[name="language"]').forEach((radio) => {
-        radio.addEventListener('change', handleLanguageChange);
-    });
+    // Attach the event listener to the select element
+    document.getElementById('language-select').addEventListener('change', handleLanguageChange);
 
     async function fetchUserCharge() {
         try {
