@@ -136,7 +136,7 @@ let sendMessage = async (custom) => {
     // Send the message via AJAX
     try {
         // const response = await fetch('{{ route('process-message') }}', {
-        const response = await fetch('http://127.0.0.1:8000/conversation', {
+        const response = await fetch('https://goya-chatbot.com/conversation', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
