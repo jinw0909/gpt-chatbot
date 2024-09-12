@@ -14,6 +14,7 @@ body {
 }
 
 .main { display: flex; flex-direction: column; height: 100%; }
+#login-time { margin-left: .25rem; }
 
 .message {
     margin-top: 1rem;
@@ -312,6 +313,8 @@ footer {
     color: white;
 }
 
+#language-select { padding: .25rem; }
+
 @keyframes typing {
     0% { width: 0 }
     100% { width: 100% }
@@ -347,6 +350,10 @@ footer {
     .chat-box-title i { width: 24px; height: 30px; background-size: 24px; }
     .charge-wrapper { font-size: .8rem; }
     .close { margin-left: 0; font-size: 36px; }
+
+    .button-custom {
+        padding: .25rem .5rem;
+    }
 }
 
 
