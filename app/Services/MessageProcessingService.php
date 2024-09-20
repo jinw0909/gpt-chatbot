@@ -71,19 +71,24 @@ class MessageProcessingService
                 'role' => 'system',
                 'content' => 'When passing "symbols" parameter to the function "analyze_cryptos", MAKE SURE that the last letter of the symbol is not missing or altered. '
             ],
+//            [
+//                'role' => 'system',
+//                'content' =>
+//                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analysis" and call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
+//            ],
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analyses" and ALWAYS call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
+                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, you should call the function "analyze_cryptos" and respond in the "format_type" of "crypto_analysis". The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
             ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_analyses", the last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
+                'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
             ],
-            [
-                'role' => 'system',
-                'content' => 'When you make any function call "analyze_crypto", but fail to retrieve the expected data, then respond in a format type of "default".'
-            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When you make any function call "analyze_cryptos", but fail to retrieve the expected data, then respond in a format type of "default".'
+//            ],
             [
                 'role' => 'system',
                 'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
@@ -94,7 +99,7 @@ class MessageProcessingService
             ],
             [
               'role' => 'system',
-              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analyses". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
+              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
             ],
             [
                 'role' => 'system',
@@ -102,19 +107,11 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, respond with a format_type of "viewpoint".'
+                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_articles" and respond with a format_type of "viewpoint".'
             ],
             [
                 'role' => 'system',
-                'content' => "When your response's format_type is 'viewpoint', you must call the function 'show_viewpoint' to generate the response. "
-            ],
-            [
-                'role' => 'system',
-                'content' => 'Upon receiving request from the user to provide major news or issues, respond with a format_type of "articles".'
-            ],
-            [
-                'role' => 'system',
-                'content' => "When your response's format type is 'articles', you must call the function 'show_articles' to generate the response. Check the previously_shown article ids and pass it as an argument. . "
+                'content' => "When the user asks for crypto related articles or additional/other articles, call the function 'show_articles' and respond in a format_type of 'articles'. Check the previously_shown article id from the system message and pass it as an argument. . "
             ],
             [
                 'role' => 'system',
@@ -138,11 +135,13 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of previously recommended coins. ' . implode(', ', $recommended)
+                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .
+                    'If the user asks to provide additional recommendations, avoid providing these cryptos. '
             ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of article IDs that is already shown to the user. ' . implode(', ', $revealed)
+                'content' => 'This is the list of articles that is already shown to the user. ' . implode(', ', $revealed) .
+                    'If the user asks to provide additional articles, avoid providing articles in this list.'
             ],
             [
                 'role' => 'system',
@@ -170,6 +169,10 @@ class MessageProcessingService
                                 ],
                                 'description' => 'A list cryptocurrency symbols to analyze (e.g., [btc, eth, xrp, ...] ).'
                             ],
+//                            'symbol' => [
+//                              'type' => 'string',
+//                              'description' => 'The symbol of the cryptocurrency to analyze.'
+//                            ],
                             'hours' => [
                                 'type' => 'number',
                                 'description' => 'The number of hours specified in the user message from when the price and score data is retrieved. If you cannot infer the hours from the user message, then use 24. Every time unit (e.g., months, weeks, days) should be calculated into the hours unit. '
@@ -181,7 +184,7 @@ class MessageProcessingService
                             ]
                         ],
                         'additionalProperties' => false, // Correctly placed
-                        'required' => ['symbol', 'hours', 'timezone'],
+                        'required' => ['symbols', 'hours', 'timezone'],
                     ]
                 ]
             ],
@@ -429,7 +432,7 @@ class MessageProcessingService
                                     'properties' => [
                                         'format_type' => [
                                             'type' => 'string',
-                                            'enum' => ['crypto_analyses']
+                                            'enum' => ['crypto_analysis']
                                         ],
                                         'content' => [
                                             'type' => 'array',
@@ -663,12 +666,17 @@ class MessageProcessingService
         try {
             // Get the response format based on the functionList
             $responseFormat = $this->getResponseFormat();
+            $functionCall = false;
 
             $toolChoice = 'auto';
-            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList) || in_array('get_current_time', $functionList)
+            if (in_array('recommend_cryptos', $functionList) || in_array('show_viewpoint', $functionList)
                 || in_array('show_articles', $functionList) || in_array('analyze_cryptos', $functionList)) {
                 $toolChoice = 'none';
+                $functionCall = true;
             }
+//            if (in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList)) {
+//                $toolChoice = 'none';
+//            }
 
             $response = OpenAI::chat()->create([
 //                'model' => 'gpt-4o-2024-08-06',
@@ -678,7 +686,7 @@ class MessageProcessingService
                 'tool_choice' => $toolChoice,
                 'response_format' => $responseFormat,
                 'parallel_tool_calls' => true,
-                'temperature' => 0.2
+                'temperature' => 0
             ]);
 
             $responseMessage = $response['choices'][0]['message'];
@@ -702,7 +710,7 @@ class MessageProcessingService
                 Log::info('response message: ', ["message" => $responseMessage]);
                 // Check if functionList contains 'analyze_cryptoss' or 'get_recommended_cryptos'
 
-                $functionCall = !empty($functionList);
+//                $functionCall = !empty($functionList);
                 $parsedContent = json_decode($responseMessage['content'], true);
                 Log::info("parsedContent: ", ["parsedContent" => $parsedContent]);
 

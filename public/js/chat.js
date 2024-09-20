@@ -238,16 +238,16 @@ let sendMessage = async (custom) => {
                     question3.classList.add('explain-symbol');
 
                     if (selectedLanguage === 'kr') {
-                        question1.textContent = `${parsed.symbol} 스코어 및 가격 분석`;
-                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
+                        question1.textContent = `${parsed.symbol} 스코어 및 가격`;
+                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
                         question3.textContent = `${parsed.symbol}에 대해 알려줘`;
                     } else if (selectedLanguage === 'jp') {
-                        question1.textContent = `${parsed.symbol}のスコアと価格分析`;
-                        question2.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格分析`;
+                        question1.textContent = `${parsed.symbol}のスコアと価格`;
+                        question2.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格`;
                         question3.textContent = `${parsed.symbol}について教えてください`;
                     } else if (selectedLanguage === 'en') {
-                        question1.textContent = `${parsed.symbol} Score and Price Analysis`;
-                        question2.textContent = `${parsed.symbol} One-Month Score and Price Analysis`;
+                        question1.textContent = `${parsed.symbol} Score and Price`;
+                        question2.textContent = `${parsed.symbol} One-Month Score and Price`;
                         question3.textContent = `Tell me about ${parsed.symbol}`;
                     }
 
@@ -322,8 +322,10 @@ let sendMessage = async (custom) => {
                 queryDiv.appendChild(userDiv);
 
                 chatBox.appendChild(queryDiv);
+
+
             }
-            else if (parsedResponse.data.format_type === 'crypto_analyses') {
+            else if (parsedResponse.data.format_type === 'crypto_analysis') {
                 const symbols = parsedResponse.data.content;
                 recommendedSymbols.shift();
                 revealedArticles.shift();
@@ -353,10 +355,10 @@ let sendMessage = async (custom) => {
 
                     let timeGapText = '';
                     if (parsed.symbol_data.time_gap.hours) {
-                        timeGapText += `${parsed.symbol_data.time_gap.hours}${parsed.symbol_data.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours} `;
+                        timeGapText += `${parsed.symbol_data.time_gap.hours}${parsed.symbol_data.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours}`;
                     }
                     if (parsed.symbol_data.time_gap.minutes) {
-                        timeGapText += `${parsed.symbol_data.time_gap.minutes}${parsed.symbol_data.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes} `;
+                        timeGapText += `${parsed.symbol_data.time_gap.minutes}${parsed.symbol_data.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes}`;
                     }
                     if (timeGapText) {
                         timeGapText += timeTexts.analysis;
@@ -472,20 +474,20 @@ let sendMessage = async (custom) => {
                     if (parsed.interval > 48) {
                         question1.classList.add('analyze-symbol');
                         if (selectedLanguage === 'kr') {
-                            question1.textContent = `${parsed.symbol} 스코어 및 가격 분석`;
+                            question1.textContent = `${parsed.symbol} 스코어 및 가격`;
                         } else if (selectedLanguage === 'jp') {
-                            question1.textContent = `${parsed.symbol}のスコアと価格分析`;
+                            question1.textContent = `${parsed.symbol}のスコアと価格`;
                         } else if (selectedLanguage === 'en') {
-                            question1.textContent = `${parsed.symbol} Score and Price Analysis`;
+                            question1.textContent = `${parsed.symbol} Score and Price`;
                         }
                     } else {
                         question1.classList.add('analyze-symbol-month');
                         if (selectedLanguage === 'kr') {
-                            question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격 분석`;
+                            question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
                         } else if (selectedLanguage === 'jp') {
-                            question1.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格分析`;
+                            question1.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格`;
                         } else if (selectedLanguage === 'en') {
-                            question1.textContent = `${parsed.symbol} One-Month Score and Price Analysis`;
+                            question1.textContent = `${parsed.symbol} One-Month Score and Price`;
                         }
                     }
 
@@ -526,6 +528,8 @@ let sendMessage = async (custom) => {
                     const scoreMovement = parsed.crypto_data.map(item => item.score);
                     const priceMovement = parsed.crypto_data.map(item => item.price);
                     drawChart(priceMovement, scoreMovement, timeLabels, canvas);
+
+
                 });
             }
             else if (parsedResponse.data.format_type === 'articles') {
@@ -675,15 +679,15 @@ let sendMessage = async (custom) => {
 
                 if (selectedLanguage === 'kr') {
                     question1.textContent = `다른 주요 암호 화폐 뉴스`; // "Other major cryptocurrency news" in Korean
-                    question2.textContent = `비트코인 스코어 및 가격 분석`; // "Bitcoin score and price analysis" in Korean
+                    question2.textContent = `비트코인 스코어 및 가격`; // "Bitcoin score and price analysis" in Korean
                     question3.textContent = `진입하기 좋은 암호 화폐 추천`; // "Recommended cryptocurrencies to enter" in Korean
                 } else if (selectedLanguage === 'jp') {
                     question1.textContent = `他の主要な暗号通貨ニュース`; // "Other major cryptocurrency news" in Japanese
-                    question2.textContent = `ビットコインのスコアと価格分析`; // "Bitcoin score and price analysis" in Japanese
+                    question2.textContent = `ビットコインのスコアと価格`; // "Bitcoin score and price analysis" in Japanese
                     question3.textContent = `エントリーに適した暗号通貨のおすすめ`; // "Recommended cryptocurrencies to enter" in Japanese
                 } else if (selectedLanguage === 'en') {
                     question1.textContent = `Other major cryptocurrency news`;
-                    question2.textContent = `Bitcoin score and price analysis`;
+                    question2.textContent = `Bitcoin score and price`;
                     question3.textContent = `Recommended cryptocurrencies to enter`;
                 }
 
@@ -703,6 +707,8 @@ let sendMessage = async (custom) => {
                 userDiv.appendChild(question3);
                 queryDiv.appendChild(userDiv);
                 chatBox.appendChild(queryDiv);
+
+
             }
             else if (parsedResponse.data.format_type === 'viewpoint') {
                 recommendedSymbols.unshift();
@@ -818,6 +824,7 @@ let sendMessage = async (custom) => {
                 userDiv.appendChild(question3);
                 queryDiv.appendChild(userDiv);
                 chatBox.appendChild(queryDiv);
+
             }
             else if (parsedResponse.data.format_type === 'default') {
                 // Add the assistant's message to the chat box
@@ -828,6 +835,20 @@ let sendMessage = async (custom) => {
                 assistantMessageDiv.innerHTML = parsedResponse.data.content.replace(/\n/g, '<br>');
                 wrapperDiv.appendChild(assistantMessageDiv);
                 chatBox.appendChild(wrapperDiv);
+
+                // Retrieve the object and parse it
+                const userMessage = {
+                    role: "user",
+                    content: message
+                };
+
+                conversation.push(userMessage);
+                const assistantMessage = {
+                    role: "assistant",
+                    content: data.responseText
+                };
+                conversation.push(assistantMessage);
+                console.log("conversation: ", conversation);
             }
 
             // Hide the "Generating..." message
@@ -843,21 +864,7 @@ let sendMessage = async (custom) => {
                 }
             }
 
-            // Retrieve the object and parse it
-            const userMessage = {
-                role: "user",
-                content: message
-            };
 
-            if (!data.functionCall) {
-                conversation.push(userMessage);
-                const assistantMessage = {
-                    role: "assistant",
-                    content: data.responseText
-                };
-                conversation.push(assistantMessage);
-                console.log("conversation: ", conversation);
-            }
             //finally set the maxUsage input value
             // Convert to a number, default to 0 if conversion results in NaN
             maxUsageInput.value = isNaN(Number(data.maxUsage)) ? 0 : Number(data.maxUsage);

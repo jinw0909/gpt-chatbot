@@ -57,7 +57,7 @@ class ArticleService
         // Fetch articles from the database
         $articles = DB::connection('mysql3')
             ->table('bu.Translations')
-            ->select('id', 'date')
+            ->select('id', 'date', 'title')
             ->orderBy('createdAt', 'desc')
             ->whereNotIn('id', $previously_shown) // Exclude articles in the recommended array
             ->where('date', '>=', $cutoffDateTimeUTC->format('Y-m-d H:i:s')) // Only articles within the last 24 hours
@@ -89,7 +89,7 @@ class ArticleService
                 'id' => $article->id,
                 'datetime' => $convertedDatetime,     // Converted timestamp
                 'time_gap' => $timeGap,               // Calculated time gap
-                'title' => '',
+                'title' => $article->title,
                 'image_url' => '',
                 'content' => '',
                 'summary' => '',
