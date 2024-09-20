@@ -30,7 +30,7 @@ async function addUserCharge() {
 
         if (response.ok) {
             const data = await response.json();
-            console.log('Charge added:', data.after);
+            console.log('After:', data.after);
             // Fetch the updated token count
             await fetchUserCharge();
         } else {
@@ -46,10 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchUserCharge();
 
     // Set the login time
-    const loginTimeSpan = document.getElementById('login-time');
-    const currentTime = new Date(Date.now());
-    const formattedTime = currentTime.toISOString().replace('T', ' ').split('.')[0] + ' UTC';
-    loginTimeSpan.textContent = `(${formattedTime})`;
+    // const loginTimeSpan = document.getElementById('login-time');
+    // const currentTime = new Date(Date.now());
+    // const formattedTime = currentTime.toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+    // loginTimeSpan.textContent = `(${formattedTime})`;
 });
 
 document.getElementById('send-button').addEventListener('click', async function() {
@@ -136,7 +136,7 @@ let sendMessage = async (custom) => {
     // Send the message via AJAX
     try {
         // const response = await fetch('{{ route('process-message') }}', {
-        const response = await fetch('https://goya-chatbot.com/conversation', {
+        const response = await fetch(processMessageUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ let sendMessage = async (custom) => {
 
             const data = await response.json();
             const parsedResponse = JSON.parse(data.responseText);
-
+            console.log("parsedResponse: ", parsedResponse);
             if (parsedResponse.data.format_type === 'crypto_recommendations') {
                 revealedArticles.shift();
                 const recommendations = parsedResponse.data.content;
@@ -180,10 +180,10 @@ let sendMessage = async (custom) => {
 
                     let timeGapText = '';
                     if (parsed.time_gap.hours) {
-                        timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours} `;
+                        timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours}`;
                     }
                     if (parsed.time_gap.minutes) {
-                        timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes} `;
+                        timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes}`;
                     }
                     if (timeGapText) {
                         timeGapText += timeTexts.recommend;
@@ -414,10 +414,10 @@ let sendMessage = async (custom) => {
 
                         let recommendGapText = '';
                         if (parsed.recommendation_status.time_gap.hours) {
-                            recommendGapText += `${parsed.recommendation_status.time_gap.hours}${parsed.recommendation_status.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours} `;
+                            recommendGapText += `${parsed.recommendation_status.time_gap.hours}${parsed.recommendation_status.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours}`;
                         }
                         if (parsed.recommendation_status.time_gap.minutes) {
-                            recommendGapText += `${parsed.recommendation_status.time_gap.minutes}${parsed.recommendation_status.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes} `;
+                            recommendGapText += `${parsed.recommendation_status.time_gap.minutes}${parsed.recommendation_status.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes}`;
                         }
                         if (timeGapText) {
                             recommendGapText += timeTexts.recommend;
@@ -553,10 +553,10 @@ let sendMessage = async (custom) => {
 
                     let timeGapText = '';
                     if (parsed.time_gap.hours) {
-                        timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours} `;
+                        timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours}`;
                     }
                     if (parsed.time_gap.minutes) {
-                        timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes} `;
+                        timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes}`;
                     }
                     if (timeGapText) {
                         timeGapText += timeTexts.articles;
@@ -724,10 +724,10 @@ let sendMessage = async (custom) => {
 
                 let timeGapText = '';
                 if (parsed.time_gap.hours) {
-                    timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours} `;
+                    timeGapText += `${parsed.time_gap.hours}${parsed.time_gap.hours === 1 ? timeTexts.hour : timeTexts.hours}`;
                 }
                 if (parsed.time_gap.minutes) {
-                    timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes} `;
+                    timeGapText += `${parsed.time_gap.minutes}${parsed.time_gap.minutes === 1 ? timeTexts.minutes : timeTexts.minutes}`;
                 }
                 if (timeGapText) {
                     timeGapText += timeTexts.articles;

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TokenService
@@ -80,4 +81,55 @@ class TokenService
             Log::error("User not found with ID: " . $userId, ['error' => 404]);
         }
     }
+
+//    public function reduceCharge($userId) {
+//        $costToReduce = self::$totalCost[$userId];
+//        $response = Http::post('https://api.retri.io/chatbot/reduce', [
+//            'user_id' => $userId,
+//            'amount' => $costToReduce
+//        ]);
+//
+//        //checking the response
+//        $responseData = $response->json();
+//        if ($responseData['code'] === 200) {
+//            return $responseData['charge'];
+//        } else {
+//            throw new \Exception($responseData['message']);
+//        }
+//    }
+
+//    public function addCharge($userId, $amount) {
+//        $response = Http::post('https://api.retri.io/chatbot/charge', [
+//            'user_id' => $userId,
+//            'amount' => $amount
+//        ]);
+//
+//        $responseData = $response->json();
+//        if ($responseData['code'] === 200) {
+//            return "Charged " . $amount . " dollars successfully to " . $userId . ". Left: " . $responseData['charge'] . ".";
+//        } else {
+//            return "Error with reason: " . $responseData['message'] . ".";
+//        }
+//    }
+
+    public function addCharge($userId, $amount) {
+        $user = User::find($userId);
+        if ($user) {
+            $user->charge += $amount;
+            $user->save();
+            return response()->json(['message' => 'Charge added successfully.', 'after' => $user->charge]);
+        } else {
+            return response()->json(['error' => 'User not found'], 402);
+        }
+    }
+
+    public function getChargeStatus($userId) {
+        $user = User::find($userId);
+        if ($user) {
+            return response()->json(['charge' => $user->charge]);
+        } else {
+            return response()->json(['error' => 'User not found'], 402);
+        }
+    }
+
 }

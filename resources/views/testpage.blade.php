@@ -63,13 +63,13 @@
                                 <i></i>
                                 <a href="/test">Goya Chat AI</a>
                             </h3>
-                            <div class="language-wrapper">
-                                <select name="language" id="language-select">
-                                    <option value="kr">KR</option>
-                                    <option value="jp">JP</option>
-                                    <option value="en">EN</option>
-                                </select>
-                            </div>
+<!--                            <div class="language-wrapper">-->
+<!--                                <select name="language" id="language-select">-->
+<!--                                    <option value="kr">KR</option>-->
+<!--                                    <option value="jp">JP</option>-->
+<!--                                    <option value="en">EN</option>-->
+<!--                                </select>-->
+<!--                            </div>-->
                             <div class="charge-wrapper">
                                 <div class="remaining">$0</div>
                                 <button type="button" id="add-button" class="button-custom">충전</button>
@@ -78,11 +78,11 @@
                         </div>
                         <div class="chat-box-body">
                             <div id="chat-box" class="chat-box">
-                                <div class="message center">
-                                    <div class="system">
-                                        <span id="connect-time">접속 시간</span><span id="login-time"></span>
-                                    </div>
-                                </div>
+<!--                                <div class="message center">-->
+<!--                                    <div class="system">-->
+<!--                                        <span id="connect-time">접속 시간</span><span id="login-time"></span>-->
+<!--                                    </div>-->
+<!--                                </div>-->
 
                                 <div class="message left">
                                     <div class="assistant content" id="header-text">
@@ -118,12 +118,24 @@
                                     </div>
                                 </form>
                             </div>
-                            <div class="input-open">
-                                <button id="input-open" class="input-open-btn">채팅창 열기</button>
+                            <div id="etc-wrapper" class="etc-wrapper">
+                                <div id="language-wrapper" class="language-wrapper">
+                                    <select name="language" id="language-select">
+                                        <option value="kr">KR</option>
+                                        <option value="jp">JP</option>
+                                        <option value="en">EN</option>
+                                    </select>
+                                </div>
+                                <div id="toggle-wrapper" class="toggle-wrapper">
+                                    <div class="input-open">
+                                        <button id="input-open" class="input-open-btn">채팅창 열기</button>
+                                    </div>
+                                    <div class="input-close">
+                                        <button id="input-close" class="input-close-btn">채팅창 닫기</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="input-close">
-                                <button id="input-close" class="input-close-btn">채팅창 닫기</button>
-                            </div>
+
                         </div>
 
 
@@ -140,7 +152,12 @@
         </div>
     </div>
 </div>
+<script>
+    let processMessageUrl = "{{ route('conversation')}}";
+    console.log("conversationUrl: ", processMessageUrl);
+</script>
 <script src="{{ asset('js/chat.js') }}"></script>
+<!--<script src="{{ asset('js/conversation.js') }}"></script>-->
 <script src="{{ asset('js/texts.js') }}"></script>
 </body>
 </html>

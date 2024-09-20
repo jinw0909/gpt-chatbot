@@ -14,7 +14,7 @@ body {
 }
 
 .main { display: flex; flex-direction: column; height: 100%; }
-#login-time { margin-left: .25rem; }
+#login-time { margin-left: .25rem; display: flex; align-items: center; justify-content: center; }
 
 .message {
     margin-top: 1rem;
@@ -238,6 +238,18 @@ body {
     gap: .5rem;
 }
 
+.etc-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.language-wrapper {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 
 /* Button Styles */
 .open-btn {
@@ -346,7 +358,7 @@ footer {
     .message { font-size: .8rem; }
     .error-message { font-size: .8rem; }
     .chat-box-header { height: 3rem; }
-    .chat-box-title { font-size: 1.2rem; }
+    .chat-box-title { font-size: 1rem; }
     .chat-box-title i { width: 24px; height: 30px; background-size: 24px; }
     .charge-wrapper { font-size: .8rem; }
     .close { margin-left: 0; font-size: 36px; }

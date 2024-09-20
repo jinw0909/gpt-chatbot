@@ -44,9 +44,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
-//        DB::connection('mysql2')->listen(function ($query) {
-//            Log::info('Executed Query: ' . $query->sql, ['bindings' => $query->bindings, 'time' => $query->time]);
+//        DB::listen(function ($query) {
+//            Log::info("SQL Query Executed: " . $query->sql);
+//            Log::info("Bindings: ", $query->bindings);
+//            Log::info("Time: " . $query->time . " ms");
 //        });
     }
 }
