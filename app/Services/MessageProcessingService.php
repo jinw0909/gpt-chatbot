@@ -64,18 +64,97 @@ class MessageProcessingService
         ]);
     }
 
+//    private function getSystemMessages($recommended, $revealed, $lang, $timezone) {
+//        // Define system messages logic here
+//        return [
+//            [
+//                'role' => 'system',
+//                'content' => 'When passing "symbols" parameter to the function "analyze_cryptos", MAKE SURE that the last letter of the symbol is not missing or altered. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' =>
+//                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, you should call the function "analyze_cryptos" and respond in the "format_type" of "crypto_analysis". The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When you make any function call "analyze_cryptos", but fail to retrieve the expected data, you may respond in a format type of "default".'
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When your response "format_type" is "crypto_recommendations", the "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
+//            ],
+//            [
+//              'role' => 'system',
+//              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When the user asks to tell about the cryptocurrency symbol, or asks to explain about the cryptocurrency symbol, then respond in the format_type of "default". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_viewpoint" and respond with a format_type of "viewpoint".'
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => "When the user asks for crypto related articles or additional/other articles, call the function 'show_articles' and respond in a format_type of 'articles'. Check the previously_shown article id from the system message and pass it as an argument. . "
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'The score values returned when calling the function "analyze_cryptos" is called a "Goya score". It is translated as "ゴヤースコア" in Japanese, and "고야 스코어" in Korean. Goya score is an indicator to predict the future price of the symbol cryptocurrency.'.
+//                    'When the Goya score is on a downward trend, the price of the cryptocurrency is likely to go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
+//                    'Goya score is derived from collecting and analyzing objective blockchain transaction activity data of the symbol cryptocurrency focused mainly on the movements that has positive or negative impacts on the price of the cryptocurrency. However, there are many other objective indicators from which the Goya score is derived from. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'From the "recommended_reason" content, L1, L2, L3 signal means that the symbol cryptocurrency price is on a upward trend. S1, S2, S3 signal means that the price is on a downward trend for that symbol. However the S1, S2, S3 signals are not necessarily negative signals because futures short trading is also a possible choice in the field of crypto trading. When creating the analysis, this point of view may be reflected as well. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' =>
+//                    'Your default response format_type is "default" when there is no specific instruction on the response format_type, and in this case, the content should be in a plain text format not in JSON. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .
+//                    'If the user asks to provide additional recommendations, avoid providing these cryptos. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'This is the list of articles that is already shown to the user. ' . implode(', ', $revealed) .
+//                    'If the user asks to provide additional articles, avoid providing articles in this list.'
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'The default language of the user is ' . $lang . ' and the default timezone of the user is ' . $timezone . '. '
+//            ],
+//            [
+//                'role' => 'user',
+//                'content' => ''
+//            ],
+//            [
+//                'role' => 'assistant',
+//                'content' => '{"data" : {"format_type" : "default", "content": "" }}'
+//            ]
+//        ];
+//    }
+
     private function getSystemMessages($recommended, $revealed, $lang, $timezone) {
         // Define system messages logic here
-        return [
+        $messages = [
             [
                 'role' => 'system',
                 'content' => 'When passing "symbols" parameter to the function "analyze_cryptos", MAKE SURE that the last letter of the symbol is not missing or altered. '
             ],
-//            [
-//                'role' => 'system',
-//                'content' =>
-//                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, or upon just receiving crypto symbols, you should respond in the "format_type" of "crypto_analysis" and call the function "analyze_cryptos", pass the given symbols as the "symbols" argument in order to get all the relevant data to generate the response for these type of inquiries. The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
-//            ],
             [
                 'role' => 'system',
                 'content' =>
@@ -85,25 +164,21 @@ class MessageProcessingService
                 'role' => 'system',
                 'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
             ],
-//            [
-//                'role' => 'system',
-//                'content' => 'When you make any function call "analyze_cryptos", but fail to retrieve the expected data, then respond in a format type of "default".'
-//            ],
+            [
+                'role' => 'system',
+                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated "analysis_translated" should include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
+            ],
             [
                 'role' => 'system',
                 'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
             ],
-//            [
-//                'role' => 'system',
-//                'content' => 'When your response "format_type" is "crypto_recommendations", you must call the function "recommend_cryptos" to complete the response. "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
-//            ],
             [
                 'role' => 'system',
                 'content' => 'When your response "format_type" is "crypto_recommendations", the "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
             ],
             [
-              'role' => 'system',
-              'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
+                'role' => 'system',
+                'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
             ],
             [
                 'role' => 'system',
@@ -134,11 +209,6 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' =>
-                    'If the user greets or simply says hello, do not call any functions and respond in a plain text in a format_type of "default". '
-            ],
-            [
-                'role' => 'system',
                 'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .
                     'If the user asks to provide additional recommendations, avoid providing these cryptos. '
             ],
@@ -150,9 +220,38 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' => 'The default language of the user is ' . $lang . ' and the default timezone of the user is ' . $timezone . '. '
-            ]
+            ],
         ];
+
+        // Define greetings based on language
+        $userGreeting = '';
+        $assistantGreeting = '';
+
+        if ($lang == 'kr') {
+            $userGreeting = '안녕';
+            $assistantGreeting = '안녕하세요! 어떻게 도와드릴까요?';
+        } elseif ($lang == 'jp') {
+            $userGreeting = 'こんにちは';
+            $assistantGreeting = 'こんにちは！何かお手伝いできることがあれば教えてください。';
+        } else {
+            $userGreeting = 'Hello';
+            $assistantGreeting = 'Hello! How can I assist you?';
+        }
+
+        // Append final user and assistant messages with greetings
+        $messages[] = [
+            'role' => 'user',
+            'content' => $userGreeting
+        ];
+
+        $messages[] = [
+            'role' => 'assistant',
+            'content' => '{"data": {"format_type": "default", "content": '. $assistantGreeting . '}}'
+        ];
+
+        return $messages;
     }
+
 
     private function getTools() {
         return [

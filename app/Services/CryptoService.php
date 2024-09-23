@@ -260,7 +260,7 @@ class CryptoService
     private function getRecommendations($limit, $coin_list = [])
     {
         // Define the excluded symbols directly in the SQL query
-        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS', 'DOGS', 'SUN', 'OMG'];
+        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS', 'DOGS', 'SUN', 'OMG', 'QUICK'];
 
         // Get the current UTC time
         $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));

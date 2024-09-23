@@ -375,12 +375,23 @@ let sendMessage = async (custom) => {
 
                     const assistantDiv = document.createElement('div');
                     assistantDiv.className = 'assistant';
-                    assistantDiv.appendChild(symbolDiv);
-                    assistantDiv.appendChild(priceDiv);
-                    assistantDiv.appendChild(timeDiv);
-                    assistantDiv.appendChild(gapDiv);
-                    assistantDiv.appendChild(canvas);
-                    assistantDiv.appendChild(analysisDiv);
+
+                    //divide by checking the existence of the crypto_data
+                    if (Array.isArray(parsed.crypto_data) && parsed.crypto_data.length > 0) {
+                        // If parsed.crypto_data is a non-empty array, append all elements
+                        assistantDiv.appendChild(symbolDiv);
+                        assistantDiv.appendChild(priceDiv);
+                        assistantDiv.appendChild(timeDiv);
+                        assistantDiv.appendChild(gapDiv);
+                        assistantDiv.appendChild(canvas);
+                        assistantDiv.appendChild(analysisDiv);
+                    } else if (Array.isArray(parsed.crypto_data) && parsed.crypto_data.length === 0) {
+                        // If parsed.crypto_data is an empty array, append only certain elements
+                        assistantDiv.appendChild(symbolDiv);
+                        assistantDiv.appendChild(analysisDiv);
+                    }
+
+
 
                     if (parsed.recommendation_status.is_recommended) {
                         const status = parsed.recommendation_status;
@@ -863,7 +874,6 @@ let sendMessage = async (custom) => {
                     conversation.push(data.summary);
                 }
             }
-
 
             //finally set the maxUsage input value
             // Convert to a number, default to 0 if conversion results in NaN
