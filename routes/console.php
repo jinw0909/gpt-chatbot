@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
+})->purpose('Display an inspiring quote')->everyMinute();
 
 Artisan::command('app:clear-logs', function () {
     $files = File::files(storage_path('logs'));
