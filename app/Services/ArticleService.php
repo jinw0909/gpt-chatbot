@@ -106,7 +106,6 @@ class ArticleService
         return json_encode($results);
     }
 
-
     private function convertTimeToTimezone($time, $timezone)
     {
         $timezoneObj = $this->getTimezoneObject($timezone);

@@ -93,9 +93,13 @@ class MessageProcessingService
                 'role' => 'system',
                 'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
             ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When your response "format_type" is "crypto_recommendations", you must call the function "recommend_cryptos" to complete the response. "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
+//            ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_recommendations", you must call the function "recommend_cryptos" to complete the response. "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
+                'content' => 'When your response "format_type" is "crypto_recommendations", the "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
             ],
             [
               'role' => 'system',
@@ -103,11 +107,11 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to tell him/her about the cryptocurrency symbol, or asks to explain him/her about the cryptocurrency symbol, then respond in the format_type of "default". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
+                'content' => 'When the user asks to tell about the cryptocurrency symbol, or asks to explain about the cryptocurrency symbol, then respond in the format_type of "default". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_articles" and respond with a format_type of "viewpoint".'
+                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_viewpoint" and respond with a format_type of "viewpoint".'
             ],
             [
                 'role' => 'system',
