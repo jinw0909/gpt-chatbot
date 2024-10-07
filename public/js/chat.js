@@ -202,7 +202,8 @@ let sendMessage = async (custom) => {
 
                     // Create div for content
                     const contentDiv = document.createElement('div');
-                    contentDiv.textContent = `${parsed.recommended_reason_translated}`;
+                    // contentDiv.textContent = `${parsed.recommended_reason_translated}`;
+                    contentDiv.textContent = `${parsed.recommended_reason}`;
 
                     // Create wrapper
                     const wrapperDiv = document.createElement('div');
@@ -440,7 +441,8 @@ let sendMessage = async (custom) => {
                         recommendGapDiv.style.color = '#bbb';
 
                         const recommendContentDiv = document.createElement('div');
-                        recommendContentDiv.textContent = status.recommended_reason_translated;
+                        // recommendContentDiv.textContent = status.recommended_reason_translated;
+                        recommendContentDiv.textContent = status.recommended_reason;
                         recommendDiv.appendChild(recommendTimeDiv);
                         recommendDiv.appendChild(recommendGapDiv);
                         recommendDiv.appendChild(recommendImageDiv);
@@ -539,8 +541,6 @@ let sendMessage = async (custom) => {
                     const scoreMovement = parsed.crypto_data.map(item => item.score);
                     const priceMovement = parsed.crypto_data.map(item => item.price);
                     drawChart(priceMovement, scoreMovement, timeLabels, canvas);
-
-
                 });
             }
             else if (parsedResponse.data.format_type === 'articles') {
@@ -909,10 +909,36 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
 
     const ctx = canvas.getContext('2d');
 
+    const firstLabel = labels[0];
+    const middleLabel = labels[Math.floor(labels.length / 2)];
+    const lastLabel = labels[labels.length - 1];
+
+    const customLabels = labels.map((label, index) => {
+        if (label === firstLabel || label === middleLabel || label === lastLabel) {
+            return label; // Keep first, middle, and last labels
+        }
+        return ''; // Hide other labels by making them empty strings
+    });
+
+    // Utility function to format date to MM/DD HH:mm
+    const formatDate = (isoString) => {
+        if (!isoString) return ''; // Handle empty strings
+
+        const date = new Date(isoString);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+
+        return `${month}/${day} ${hours}:${minutes}`;
+    };
+
+    console.log("customLabels: ", customLabels);
+
     const myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: customLabels,
             datasets: [
                 {
                     label: 'Market Price',
@@ -950,8 +976,18 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                     position: 'right',
 
                 },
-                x: { // Hide the x-axis scale as well
-                    display: false, // Show the scale for the x-axis
+                x: {
+                    display: true,
+                    ticks: {
+                        callback: function(value, index) {
+                            if (customLabels[index]) {
+                                return formatDate(customLabels[index]);
+                            }
+                            return ''; // Hide empty labels
+                        },
+                        autoSkip: false,
+                        maxTicksLimit: 3
+                    }
                 }
             },
             plugins: {
@@ -968,12 +1004,92 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                 }
             },
             interaction: {
-                mode: 'nearest',
+                mode: 'point',
                 axis: 'x',
-                intersect: false
+                intersect: true
             }
         }
     })
+    // const myChart = new Chart(ctx, {
+    //     type: 'line',
+    //     data: {
+    //         labels: customLabels,
+    //         datasets: [
+    //             {
+    //                 label: 'Market Price',
+    //                 data: priceMovement,
+    //                 borderColor: 'rgba(153, 102, 255, 1)', // Color of the first line
+    //                 borderWidth: 2,
+    //                 fill: false, // Don't fill under the line
+    //                 yAxisID: 'y-left',
+    //                 pointRadius: 1,
+    //                 pointHoverRadius: 3,
+    //                 tension: 0.4
+    //             },
+    //             {
+    //                 label: 'Goya Score',
+    //                 data: scoreMovement,
+    //                 borderColor: 'rgba(75, 192, 192, 1)', // Color of the second line
+    //                 borderWidth: 2,
+    //                 fill: false, // Don't fill under the line
+    //                 yAxisID: 'y-right',
+    //                 pointRadius: 1,
+    //                 pointHoverRadius: 3,
+    //                 tension: 0.4
+    //             }
+    //         ]
+    //     },
+    //     options: {
+    //         scales: {
+    //             'y-left': { // Left y-axis for Price Movement
+    //                 type: 'linear',
+    //                 position: 'left',
+    //             },
+    //             'y-right': { // Right y-axis for Score Movement
+    //                 type: 'linear',
+    //                 position: 'right',
+    //             },
+    //             x: {
+    //                 display: true,
+    //                 ticks: {
+    //                     callback: function(value, index) {
+    //                         if (customLabels[index]) {
+    //                             return formatDate(customLabels[index]);
+    //                         }
+    //                         return ''; // Hide empty labels
+    //                     },
+    //                     autoSkip: true,  // Ensure that labels are auto-skipped if they don’t fit
+    //                     autoSkipPadding: 10,  // Add padding between skipped labels
+    //                     maxRotation: 0,  // Prevents labels from rotating
+    //                     minRotation: 0,  // Ensures labels are not rotated
+    //                     maxTicksLimit: 3,  // Limits the number of ticks displayed
+    //                 },
+    //                 afterFit: function(scale) {
+    //                     scale.paddingRight = 20;  // Adjust padding on the right to prevent cut-offs
+    //                     scale.paddingLeft = 20;   // Adjust padding on the left to prevent cut-offs
+    //                 }
+    //             }
+    //         },
+    //         plugins: {
+    //             tooltip: {
+    //                 callbacks: {
+    //                     title: function(tooltipItems) {
+    //                         return tooltipItems[0].label;  // Display the label when hovering
+    //                     }
+    //                 }
+    //             },
+    //             legend: {
+    //                 display: false
+    //             }
+    //         },
+    //         interaction: {
+    //             mode: 'point',
+    //             axis: 'x',
+    //             intersect: true
+    //         }
+    //     }
+    // });
+
 }
 
 function formatDateTimeToWords(dateTimeString) {
@@ -1022,6 +1138,37 @@ Array.from(questionArray).forEach((elem) => {
         executeQuestion(elem);
     });
 });
+
+let langDivs = document.querySelectorAll('.select-lang');
+langDivs.forEach(div => {
+    div.addEventListener('click', function() {
+        if (this.classList.contains('selected')) {
+            return; // Exit the function if it already has the 'selected' class
+        }
+       langDivs.forEach(d => d.classList.remove('selected'));
+       this.classList.add('selected');
+       selectedLanguage = this.getAttribute('data-lang');
+       console.log('Selected language: ', selectedLanguage);
+        let languageDiv = document.createElement('div');
+        languageDiv.classList.add('message', 'left');
+        let assistantDiv = document.createElement('div');
+        assistantDiv.classList.add('assistant');
+        // Set textContent based on selected language
+        if (selectedLanguage === 'kr') {
+            assistantDiv.textContent = '기본 언어로 한국어를 선택하였습니다.';
+        } else if (selectedLanguage === 'jp') {
+            assistantDiv.textContent = 'デフォルト言語として日本語が選ばれました。';
+        } else if (selectedLanguage === 'en') {
+            assistantDiv.textContent = 'English has been selected as the default language.';
+        }
+        languageDiv.appendChild(assistantDiv);
+        const chatBox = document.querySelector('#chat-box');
+        chatBox.appendChild(languageDiv);
+
+        handleLanguageChange();
+
+    });
+})
 
 // Modal handling
 let modal = document.getElementById("myModal");

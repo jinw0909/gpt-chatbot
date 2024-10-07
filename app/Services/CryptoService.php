@@ -20,7 +20,6 @@ class CryptoService
         Log::info("time", ["time" => $dateTime]);
         return $dateTime->format('Y-m-d H:i:s');
     }
-
     public function getCryptoDataInTimeRange($symbol, $startTime, $endTime, $timezone)
     {
         $symbol = $this->normalizeSymbol($symbol);
@@ -40,7 +39,6 @@ class CryptoService
 
         return json_encode(['symbol' => $symbol, 'data' => $data]);
     }
-
     public function getLatestPrice(string $symbol, $timezone)
     {
         $symbol = $this->normalizeSymbol($symbol);
@@ -57,23 +55,92 @@ class CryptoService
             $timeGap = $this->calculateTimeGap($convertedDatetime, $timezone);
 
             $result = [
-                'symbol' => strtoupper($data->symbol),
-                'score' => $data->score,
-                'price' => $data->price,
-                'datetime' => $convertedDatetime,
-                'time_gap' => $timeGap
+                'symbol_data' => [
+                    'symbol' => strtoupper($data->symbol),
+                    'score' => $data->score,
+                    'price' => $data->price,
+                    'datetime' => $convertedDatetime,
+                    'time_gap' => $timeGap
+                ]
             ];
         }
-        Log::info("get latest price result: ", ['result' => $result]);
+        Log::info("get latest price result: ", ["result" => $result]);
 
         return json_encode($result);
     }
-
     public function convertToLocalTime($utc_time, $timezone)
     {
         return $this->convertTimeToTimezone($utc_time, $timezone);
     }
-
+//    public function checkRecommendationStatus(string $symbol, $timezone)
+//    {
+//        $normalizedSymbol = $this->normalizeSymbol($symbol, false);
+//
+//        // Remove the appended 'USDT' from the symbol if it exists
+//        if (str_ends_with($normalizedSymbol, 'USDT')) {
+//            $normalizedSymbol = substr($normalizedSymbol, 0, -4); // Remove 'USDT' (4 characters)
+//        }
+//
+//        $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
+//        $twelveHoursAgoKST = clone $currentKST;
+//        $twelveHoursAgoKST->modify('-6 hours');
+//        Log::info("current KST: ", ["currentKST" => $currentKST]);
+//        Log::info("12 hours ago KST: ", ["12HoursAgoKST" => $twelveHoursAgoKST]);
+//
+//        // Build the query
+//        $query = DB::connection('mysql2')->table('beuliping')
+//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+//            ->where('beuliping.symbol', $normalizedSymbol)
+//            ->whereBetween('beuliping.datetime', [$twelveHoursAgoKST, $currentKST])
+//            ->whereNotNull('beuliping.images')
+//            ->orderBy('beuliping.id', 'desc')
+//            ->select(
+//                'beuliping.id',
+//                'beuliping.symbol',
+//                DB::raw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime"),
+//                'beuliping.images',
+//                'vm_beuliping_EN.content'
+//            );
+//
+//        // Log the raw SQL query
+//        Log::info("SQL Query: ", [
+//            'sql' => $query->toSql(),
+//            'bindings' => $query->getBindings()
+//        ]);
+//
+//        // Execute the query
+//        $result = $query->first();
+//
+//        // Determine if a recommendation was found
+//        $isRecommended = $result ? true : false;
+//
+//        // Initialize recommendTimeGap as null
+//        $recommendTimeGap = null;
+//
+//        // Calculate recommendTime and recommendTimeGap if there is a recommendation
+//        if ($isRecommended) {
+//            $recommendTime = $this->convertTimeToTimezone($result->datetime, $timezone);
+//            $recommendTimeGap = $this->calculateTimeGap($recommendTime, $timezone);
+//        } else {
+//            $recommendTime = null;
+//        }
+//
+//        // Prepare the response for the current symbol
+//        $response = [
+//            'symbol' => $normalizedSymbol . 'USDT',
+//            'is_recommended' => $isRecommended,
+//            'recommend_time' => $recommendTime,
+//            'image_url' => $isRecommended ? $result->images : null,
+//            'recommended_reason' => $isRecommended ? $result->content : null,
+//            'time_gap' => $recommendTimeGap
+//        ];
+//
+//        // Log the result
+//        Log::info("check_recommendation_status result for symbol: ", ["symbol" => $normalizedSymbol, "result" => $response]);
+//
+//        // Return the result as JSON
+//        return json_encode($response);
+//    }
     public function checkRecommendationStatus(string $symbol, $timezone)
     {
         $normalizedSymbol = $this->normalizeSymbol($symbol, false);
@@ -83,6 +150,17 @@ class CryptoService
             $normalizedSymbol = substr($normalizedSymbol, 0, -4); // Remove 'USDT' (4 characters)
         }
 
+        // Determine the language suffix based on the timezone
+        $userLanguage = 'EN'; // Default is English
+        if ($timezone === 'KST') {
+            $userLanguage = 'KR'; // Korean
+        } elseif ($timezone === 'JST') {
+            $userLanguage = 'JP'; // Japanese
+        }
+
+        // Build the dynamic table name
+        $tableWithLanguage = 'vm_beuliping_' . $userLanguage;
+
         $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
         $twelveHoursAgoKST = clone $currentKST;
         $twelveHoursAgoKST->modify('-6 hours');
@@ -91,7 +169,7 @@ class CryptoService
 
         // Build the query
         $query = DB::connection('mysql2')->table('beuliping')
-            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+            ->join($tableWithLanguage, 'beuliping.id', '=', "$tableWithLanguage.m_id")
             ->where('beuliping.symbol', $normalizedSymbol)
             ->whereBetween('beuliping.datetime', [$twelveHoursAgoKST, $currentKST])
             ->whereNotNull('beuliping.images')
@@ -101,7 +179,7 @@ class CryptoService
                 'beuliping.symbol',
                 DB::raw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as datetime"),
                 'beuliping.images',
-                'vm_beuliping_EN.content'
+                "$tableWithLanguage.content"
             );
 
         // Log the raw SQL query
@@ -156,14 +234,14 @@ class CryptoService
             // Call each function for the current symbol
             $latestPriceData = json_decode($this->getLatestPrice($symbol, $timezone), true);
             $cryptoData = json_decode($this->getCryptoData($symbol, $hours, $timezone), true);
-            $recommendationStatus = json_decode($this->checkRecommendationStatus($symbol, $timezone), true);
+//            $recommendationStatus = json_decode($this->checkRecommendationStatus($symbol, $timezone), true);
 
             // Combine the results for the current symbol
             $symbolResult = [
                 'symbol' => $normalizedSymbol,
                 'symbol_data' => $latestPriceData,
                 'crypto_data' => $cryptoData,
-                'recommendation_status' => $recommendationStatus,
+//                'recommendation_status' => $recommendationStatus,
                 'interval' => $hours
             ];
 
@@ -174,7 +252,6 @@ class CryptoService
         // Return the combined results as JSON
         return json_encode($combinedResults);
     }
-
     public function getRecommendation($timezone, $limit = 3, $already_recommended = []) {
         if ($limit === 0) { $limit = 3; }
         if ($limit > 10) { $limit = 10; }
@@ -187,9 +264,25 @@ class CryptoService
             return $normalizedCoin;
         }, $already_recommended);
 
+        // Map timezones to specific strings
+        switch ($timezone) {
+            case 'UTC':
+                $mappedTimezone = 'EN';
+                break;
+            case 'KST':
+                $mappedTimezone = 'KR';
+                break;
+            case 'JST':
+                $mappedTimezone = 'JP';
+                break;
+            default:
+                $mappedTimezone = 'EN'; // Default to 'EN'
+                break;
+        }
+
         //Get the recommendations using the recursive function
 //        $result = $this->getRecommendationsRecursive($limit, $sanitizedCoinList, $offset = 0);
-        $result = $this->getRecommendations($limit, $sanitizedCoinList);
+        $result = $this->getRecommendations($limit, $mappedTimezone, $sanitizedCoinList);
         // Parse the datetime using the specified timezone
         $result = $this->convertToTimeZone($result, $timezone);
         // Return the processed result
@@ -204,105 +297,103 @@ class CryptoService
 
         return $jsonResult;
     }
+//    private function getRecommendations($limit, $timezone, $coin_list = [])
+//    {
+//        // Define the excluded symbols directly in the SQL query
+//        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS', 'DOGS', 'SUN', 'OMG', 'QUICK'];
+//
+//        // Get the current UTC time
+//        $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));
+//        // Subtract 4 hours from the current UTC time to get the lower bound
+//        $fourHoursAgoUtcTime = $currentUtcTime->modify('-4 hours')->format('Y-m-d H:i:s');
+//
+//        $tableName = 'vm_beuliping_' . strtoupper($timezone);
+//
+//        // Step 1: Apply filters first to reduce the number of rows
+//        $filteredRows = DB::connection('mysql2')->table('beuliping')
+//            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
+//            ->select(
+//                'beuliping.id',
+//                'beuliping.symbol',
+//                'beuliping.images as image_url',
+//                'vm_beuliping_EN.content as recommended_reason',
+//                DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
+//            )
+//            ->whereNotIn('beuliping.symbol', $excludedSymbols) // Exclude specific symbols
+//            ->whereNotNull('beuliping.images') // Ensure image_url is not null
+//            ->whereNotIn('beuliping.symbol', $coin_list) // Exclude symbols already in the coin list
+//            ->where(function ($query) {
+//                // Apply conditions to filter based on recommended_reason content
+//                $query->where('vm_beuliping_EN.content', 'not like', 'no%')
+//                    ->where('vm_beuliping_EN.content', 'not like', '%there%');
+//            })
+//            ->whereRaw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) >= ?", [$fourHoursAgoUtcTime]) // Add condition for regdate within the last 4 hours
+//            ->orderBy('beuliping.id', 'desc') // Order by id in descending order to get recent rows first
+//            ->get(); // Fetch all filtered rows
+//
+//        // Step 2: Use Collection methods to group by 'symbol' and keep only the most recent row
+//        $uniqueResults = $filteredRows->groupBy('symbol')->map(function ($group) {
+//            return $group->first(); // Keep only the most recent row for each symbol
+//        });
+//
+//        // Step 3: Take the desired number of rows (limit)
+//        $finalResults = $uniqueResults->take($limit);
+//
+//        // Log the fetched results
+//        Log::info("Fetched recommendations: ", ["recommendations" => $finalResults]);
+//
+//        // Return the results
+//        return $finalResults->values(); // Return as a collection or array
+//    }
+    private function getRecommendations($limit, $timezone, $coin_list = [])
+{
+    // Define the excluded symbols directly in the SQL query
+    $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA', 'NULS', 'DOGS', 'SUN', 'OMG', 'QUICK'];
 
-    private function getRecommendationsRecursive($limit, $coin_list = [], $offset = 0, $accumulatedResults = null)
-    {
-        // Initialize the accumulated results if not already initialized
-        if ($accumulatedResults === null) {
-            $accumulatedResults = collect();
-        }
+    // Get the current UTC time
+    $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));
+    // Subtract 4 hours from the current UTC time to get the lower bound
+    $fourHoursAgoUtcTime = $currentUtcTime->modify('-4 hours')->format('Y-m-d H:i:s');
 
-        // Base case: If the accumulated results have reached the limit, return them
-        if ($accumulatedResults->count() >= $limit) {
-            return $accumulatedResults->take($limit);
-        }
+    // Dynamically set the table name based on the $timezone
+    $tableName = 'vm_beuliping_' . strtoupper($timezone); // Concatenate the timezone
 
-        // Query 100 rows from the database starting from the given offset
-        $queryResults = DB::connection('mysql2')->table('beuliping')
-            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-            ->orderBy('beuliping.id', 'desc')
-            ->offset($offset)
-            ->limit(10)
-            ->select(
-                'beuliping.symbol',
-                'beuliping.images as image_url',
-                'vm_beuliping_EN.content as recommended_reason',
-                DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
-            )
-            ->get();
+    // Step 1: Apply filters first to reduce the number of rows
+    $filteredRows = DB::connection('mysql2')->table('beuliping')
+        ->join($tableName, 'beuliping.id', '=', "$tableName.m_id") // Use dynamic table name
+        ->select(
+            'beuliping.id',
+            'beuliping.symbol',
+            'beuliping.images as image_url',
+            "$tableName.content as recommended_reason", // Use dynamic table name for content
+            DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
+        )
+        ->whereNotIn('beuliping.symbol', $excludedSymbols) // Exclude specific symbols
+        ->whereNotNull('beuliping.images') // Ensure image_url is not null
+        ->whereNotIn('beuliping.symbol', $coin_list) // Exclude symbols already in the coin list
+        ->where(function ($query) use ($tableName) {
+            // Apply conditions to filter based on recommended_reason content dynamically
+            $query->where("$tableName.content", 'not like', 'no%')
+                ->where("$tableName.content", 'not like', '%there%');
+        })
+        ->whereRaw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) >= ?", [$fourHoursAgoUtcTime]) // Add condition for regdate within the last 4 hours
+        ->orderBy('beuliping.id', 'desc') // Order by id in descending order to get recent rows first
+        ->get(); // Fetch all filtered rows
 
-        // Base case: If there are no more rows to query, return the accumulated results
-        if ($queryResults->isEmpty()) {
-            return $accumulatedResults->take($limit); // Return what we have so far up to the limit
-        }
+    // Step 2: Use Collection methods to group by 'symbol' and keep only the most recent row
+    $uniqueResults = $filteredRows->groupBy('symbol')->map(function ($group) {
+        return $group->first(); // Keep only the most recent row for each symbol
+    });
 
-        // Filter out coins that are already in the coin list and meet the criteria
-        $newResults = $queryResults->filter(function ($item) use ($coin_list) {
-            return $item->symbol !== '1000BONK'
-                && $item->symbol !== 'RAD' // Exclude symbol 'RAD'
-                && $item->symbol !== 'BANANA' // Exclude symbol 'BANANA'
-                && !is_null($item->image_url)
-                && !in_array($item->symbol, $coin_list)
-                && stripos($item->recommended_reason, 'no') !== 0
-                && stripos($item->recommended_reason, 'there') === false;
-        });
+    // Step 3: Take the desired number of rows (limit)
+    $finalResults = $uniqueResults->take($limit);
 
-        // Add new results to the accumulated results
-        $accumulatedResults = $accumulatedResults->merge($newResults);
+    // Log the fetched results
+    Log::info("Fetched recommendations: ", ["recommendations" => $finalResults]);
 
-        // Update the coin list with new symbols
-        $newCoinList = array_merge($coin_list, $newResults->pluck('symbol')->toArray());
-
-        // Recursive call logic to keep fetching more results until we have enough
-        return $this->getRecommendationsRecursive($limit, $newCoinList, $offset + 10, $accumulatedResults);
-    }
-
-    private function getRecommendations($limit, $coin_list = [])
-    {
-        // Define the excluded symbols directly in the SQL query
-        $excludedSymbols = ['1000BONK', 'RAD', 'BANANA', 'ALPACA' , 'NULS', 'DOGS', 'SUN', 'OMG', 'QUICK'];
-
-        // Get the current UTC time
-        $currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));
-        // Subtract 4 hours from the current UTC time to get the lower bound
-        $fourHoursAgoUtcTime = $currentUtcTime->modify('-4 hours')->format('Y-m-d H:i:s');
-
-        // Step 1: Apply filters first to reduce the number of rows
-        $filteredRows = DB::connection('mysql2')->table('beuliping')
-            ->join('vm_beuliping_EN', 'beuliping.id', '=', 'vm_beuliping_EN.m_id')
-            ->select(
-                'beuliping.id',
-                'beuliping.symbol',
-                'beuliping.images as image_url',
-                'vm_beuliping_EN.content as recommended_reason',
-                DB::raw('DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) as regdate')
-            )
-            ->whereNotIn('beuliping.symbol', $excludedSymbols) // Exclude specific symbols
-            ->whereNotNull('beuliping.images') // Ensure image_url is not null
-            ->whereNotIn('beuliping.symbol', $coin_list) // Exclude symbols already in the coin list
-            ->where(function ($query) {
-                // Apply conditions to filter based on recommended_reason content
-                $query->where('vm_beuliping_EN.content', 'not like', 'no%')
-                    ->where('vm_beuliping_EN.content', 'not like', '%there%');
-            })
-            ->whereRaw("DATE_SUB(beuliping.datetime, INTERVAL 9 HOUR) >= ?", [$fourHoursAgoUtcTime]) // Add condition for regdate within the last 4 hours
-            ->orderBy('beuliping.id', 'desc') // Order by id in descending order to get recent rows first
-            ->get(); // Fetch all filtered rows
-
-        // Step 2: Use Collection methods to group by 'symbol' and keep only the most recent row
-        $uniqueResults = $filteredRows->groupBy('symbol')->map(function ($group) {
-            return $group->first(); // Keep only the most recent row for each symbol
-        });
-
-        // Step 3: Take the desired number of rows (limit)
-        $finalResults = $uniqueResults->take($limit);
-
-        // Log the fetched results
-        Log::info("Fetched recommendations: ", ["recommendations" => $finalResults]);
-
-        // Return the results
-        return $finalResults->values(); // Return as a collection or array
-    }
+    // Return the results
+    return $finalResults->values(); // Return as a collection or array
+}
 
     public function getCryptoData(string $symbol, $hours = 24, $timezone = 'UTC')
     {
@@ -328,10 +419,8 @@ class CryptoService
                 ->orderBy('regdate')
                 ->select('simbol as symbol', 'score', 'price', 'regdate')
                 ->get();
-
             $formattedData = $this->formatDataWithTimezone($data, $timezone);
         } else {
-
             // Logic for daily interval (more than 48 hours)
             $data = DB::connection('mysql')->table('trsi.retri_chart_data')
                 ->where('simbol', $symbol)
@@ -339,14 +428,12 @@ class CryptoService
                 ->orderBy('regdate')
                 ->select('simbol as symbol', 'score', 'price', 'regdate')
                 ->get();
-
             $formattedData = $this->averageAndFormatData($data, $timezone);
         }
 
         // Add the formatted data to the results array
         return $formattedData;
     }
-
     // Private helper functions
     private function normalizeSymbol($symbol, $appendUSDT = true)
     {
@@ -366,7 +453,6 @@ class CryptoService
 
         return $symbol;
     }
-
     private function convertIsoToDateTime($isoTime)
     {
         $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $isoTime, new DateTimeZone('UTC'));
@@ -375,7 +461,6 @@ class CryptoService
         }
         return $dateTime->format('Y-m-d H:i:s');
     }
-
     private function getTimezoneObject($timezone)
     {
         return match (strtoupper($timezone)) {
@@ -384,7 +469,6 @@ class CryptoService
             default => new DateTimeZone('UTC'),
         };
     }
-
     private function convertTimeToTimezone($time, $timezone)
     {
         $timezoneObj = $this->getTimezoneObject($timezone);
@@ -392,7 +476,6 @@ class CryptoService
         $dateTime->setTimezone($timezoneObj);
         return $dateTime->format('Y-m-d\TH:i:sP');
     }
-
     private function convertToTimezone($data, $timezone)
     {
         $timezoneObj = $this->getTimezoneObject($timezone);
@@ -404,20 +487,17 @@ class CryptoService
             return $item;
         });
     }
-
     private function getFormattedCurrentTime($timezone)
     {
         $dateTime = new DateTime('now', new DateTimeZone($timezone));
         return $dateTime->format('Y-m-d\TH:i:s\Z');
     }
-
     private function subtractHours($time, $hours)
     {
         $dateTime = new DateTime($time, new DateTimeZone('UTC'));
         $dateTime->sub(new DateInterval('PT' . $hours . 'H'));
         return $dateTime->format('Y-m-d\TH:i:s\Z');
     }
-
     private function formatDataWithTimezone($data, $timezone)
     {
         $timezoneObj = $this->getTimezoneObject($timezone);
@@ -435,7 +515,6 @@ class CryptoService
         Log::info("hourlySymbolData", ["symboldata" => $resultData]);
         return json_encode($resultData);
     }
-
     private function averageAndFormatData($data, $timezone)
     {
         // Check if the collection is not empty
@@ -472,9 +551,6 @@ class CryptoService
         // Return the result as an array
         return json_encode($formattedData);
     }
-
-
-
     private function calculateTimeGap($recommendTime, $timezone)
     {
         $currentDateTime = new DateTime('now', new DateTimeZone($timezone));

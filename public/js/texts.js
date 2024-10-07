@@ -3,8 +3,8 @@ const texts = {
         connectedTime: '접속 시간',
         charge: '충전',
         send: '전송',
-        openChat: '채팅창 열기',
-        closeChat: '채팅창 닫기',
+        openChat: '&#9650; 채팅창 열기',
+        closeChat: '&#9660; 채팅창 닫기',
         placeHolder: '메시지를 입력해 주세요...',
         generating: "답변 생성중...",
         headerText: ['안녕하세요.', 'Goya Chat AI에 오신 것을 환영합니다.', 'Goya Chat AI는 사용료가 부과되는 유료 서비스입니다.', 'Chat AI 질문을 클릭해 주세요.'],
@@ -136,14 +136,13 @@ const timeZoneAbbreviations = {
 let selectedLanguage = 'kr'; // Default selected language
 
 function handleLanguageChange(event) {
-    selectedLanguage = event.target.value;
     console.log("Selected Language:", selectedLanguage);
     initText();
     changeText();
 }
 
 // Attach the event listener to the select element
-document.getElementById('language-select').addEventListener('change', handleLanguageChange);
+// document.getElementById('language-select').addEventListener('change', handleLanguageChange);
 
 // Function to set login time based on selected language's timezone
 // function setLoginTime() {
@@ -197,8 +196,8 @@ function initText() {
         }
     });
     placeHolderText.placeholder = langText.placeHolder;
-    openChatText.textContent = langText.openChat;
-    closeChatText.textContent = langText.closeChat;
+    openChatText.innerHTML = langText.openChat;
+    closeChatText.innerHTML = langText.closeChat;
 
     // Set login time based on selected language
     // setLoginTime();
@@ -229,7 +228,7 @@ function changeText() {
     // Loop over each key in the map and update elements with the corresponding class
     for (const className in classToKeyMap) {
         const key = classToKeyMap[className];
-        console.log("key: ", key);
+        // console.log("key: ", key);
         const elements = document.querySelectorAll(`.${className}`);
 
         elements.forEach(element => {
@@ -245,7 +244,6 @@ function changeText() {
             }
         });
     }
-
     // Set login time based on selected language
     // setLoginTime();
 }

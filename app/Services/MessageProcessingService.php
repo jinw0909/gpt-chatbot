@@ -78,19 +78,23 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis on the price and score movement trend of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
+                'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and the should also refer to the recent price movement change of the symbol. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
             ],
-            [
-                'role' => 'system',
-                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated "analysis_translated" should include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
-            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated "analysis_translated" should include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
+//            ],
             [
                 'role' => 'system',
                 'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
             ],
+//            [
+//                'role' => 'system',
+//                'content' => 'When your response "format_type" is "crypto_recommendations", the "recommended_reason_translated" should be in the language of the user and should include the information about the signals. Also the "symbol" value should be capitalized.'
+//            ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_recommendations", the "recommended_reason_translated" should be in the language of the user. The "symbol" value should be capitalized. '
+                'content' => 'When your response "format_type" is "crypto_recommendations", the "symbol" value should be capitalized.'
             ],
             [
                 'role' => 'system',
@@ -477,44 +481,49 @@ class MessageProcessingService
                                                         'required' => ['symbol_price', 'record_time', 'time_gap'],
                                                         'additionalProperties' => false
                                                     ],
-                                                    'crypto_data' => [
-                                                        'type' => 'array',
-                                                        'items' => [
-                                                            'type' => 'object',
-                                                            'properties' => [
-                                                                'datetime' => ['type' => 'string'],
-                                                                'score' => ['type' => 'number'],
-                                                                'price' => ['type' => 'number']
-                                                            ],
-                                                            'required' => ['datetime', 'score', 'price'],
-                                                            'additionalProperties' => false
-                                                        ]
-                                                    ],
-                                                    "recommendation_status" => [
-                                                        'type' => 'object',
-                                                        'properties' => [
-                                                            'is_recommended' => ['type' => 'boolean'],
-                                                            'recommended_datetime' => ['type' => 'string'],
-                                                            'recommended_reason_translated' => ['type' => 'string'],
-                                                            'image_url' => ['type' => 'string'],
-                                                            'time_gap' => [
-                                                                'type' => 'object',
-                                                                'properties' => [
-                                                                    'hours' => ['type' => 'number'],
-                                                                    'minutes' => ['type' => 'number']
-                                                                ],
-                                                                'required' => ['hours', 'minutes'],
-                                                                'additionalProperties' => false
-                                                            ],
-                                                        ],
-                                                        'required' => ['is_recommended', 'recommended_datetime', 'recommended_reason_translated', 'image_url', 'time_gap'],
-                                                        'additionalProperties' => false
-                                                    ],
+//                                                    'crypto_data' => [
+//                                                        'type' => 'array',
+//                                                        'items' => [
+//                                                            'type' => 'object',
+//                                                            'properties' => [
+//                                                                'datetime' => ['type' => 'string'],
+//                                                                'score' => ['type' => 'number'],
+//                                                                'price' => ['type' => 'number']
+//                                                            ],
+//                                                            'required' => ['datetime', 'score', 'price'],
+//                                                            'additionalProperties' => false
+//                                                        ]
+//                                                    ],
+//                                                    "recommendation_status" => [
+//                                                        'type' => 'object',
+//                                                        'properties' => [
+//                                                            'is_recommended' => ['type' => 'boolean'],
+//                                                            'recommended_datetime' => ['type' => 'string'],
+//                                                            'recommended_reason' => ['type' => 'string'],
+//                                                            'image_url' => ['type' => 'string'],
+//                                                            'time_gap' => [
+//                                                                'type' => 'object',
+//                                                                'properties' => [
+//                                                                    'hours' => ['type' => 'number'],
+//                                                                    'minutes' => ['type' => 'number']
+//                                                                ],
+//                                                                'required' => ['hours', 'minutes'],
+//                                                                'additionalProperties' => false
+//                                                            ],
+//                                                        ],
+//                                                        'required' => ['is_recommended', 'recommended_datetime', 'recommended_reason', 'image_url', 'time_gap'],
+//                                                        'additionalProperties' => false
+//                                                    ],
                                                     'interval' => ['type' => 'number'],
+                                                    'timezone' => [
+                                                        'type' => 'string',
+                                                        'enum' => ['KST', 'JST', 'UTC']
+                                                    ],
                                                     'analysis_translated' => ['type' => 'string']
                                                 ],
                                                 'required' => [
-                                                    'symbol', 'symbol_data', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
+//                                                    'symbol', 'symbol_data', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
+                                                    'symbol', 'symbol_data', 'analysis_translated', 'interval', 'timezone'
                                                 ],
                                                 'additionalProperties' => false
                                             ]
@@ -549,9 +558,9 @@ class MessageProcessingService
                                                         'additionalProperties' => false
                                                     ],
                                                     'image_url' => ['type' => 'string'],
-                                                    'recommended_reason_translated' => ['type' => 'string']
+                                                    'recommended_reason' => ['type' => 'string']
                                                 ],
-                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason_translated'],
+                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason'],
                                                 'additionalProperties' => false
                                             ]
                                         ]
@@ -830,129 +839,58 @@ class MessageProcessingService
                         }
                     }
                     unset($item); // Unset reference to avoid potential side effects
-                    Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
+                    Log::info('Modified parsedContent for articles: ', ['modified parsedContent for articles' => $parsedContent]);
 
                     // Encode the modified content back to JSON
                     $responseText = json_encode($parsedContent);
 
                 }
-                // Check if the last element in the functionList is 'get_viewpoint'
-                // Check if the last element in the functionList is 'get_viewpoint'
-//                if ($functionCall === 'show_viewpoint') {
-//                    // Parse the responseMessage['content'] JSON
-//                    Log::info("retrieving article from db to complete the viewpoint response...");
-//                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
-//                    $parsedContent = json_decode($responseMessage['content'], true);
-//                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
-//
-//                    if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
-//                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
-//                        Log::info('language detected: ', ['language' => $language]);
-//
-//                        // Determine the column to query based on the language value
-//                        $columnToQuery = match ($language) {
-//                            'jp' => 'viewpoint_jp',
-//                            'kr' => 'viewpoint_kr',
-//                            default => 'viewpoint', // Default to 'viewpoint' for 'en' or any unexpected value
-//                        };
-//                        Log::info('columnToQuery: ', ['columnToQuery' => $columnToQuery]);
-//
-//                        // Extract all 'id' values from the parsed content
-//                        $ids = array_column($parsedContent['data']['content'], 'id');
-//                        Log::info('ids: ', ['ids' => $ids]);
-//
-//                        // Run a query to retrieve rows from the db using these ids
-//                        $rows = DB::connection('mysql3')
-//                            ->table('bu.Viewpoints')
-//                            ->whereIn('id', $ids)
-//                            ->select('id', $columnToQuery, DB::raw('imageUrl as image_url')) // Select both viewpoint and imageUrl
-//                            ->get()
-//                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
-//                        Log::info("rows: ", ["rows" => $rows]);
-//
-//                        // Append the retrieved content values to the parsed response
-//                        foreach ($parsedContent['data']['content'] as &$item) {
-//                            if (isset($item['id']) && isset($rows[$item['id']])) {
-//                                $item['content'] = $rows[$item['id']]->$columnToQuery; // Retrieve the content
-//                                $item['image_url'] = $rows[$item['id']]->image_url; // Retrieve the imageUrl
-//                            }
+                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'crypto_analysis') {
+                    Log::info("crypto analysis format");
+                    // Loop through each element of the content array
+                    foreach ($parsedContent['data']['content'] as &$contentItem) {
+                        if (isset($contentItem['symbol'])) {
+                            // Extract symbol
+                            $symbol = $contentItem['symbol'];
+                            $interval = $contentItem['interval'] ?? 24; // Default to 24 if not provided
+                            $timezone = $contentItem['timezone'] ?? 'UTC';
+                            // Get the new crypto data for the current symbol
+                            $cryptoData = $this->cryptoService->getCryptoData($symbol, $interval, $timezone);
+                            $recommendationStatus = $this->cryptoService->checkRecommendationStatus($symbol, $timezone);
+                            // Ensure $cryptoData is decoded if it's a JSON string
+                            if (is_string($cryptoData)) {
+                                $cryptoData = json_decode($cryptoData, true); // Decode the JSON string into an array
+                            }
+                            if (is_string($recommendationStatus)) {
+                                $recommendationStatus = json_decode($recommendationStatus, true); // Decode the JSON string into an array
+                            }
+                            if (!isset($contentItem['crypto_data'])) {
+                                $contentItem['crypto_data'] = []; // Initialize an empty array or set to null if preferred
+                            }
+                            if (!isset($contentItem['recommendation_status'])) {
+                                $contentItem['recommendation_status'] = []; // Initialize an empty array or set to null if preferred
+                            }
+
+                            // Replace the original cryptoData with the newly retrieved value
+                            $contentItem['crypto_data'] = $cryptoData;
+                            $contentItem['recommendation_status'] = $recommendationStatus;
+                        }
+                    }
+
+                    // Encode the modified parsed content into a JSON string
+                    $responseText = json_encode($parsedContent);
+
+                    Log::info("Modified responseText: " . $responseText);
+                }
+//                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'crypto_recommendations') {
+//                    Log::info("crypto recommendations format");
+//                    foreach ($parsedContent['data']['content'] as &$contentItem) {
+//                        if (isset($contentItem['symbol'])) {
+//                            // Extract symbol
+//                            $symbol = $contentItem['symbol'];
 //                        }
-//                        unset($item); // Unset reference to avoid potential side effects
-//                        Log::info('Modified parsedContent: ', ['parsedContent' => $parsedContent]);
-//
-//                        // Encode the modified content back to JSON
-//                        $responseText = json_encode($parsedContent);
 //                    }
 //                }
-//                // Check if the last element in the functionList is 'show_articles'
-//                else if ($functionCall === 'show_articles') {
-//                    Log::info("retrieving articles from db to complete the show_articles response...");
-//                    Log::info("responseContent: ", ["responseContent" => $responseMessage['content']]);
-//                    $parsedContent = json_decode($responseMessage['content'], true);
-//                    Log::info("parsedContent: ", ['parsedContent' => $parsedContent]);
-//
-//                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content'])) {
-//                        $language = $parsedContent['data']['language'] ?? 'en'; // Default to 'en' if not set
-//                        Log::info('Language detected: ', ['language' => $language]);
-//
-//                        // Determine the columns to query based on the language value
-//                        $columnsToQuery = match ($language) {
-//                            'jp' => [
-//                                'id',
-//                                DB::raw('imageUrl as image_url'),
-//                                DB::raw('analysis_jp as content'), // Alias 'analysis_jp' as 'content_jp'
-//                                DB::raw('content_jp as article'),  // Alias 'content_jp' as 'article_jp'
-//                                DB::raw('title_jp as title'),  // Alias 'content_jp' as 'article_jp'
-//                                DB::raw('summary_jp as summary')
-//                            ],
-//                            'kr' => [
-//                                'id',
-//                                DB::raw('imageUrl as image_url'),
-//                                DB::raw('analysis_kr as content'), // Alias 'analysis_kr' as 'content_kr'
-//                                DB::raw('content_kr as article'),  // Alias 'content_kr' as 'article_kr'
-//                                DB::raw('title_kr as title'),  // Alias 'content_kr' as 'article_kr'
-//                                DB::raw('summary_kr as summary')
-//                            ],
-//                            default => [
-//                                'id',
-//                                DB::raw('imageUrl as image_url'),
-//                                DB::raw('analysis as content'),       // Alias 'analysis' as 'content'
-//                                DB::raw('content as article'),        // Alias 'content' as 'article'
-//                                'title',
-//                                'summary'
-//                            ], // Default columns for 'en' or any unexpected value
-//                        };
-//
-//                        // Extract all 'id' values from the parsed content
-//                        $ids = array_column($parsedContent['data']['content'], 'id');
-//                        Log::info('ids: ', ['ids' => $ids]);
-//
-//                        // Run a query to retrieve rows from the db using these ids
-//                        $rows = DB::connection('mysql3')
-//                            ->table('bu.Translations')
-//                            ->whereIn('id', $ids)
-//                            ->select($columnsToQuery) // Select id, imageUrl, and language-specific columns
-//                            ->get()
-//                            ->keyBy('id'); // Key the collection by 'id' for easy lookup
-//                        Log::info("rows: ", ["rows" => $rows]);
-//
-//                        // Append the retrieved content values to the parsed response
-//                        // Append the retrieved content values to the parsed response
-//                        foreach ($parsedContent['data']['content'] as &$item) {
-//                            if (isset($item['id']) && isset($rows[$item['id']])) {
-//                                $item['content'] = $rows[$item['id']]->content ?? ''; // Retrieve the aliased content
-//                                $item['article'] = $rows[$item['id']]->article ?? ''; // Retrieve the aliased article
-//                                $item['summary'] = $rows[$item['id']]->summary ?? ''; // Retrieve the summary
-//                                $item['title'] = $rows[$item['id']]->title ?? ''; // Retrieve the title
-//                                $item['image_url'] = $rows[$item['id']]->image_url ?? ''; // Retrieve the imageUrl
-//                            }
-//                        }
-//                        unset($item); // Unset reference to avoid potential side effects
-//                        Log::info('Modified parsedContent for articles: ', ['parsedContent' => $parsedContent]);
-//
-//                        // Encode the modified content back to JSON
-//                        $responseText = json_encode($parsedContent);
-//                    }
 
                 if (!$functionCall) {
                     $this->tokenService->setCostToZero($userId);

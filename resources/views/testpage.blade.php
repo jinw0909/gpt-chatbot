@@ -18,36 +18,36 @@
 <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
     <div class="relative min-h-screen flex flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white">
         <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-            <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
-                @if (Route::has('login'))
-                <nav class="-mx-3 flex flex-1 justify-end">
-                    @auth
-                    <a
-                        href="{{ url('/dashboard') }}"
-                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                    >
-                        Dashboard
-                    </a>
-                    @else
-                    <a
-                        href="{{ route('login') }}"
-                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                    >
-                        Log in
-                    </a>
-
-                    @if (Route::has('register'))
-                    <a
-                        href="{{ route('register') }}"
-                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                    >
-                        Register
-                    </a>
-                    @endif
-                    @endauth
-                </nav>
-                @endif
-            </header>
+<!--            <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">-->
+<!--                @if (Route::has('login'))-->
+<!--                <nav class="-mx-3 flex flex-1 justify-end">-->
+<!--                    @auth-->
+<!--                    <a-->
+<!--                        href="{{ url('/dashboard') }}"-->
+<!--                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"-->
+<!--                    >-->
+<!--                        Dashboard-->
+<!--                    </a>-->
+<!--                    @else-->
+<!--                    <a-->
+<!--                        href="{{ route('login') }}"-->
+<!--                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"-->
+<!--                    >-->
+<!--                        Log in-->
+<!--                    </a>-->
+<!---->
+<!--                    @if (Route::has('register'))-->
+<!--                    <a-->
+<!--                        href="{{ route('register') }}"-->
+<!--                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"-->
+<!--                    >-->
+<!--                        Register-->
+<!--                    </a>-->
+<!--                    @endif-->
+<!--                    @endauth-->
+<!--                </nav>-->
+<!--                @endif-->
+<!--            </header>-->
 
             <div class="open-btn">
                 <i></i>
@@ -59,17 +59,14 @@
                 <div class="modal-content">
                     <main class="main">
                         <div class="chat-box-header">
-                            <h3 class="chat-box-title">
+<!--                            <h3 class="chat-box-title">-->
+<!--                                <i></i>-->
+<!--                                <a href="/test">Goya Chat AI</a>-->
+<!--                            </h3>-->
+                            <div class="chat-box-title">
                                 <i></i>
                                 <a href="/test">Goya Chat AI</a>
-                            </h3>
-<!--                            <div class="language-wrapper">-->
-<!--                                <select name="language" id="language-select">-->
-<!--                                    <option value="kr">KR</option>-->
-<!--                                    <option value="jp">JP</option>-->
-<!--                                    <option value="en">EN</option>-->
-<!--                                </select>-->
-<!--                            </div>-->
+                            </div>
                             <div class="charge-wrapper">
                                 <div class="remaining">$0</div>
                                 <button type="button" id="add-button" class="button-custom">충전</button>
@@ -83,7 +80,6 @@
 <!--                                        <span id="connect-time">접속 시간</span><span id="login-time"></span>-->
 <!--                                    </div>-->
 <!--                                </div>-->
-
                                 <div class="message left">
                                     <div class="assistant content" id="header-text">
                                         <span>안녕하세요.</span>
@@ -101,9 +97,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="generating-message" class="generating" style="display: none;">
-                                <span>Generating...</span>
-                            </div>
+<!--                            <div id="generating-message" class="generating" style="display: none;">-->
+<!--                                <span>Generating...</span>-->
+<!--                            </div>-->
                             <div id="input-wrapper" class="input-wrapper">
 <!--                                <form id="chat-form" action="{{ route('process-message') }}" method="POST">-->
                                 <form id="chat-form" action="{{ route('conversation') }}" method="POST">
@@ -125,20 +121,25 @@
                                         <option value="jp">JP</option>
                                         <option value="en">EN</option>
                                     </select>
+                                    <div class="select-lang-wrapper">
+                                        <div class="select-lang select-kr selected" data-lang="kr"></div>
+                                        <div class="select-lang select-jp" data-lang="jp"></div>
+                                        <div class="select-lang select-us" data-lang="en"></div>
+                                    </div>
                                 </div>
                                 <div id="toggle-wrapper" class="toggle-wrapper">
                                     <div class="input-open">
-                                        <button id="input-open" class="input-open-btn">채팅창 열기</button>
+                                        <button id="input-open" class="input-open-btn input-toggle-btn">&#9650; 채팅창 열기</button> <!-- Upwards arrow -->
                                     </div>
                                     <div class="input-close">
-                                        <button id="input-close" class="input-close-btn">채팅창 닫기</button>
+                                        <button id="input-close" class="input-close-btn input-toggle-btn">&#9660; 채팅창 닫기</button> <!-- Downwards arrow -->
                                     </div>
                                 </div>
+                                <div id="generating-message" class="generating" style="display: none;">
+                                    <span>GENERATING...</span>
+                                </div>
                             </div>
-
                         </div>
-
-
                         @if (session('responseText'))
                         <div class="mt-6">
                             <h2 class="text-xl font-semibold">Response:</h2>
@@ -146,6 +147,12 @@
                         </div>
                         @endif
                     </main>
+                    <div class="charge-modal-content">
+                        <div class="charge-modal-header"></div>
+                        <div class="charge-modal-top charge-modal-elem"></div>
+                        <div class="charge-modal-mid charge-modal-elem"></div>
+                        <div class="charge-modal-bottom charge-modal-elem"></div>
+                    </div>
                 </div>
             </div>
 
