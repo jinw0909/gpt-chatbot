@@ -135,9 +135,9 @@
                                         <button id="input-close" class="input-close-btn input-toggle-btn">&#9660; 채팅창 닫기</button> <!-- Downwards arrow -->
                                     </div>
                                 </div>
-                                <div id="generating-message" class="generating" style="display: none;">
-                                    <span>GENERATING...</span>
-                                </div>
+<!--                                <div id="generating-message" class="generating" style="display: none;">-->
+<!--                                    <span>GENERATING...</span>-->
+<!--                                </div>-->
                             </div>
                         </div>
                         @if (session('responseText'))

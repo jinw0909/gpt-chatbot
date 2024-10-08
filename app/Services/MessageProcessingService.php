@@ -78,7 +78,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_analysis", the last response field, "analysis_translated", must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and the should also refer to the recent price movement change of the symbol. The analysis should also refer to the "recommended_reason_translated" content which explains why the symbol is currently recommended. '
+                'content' => 'When your response "format_type" is "crypto_analysis", "analysis_translated" field and the "recommend_reason_translated" field should be translated into the local language of the user. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and should also refer to the recent price movement change of the symbol. The "analysis_translated" field should also refer to the "recommended_reason_translated" content inside the "recommendation_status" which explains why the symbol is currently recommended. When the "recommend_reason_translated" says there are S, S2, or S3 signals it means price of the crypto is an a declining trend which could be an opportunity for short position traders, while L, L2, L3 signal means the price in on a inclining trend which can be an opportunity for long position traders.'
             ],
 //            [
 //                'role' => 'system',
@@ -94,7 +94,7 @@ class MessageProcessingService
 //            ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_recommendations", the "symbol" value should be capitalized.'
+                'content' => 'When your response "format_type" is "crypto_recommendations", the "symbol" value should be capitalized. Also the "recommended_reason_translated" content should always be translated into the local language of the user.'
             ],
             [
                 'role' => 'system',
@@ -180,7 +180,7 @@ class MessageProcessingService
                 'function' => [
                     'name' => 'analyze_cryptos',
                     'description' => 'The function to get the overall data of the given cryptocurrency symbol including price data, score data and the recommendation status.',
-                    'strict' => false,
+                    'strict' => true,
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
@@ -288,29 +288,39 @@ class MessageProcessingService
                 'function' => [
                     'name' => 'recommend_cryptos',
                     'description' => "Provides a list of recommended cryptocurrencies.",
-//                    'strict' => true,
+                    'strict' => true,
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
+                            'limit' => [
+                                'type' => 'number',
+                                'description' => "The limit number of the recommended cryptos to show. Pass 3 if you cannot infer the limit number from the user message. "
+                            ],
                             'timezone' => [
                                 'type' => 'string',
                                 'description' => "The local timezone of the user",
                                 'enum' => ['UTC', 'JST', 'KST']
                             ],
-                            'limit' => [
-                                'type' => 'number',
-                                'description' => "The limit number of the recommended cryptos to show. Pass 3 if you cannot infer the limit number from the user message. "
-                            ],
-                            'previously_recommended' => [
+                            'already_recommended' => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'string',
                                     'description' => 'The symbol of cryptocurrency already recommended previously.'
                                 ],
-                                'description' => 'The list of cryptocurrency symbols that has been previously recommended. You can freely create this list by checking the previous conversation history and the user message. '
-                            ]
+                                'description' => 'The list of cryptocurrency symbols that has been previously recommended. You can create this list by checking the previous conversation history and the system message. '
+                            ],
+//                            'coin_list' => [
+//                                'type' => 'array',
+//                                'items' => [
+//                                    'type' => 'string',
+//                                    'description' => 'The symbol of cryptocurrency already recommended previously.'
+//                                ],
+//                                'description' => 'The list of cryptocurrency symbols that has been previously recommended. You can freely create this list by checking the previous conversation history and the user message. '
+//                            ]
                         ],
-                        'required' => ['limit', 'timezone', 'previously_recommended'],
+//                        'required' => ['limit', 'timezone', 'previously_recommended'],
+//                        'required' => ['limit', 'timezone', 'coin_list'],
+                        'required' => ['limit', 'timezone', 'already_recommended'],
                         'additionalProperties' => false
                     ]
                 ]
@@ -450,7 +460,7 @@ class MessageProcessingService
                                 ],
                                 [
                                     'title' => 'Crypto Analyses Format',
-                                    'description' => 'This format is used for detailed crypto analyses',
+                                    'description' => 'This format is used for detailed crypto analyses for each given symbol',
                                     'type' => 'object',
                                     'properties' => [
                                         'format_type' => [
@@ -494,6 +504,90 @@ class MessageProcessingService
 //                                                            'additionalProperties' => false
 //                                                        ]
 //                                                    ],
+                                                    "recommendation_status" => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'is_recommended' => ['type' => 'boolean'],
+                                                            'recommended_datetime' => ['type' => 'string'],
+                                                            'recommended_reason_translated' => ['type' => 'string'],
+                                                            'image_url' => ['type' => 'string'],
+                                                            'time_gap' => [
+                                                                'type' => 'object',
+                                                                'properties' => [
+                                                                    'hours' => ['type' => 'number'],
+                                                                    'minutes' => ['type' => 'number']
+                                                                ],
+                                                                'required' => ['hours', 'minutes'],
+                                                                'additionalProperties' => false
+                                                            ],
+                                                        ],
+                                                        'required' => ['is_recommended', 'recommended_datetime', 'recommended_reason_translated', 'image_url', 'time_gap'],
+                                                        'additionalProperties' => false
+                                                    ],
+                                                    'interval' => ['type' => 'number'],
+                                                    'timezone' => [
+                                                        'type' => 'string',
+                                                        'enum' => ['KST', 'JST', 'UTC']
+                                                    ],
+                                                    'analysis_translated' => ['type' => 'string']
+                                                ],
+                                                'required' => [
+//                                                    'symbol', 'symbol_data', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
+                                                    'symbol', 'symbol_data', 'analysis_translated', 'recommendation_status', 'interval', 'timezone'
+                                                ],
+                                                'additionalProperties' => false
+                                            ]
+                                        ]
+                                    ],
+                                    'required' => ['format_type', 'content'],
+                                    'additionalProperties' => false
+                                ],
+//                                [
+//                                    'title' => 'Crypto Analyses Format',
+//                                    'description' => 'This format is used for detailed crypto analyses',
+//                                    'type' => 'object',
+//                                    'properties' => [
+//                                        'format_type' => [
+//                                            'type' => 'string',
+//                                            'enum' => ['crypto_analysis']
+//                                        ],
+//                                        'content' => [
+//                                            'type' => 'array',
+//                                            'items' => [
+//                                                'type' => 'object',
+//                                                'properties' => [
+//                                                    'symbol' => ['type' => 'string'],
+//                                                    'symbol_data' => [
+//                                                        'type' => 'object',
+//                                                        'properties' => [
+//                                                            'symbol_price' => ['type' => 'number'],
+//                                                            'record_time' => ['type' => 'string'],
+//                                                            'time_gap' => [
+//                                                                'type' => 'object',
+//                                                                'properties' => [
+//                                                                    'hours' => ['type' => 'number'],
+//                                                                    'minutes' => ['type' => 'number']
+//                                                                ],
+//                                                                'required' => ['hours', 'minutes'],
+//                                                                'additionalProperties' => false
+//                                                            ],
+//                                                        ],
+//                                                        'required' => ['symbol_price', 'record_time', 'time_gap'],
+//                                                        'additionalProperties' => false
+//                                                    ],
+////                                                    'crypto_data' => [
+////                                                        'type' => 'array',
+////                                                        'items' => [
+////                                                            'type' => 'object',
+////                                                            'properties' => [
+////                                                                'datetime' => ['type' => 'string'],
+////                                                                'score' => ['type' => 'number'],
+////                                                                'price' => ['type' => 'number']
+////                                                            ],
+////                                                            'required' => ['datetime', 'score', 'price'],
+////                                                            'additionalProperties' => false
+////                                                        ]
+////                                                    ],
 //                                                    "recommendation_status" => [
 //                                                        'type' => 'object',
 //                                                        'properties' => [
@@ -514,24 +608,24 @@ class MessageProcessingService
 //                                                        'required' => ['is_recommended', 'recommended_datetime', 'recommended_reason', 'image_url', 'time_gap'],
 //                                                        'additionalProperties' => false
 //                                                    ],
-                                                    'interval' => ['type' => 'number'],
-                                                    'timezone' => [
-                                                        'type' => 'string',
-                                                        'enum' => ['KST', 'JST', 'UTC']
-                                                    ],
-                                                    'analysis_translated' => ['type' => 'string']
-                                                ],
-                                                'required' => [
-//                                                    'symbol', 'symbol_data', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
-                                                    'symbol', 'symbol_data', 'analysis_translated', 'interval', 'timezone'
-                                                ],
-                                                'additionalProperties' => false
-                                            ]
-                                        ]
-                                    ],
-                                    'required' => ['format_type', 'content'],
-                                    'additionalProperties' => false
-                                ],
+//                                                    'interval' => ['type' => 'number'],
+//                                                    'timezone' => [
+//                                                        'type' => 'string',
+//                                                        'enum' => ['KST', 'JST', 'UTC']
+//                                                    ],
+//                                                    'analysis_translated' => ['type' => 'string']
+//                                                ],
+//                                                'required' => [
+////                                                    'symbol', 'symbol_data', 'crypto_data', 'analysis_translated', 'recommendation_status', 'interval'
+//                                                    'symbol', 'symbol_data', 'analysis_translated', 'recommendation_status', 'interval', 'timezone'
+//                                                ],
+//                                                'additionalProperties' => false
+//                                            ]
+//                                        ]
+//                                    ],
+//                                    'required' => ['format_type', 'content'],
+//                                    'additionalProperties' => false
+//                                ],
                                 [
                                     'title' => 'Crypto Recommendations Format',
                                     'description' => 'This format is used to recommend cryptos to the user. ',
@@ -558,9 +652,9 @@ class MessageProcessingService
                                                         'additionalProperties' => false
                                                     ],
                                                     'image_url' => ['type' => 'string'],
-                                                    'recommended_reason' => ['type' => 'string']
+                                                    'recommended_reason_translated' => ['type' => 'string'],
                                                 ],
-                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason'],
+                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason_translated'],
                                                 'additionalProperties' => false
                                             ]
                                         ]
@@ -568,6 +662,48 @@ class MessageProcessingService
                                     'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
                                 ],
+//                                [
+//                                    'title' => 'Crypto Recommendations Format',
+//                                    'description' => 'This format is used to recommend cryptos to the user. ',
+//                                    'type' => 'object',
+//                                    'properties' => [
+//                                        'format_type' => [
+//                                            'type' => 'string',
+//                                            'enum' => ['crypto_recommendations']
+//                                        ],
+//                                        'content' => [
+//                                            'type' => 'array',
+//                                            'items' => [
+//                                                'type' => 'object',
+//                                                'properties' => [
+//                                                    'id' => ['type' => 'number'],
+//                                                    'symbol' => ['type' => 'string'],
+//                                                    'datetime' => ['type' => 'string'],
+//                                                    'time_gap' => [
+//                                                        'type' => 'object',
+//                                                        'properties' => [
+//                                                            'hours' => ['type' => 'integer'],
+//                                                            'minutes' => ['type' => 'integer']
+//                                                        ],
+//                                                        'required' => ['hours', 'minutes'],
+//                                                        'additionalProperties' => false
+//                                                    ],
+//                                                    'image_url' => ['type' => 'string'],
+////                                                    'recommended_reason' => ['type' => 'string'],
+//                                                    'language' => [
+//                                                        'type' => 'string',
+//                                                        'enum' => ['kr', 'jp', 'en']
+//                                                    ]
+//                                                ],
+////                                                'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason'],
+//                                                'required' => ['id', 'symbol', 'datetime', 'time_gap', 'image_url', 'language'],
+//                                                'additionalProperties' => false
+//                                            ]
+//                                        ]
+//                                    ],
+//                                    'required' => ['format_type', 'content'],
+//                                    'additionalProperties' => false
+//                                ],
                                 [
                                     'title' => 'Crypto Articles Format',
                                     'description' => 'Use this format to present crypto related articles to the user.',
@@ -708,7 +844,6 @@ class MessageProcessingService
 //            if (in_array('show_viewpoint', $functionList) || in_array('show_articles', $functionList)) {
 //                $toolChoice = 'none';
 //            }
-
             $response = OpenAI::chat()->create([
 //                'model' => 'gpt-4o-2024-08-06',
                 'model' => 'gpt-4o-mini',
@@ -716,7 +851,7 @@ class MessageProcessingService
                 'tools' => $tools,
                 'tool_choice' => $toolChoice,
                 'response_format' => $responseFormat,
-                'parallel_tool_calls' => true,
+                'parallel_tool_calls' => false,
                 'temperature' => 0
             ]);
 
@@ -856,40 +991,63 @@ class MessageProcessingService
                             $timezone = $contentItem['timezone'] ?? 'UTC';
                             // Get the new crypto data for the current symbol
                             $cryptoData = $this->cryptoService->getCryptoData($symbol, $interval, $timezone);
-                            $recommendationStatus = $this->cryptoService->checkRecommendationStatus($symbol, $timezone);
+//                            $recommendationStatus = $this->cryptoService->checkRecommendationStatus($symbol, $timezone);
                             // Ensure $cryptoData is decoded if it's a JSON string
                             if (is_string($cryptoData)) {
                                 $cryptoData = json_decode($cryptoData, true); // Decode the JSON string into an array
                             }
-                            if (is_string($recommendationStatus)) {
-                                $recommendationStatus = json_decode($recommendationStatus, true); // Decode the JSON string into an array
-                            }
+//                            if (is_string($recommendationStatus)) {
+//                                $recommendationStatus = json_decode($recommendationStatus, true); // Decode the JSON string into an array
+//                            }
                             if (!isset($contentItem['crypto_data'])) {
                                 $contentItem['crypto_data'] = []; // Initialize an empty array or set to null if preferred
                             }
-                            if (!isset($contentItem['recommendation_status'])) {
-                                $contentItem['recommendation_status'] = []; // Initialize an empty array or set to null if preferred
-                            }
+//                            if (!isset($contentItem['recommendation_status'])) {
+//                                $contentItem['recommendation_status'] = []; // Initialize an empty array or set to null if preferred
+//                            }
 
                             // Replace the original cryptoData with the newly retrieved value
                             $contentItem['crypto_data'] = $cryptoData;
-                            $contentItem['recommendation_status'] = $recommendationStatus;
+//                            $contentItem['recommendation_status'] = $recommendationStatus;
                         }
                     }
 
                     // Encode the modified parsed content into a JSON string
                     $responseText = json_encode($parsedContent);
-
                     Log::info("Modified responseText: " . $responseText);
                 }
 //                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'crypto_recommendations') {
 //                    Log::info("crypto recommendations format");
 //                    foreach ($parsedContent['data']['content'] as &$contentItem) {
-//                        if (isset($contentItem['symbol'])) {
+//                        if (isset($contentItem['id']) && isset($contentItem['language'])) {
 //                            // Extract symbol
-//                            $symbol = $contentItem['symbol'];
+//                            $id = $contentItem['id'];
+//                            $language = $contentItem['language'];
+//                            $recommended_reason = $this->cryptoService->getRecommendationDetail($id, $language);
+//                            Log::info("recommended reason: ", ["recommended_reason" => $recommended_reason]);
+//
+//                            // Check if recommended_reason is a string (not JSON) and handle accordingly
+//                            if (is_string($recommended_reason)) {
+//                                // No need to decode if it's just a plain string
+//                                $contentItem['recommended_reason'] = $recommended_reason;
+//                            } else {
+//                                // Handle any case where recommended_reason is not a string (unlikely in this context)
+//                                $contentItem['recommended_reason'] = $recommended_reason ?? [];
+//                            }
+//
+//                            if (!isset($contentItem['recommended_reason'])) {
+//                                $contentItem['recommended_reason'] = []; // Initialize an empty array or set to null if preferred
+//                            }
+//                            // Replace the original cryptoData with the newly retrieved value
+//                            if ($recommended_reason !== null) {
+//                                $contentItem['recommended_reason'] = $recommended_reason;
+//                            }
+//
 //                        }
 //                    }
+//
+//                    $responseText = json_encode($parsedContent);
+//                    Log::info("Modified responseText: " . $responseText);
 //                }
 
                 if (!$functionCall) {
@@ -910,12 +1068,13 @@ class MessageProcessingService
             } else { // Continue recursion
                 $availableFunctions = [
                     'analyze_cryptos' => [$this->cryptoService, 'analyzeCrypto'],
-                    'get_symbol_price' => [$this->cryptoService, 'getLatestPrice'],
+//                    'get_symbol_price' => [$this->cryptoService, 'getLatestPrice'],
                     'get_crypto_data' => [$this->cryptoService, 'getCryptoData'],
                      // 'get_crypto_data_in_time_range' => [$this->cryptoService, 'getCryptoDataInTimeRange'],
                     'get_current_time' => [$this->cryptoService, 'getCurrentTime'],
                     'recommend_cryptos' => [$this->cryptoService, 'getRecommendation'],
-                    'get_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus'],
+//                    'recommend_cryptos' => [$this->cryptoService, 'getRecommendationData'],
+//                    'get_recommendation_status' => [$this->cryptoService, 'checkRecommendationStatus'],
                     'show_viewpoint' => [$this->articleService, 'getViewpoint'],
                     'show_articles' => [$this->articleService, 'getArticles']
                 ];

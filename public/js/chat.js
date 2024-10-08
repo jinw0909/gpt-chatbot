@@ -115,8 +115,6 @@ let sendMessage = async (custom) => {
     }
 
     // Show the "Generating..." message
-    const generatingMessage = document.getElementById('generating-message');
-    generatingMessage.style.display = 'flex';
     messageInput.readOnly = true;
     messageInput.classList.add('locked');
 
@@ -129,6 +127,31 @@ let sendMessage = async (custom) => {
     userMessageDiv.textContent = message;
     userMessageWrapper.append(userMessageDiv);
     chatBox.appendChild(userMessageWrapper);
+
+    // Add generating message to the chat box
+    const generatingWrapper = document.createElement('div');
+    generatingWrapper.classList.add('message', 'left');
+    const generatingContent = document.createElement('div');
+    generatingContent.classList.add('assistant');
+    const generatingMessage = document.createElement('div');
+    generatingMessage.classList.add('generating');
+    switch (selectedLanguage) {
+        case 'kr':
+            generatingMessage.innerText = '응답 생성중입니다...';
+            break;
+        case 'jp':
+            generatingMessage.innerText = '回答を生成中です。。。';
+            break;
+        case 'en':
+            generatingMessage.innerText = 'Generating message...';
+            break;
+        default:
+            generatingMessage.innerText = 'Generating message...';
+            break;
+    }
+    generatingContent.appendChild(generatingMessage);
+    generatingWrapper.appendChild(generatingContent);
+    chatBox.appendChild(generatingWrapper);
 
     // Scroll to the bottom of the chat box
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -154,7 +177,6 @@ let sendMessage = async (custom) => {
         });
 
         if (response.ok) {
-
             const data = await response.json();
             const parsedResponse = JSON.parse(data.responseText);
             console.log("parsedResponse: ", parsedResponse);
@@ -194,6 +216,7 @@ let sendMessage = async (custom) => {
 
                     // Create div for image
                     const imageDiv = document.createElement('div');
+                    imageDiv.classList.add('recommend-img');
                     const imageElement = document.createElement('img');
                     imageElement.src = parsed.image_url;
                     imageElement.style.width = '100%';
@@ -202,8 +225,8 @@ let sendMessage = async (custom) => {
 
                     // Create div for content
                     const contentDiv = document.createElement('div');
-                    // contentDiv.textContent = `${parsed.recommended_reason_translated}`;
-                    contentDiv.textContent = `${parsed.recommended_reason}`;
+                    contentDiv.textContent = `${parsed.recommended_reason_translated}`;
+                    // contentDiv.textContent = `${parsed.recommended_reason}`;
 
                     // Create wrapper
                     const wrapperDiv = document.createElement('div');
@@ -392,8 +415,6 @@ let sendMessage = async (custom) => {
                         assistantDiv.appendChild(analysisDiv);
                     }
 
-
-
                     if (parsed.recommendation_status.is_recommended) {
                         const status = parsed.recommendation_status;
                         const recommendComment = document.createElement('div');
@@ -441,8 +462,8 @@ let sendMessage = async (custom) => {
                         recommendGapDiv.style.color = '#bbb';
 
                         const recommendContentDiv = document.createElement('div');
-                        // recommendContentDiv.textContent = status.recommended_reason_translated;
-                        recommendContentDiv.textContent = status.recommended_reason;
+                        recommendContentDiv.textContent = status.recommended_reason_translated;
+                        // recommendContentDiv.textContent = status.recommended_reason;
                         recommendDiv.appendChild(recommendTimeDiv);
                         recommendDiv.appendChild(recommendGapDiv);
                         recommendDiv.appendChild(recommendImageDiv);
@@ -863,7 +884,7 @@ let sendMessage = async (custom) => {
             }
 
             // Hide the "Generating..." message
-            generatingMessage.style.display = 'none';
+            generatingWrapper.style.display = 'none';
 
             // Fetch user tokens
             await fetchUserCharge();
@@ -883,7 +904,8 @@ let sendMessage = async (custom) => {
             chatBox.scrollTop = chatBox.scrollHeight;
         } else {
             // Hide the "Generating..." message and show error message
-            generatingMessage.style.display = 'none';
+            // generatingMessage.style.display = 'none';
+            generatingWrapper.style.display = 'none';
             const errorMessageDiv = document.createElement('div');
             errorMessageDiv.className = 'error-message';
             errorMessageDiv.textContent = 'Something probably went wrong';
@@ -891,7 +913,7 @@ let sendMessage = async (custom) => {
         }
     } catch (error) {
         // Hide the "Generating..." message and show error message
-        generatingMessage.style.display = 'none';
+        generatingWrapper.style.display = 'none';
         const errorMessageDiv = document.createElement('div');
         errorMessageDiv.className = 'error-message';
         errorMessageDiv.textContent = 'Something probably went wrong';
@@ -933,7 +955,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
         return `${month}/${day} ${hours}:${minutes}`;
     };
 
-    console.log("customLabels: ", customLabels);
+    // console.log("customLabels: ", customLabels);
 
     const myChart = new Chart(ctx, {
         type: 'line',
@@ -946,7 +968,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                     borderColor: 'rgba(153, 102, 255, 1)', // Color of the first line
                     borderWidth: 2,
                     fill: false, // Don't fill under the line
-                    yAxisID: 'y-left',
+                    yAxisID: 'y-right',
                     pointRadius: 1,
                     pointHoverRadius: 3,
                     tension: 0.4
@@ -957,7 +979,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                     borderColor: 'rgba(75, 192, 192, 1)', // Color of the second line
                     borderWidth: 2,
                     fill: false, // Don't fill under the line
-                    yAxisID: 'y-right',
+                    yAxisID: 'y-left',
                     pointRadius: 1,
                     pointHoverRadius: 3,
                     tension: 0.4
@@ -966,14 +988,14 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
         },
         options: {
             scales: {
-                'y-left': { // Left y-axis for Price Movement
-                    type: 'linear',
-                    position: 'left',
-
-                },
-                'y-right': { // Right y-axis for Score Movement
+                'y-right': { // Left y-axis for Price Movement
                     type: 'linear',
                     position: 'right',
+
+                },
+                'y-left': { // Right y-axis for Score Movement
+                    type: 'linear',
+                    position: 'left',
 
                 },
                 x: {
