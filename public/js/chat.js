@@ -1,73 +1,18 @@
 let conversation = [];
 
-async function fetchUserCharge() {
-    try {
-        const response = await fetch('/user/1/get-charge');
-        if (response.ok) {
-            const chargeData = await response.json();
-            console.log('Current Charge:', chargeData.charge);
-            const formattedCharge = parseFloat(chargeData.charge).toFixed(3);
-            // Update token display
-            document.querySelector('.remaining').textContent = `$${formattedCharge}`;
-        } else {
-            console.error('Error fetching tokens:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-async function addUserCharge() {
-    try {
-        const response = await fetch('/user/1/add-charge', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ amount: 10 }) // Add 10 dollars
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log('After:', data.after);
-            // Fetch the updated token count
-            await fetchUserCharge();
-        } else {
-            console.error('Error adding charge:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Fetch user tokens when the page loads
-    fetchUserCharge();
-
-    // Set the login time
-    // const loginTimeSpan = document.getElementById('login-time');
-    // const currentTime = new Date(Date.now());
-    // const formattedTime = currentTime.toISOString().replace('T', ' ').split('.')[0] + ' UTC';
-    // loginTimeSpan.textContent = `(${formattedTime})`;
+document.addEventListener('DOMContentLoaded', async () => {
+    await getUsername();
 });
-
 document.getElementById('send-button').addEventListener('click', async function() {
     sendMessage();
 });
-
-document.getElementById('add-button').addEventListener('click', function() {
-    addUserCharge();
-});
-
 document.getElementById('input-open').addEventListener('click', function() {
     let inputWrapper = document.getElementById('input-wrapper');
-    let chatBox = document.getElementById('chat-box');
+    // let chatBox = document.getElementById('chat-box');
     let inputOpen = document.querySelector('.input-open');
     let inputClose = document.querySelector('.input-close');
     // chatBox.classList.add('closed');
     inputWrapper.style.maxHeight = "175px";
-
     inputOpen.style.display = 'none';
     inputClose.style.display = 'block';
 });
@@ -92,6 +37,7 @@ let viewpointList = [];
 //function to send message
 let sendMessage = async (custom) => {
 
+    const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
     const userIdInput = document.getElementById('user-id');
     const maxUsageInput = document.getElementById('max-usage');
@@ -114,9 +60,9 @@ let sendMessage = async (custom) => {
         return;
     }
 
-    // Show the "Generating..." message
     messageInput.readOnly = true;
-    messageInput.classList.add('locked');
+    // messageInput.classList.add('locked');
+    chatForm.classList.add('locked');
 
     // Add the user's message to the chat box
     const userMessageWrapper = document.createElement('div');
@@ -260,6 +206,9 @@ let sendMessage = async (custom) => {
                     question1.classList.add('analyze-symbol');
                     question2.classList.add('analyze-symbol-month');
                     question3.classList.add('explain-symbol');
+                    question1.setAttribute('data-symbol', parsed.symbol);
+                    question2.setAttribute('data-symbol', parsed.symbol);
+                    question3.setAttribute('data-symbol', parsed.symbol);
 
                     if (selectedLanguage === 'kr') {
                         question1.textContent = `${parsed.symbol} 스코어 및 가격`;
@@ -505,6 +454,7 @@ let sendMessage = async (custom) => {
                         parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                     }
 
+
                     if (parsed.interval > 48) {
                         question1.classList.add('analyze-symbol');
                         if (selectedLanguage === 'kr') {
@@ -515,7 +465,7 @@ let sendMessage = async (custom) => {
                             question1.textContent = `${parsed.symbol} Score and Price`;
                         }
                     } else {
-                        question1.classList.add('analyze-symbol-month');
+                        question1.setAttribute('data-symbol', parsed.symbol);
                         if (selectedLanguage === 'kr') {
                             question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
                         } else if (selectedLanguage === 'jp') {
@@ -527,6 +477,9 @@ let sendMessage = async (custom) => {
 
                     question2.classList.add('explain-symbol');
                     question3.classList.add('recommend-crypto');
+                    question1.setAttribute('data-symbol', parsed.symbol);
+                    question2.setAttribute('data-symbol', parsed.symbol);
+                    question3.setAttribute('data-symbol', parsed.symbol);
 
                     if (selectedLanguage === 'kr') {
                         question2.textContent = `${parsed.symbol}에 대해 알려줘`;
@@ -899,7 +852,6 @@ let sendMessage = async (custom) => {
             //finally set the maxUsage input value
             // Convert to a number, default to 0 if conversion results in NaN
             maxUsageInput.value = isNaN(Number(data.maxUsage)) ? 0 : Number(data.maxUsage);
-
             // Scroll to the bottom of the chat box
             chatBox.scrollTop = chatBox.scrollHeight;
         } else {
@@ -921,7 +873,8 @@ let sendMessage = async (custom) => {
         console.error('Error:', error);
     } finally {
         messageInput.readOnly = false;
-        messageInput.classList.remove('locked');
+        chatForm.classList.remove('locked');
+        // messageInput.classList.remove('locked');
         console.log("symbols: ", recommendedSymbols);
         console.log("articles: ", revealedArticles);
     }
@@ -1111,7 +1064,6 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
     //         }
     //     }
     // });
-
 }
 
 function formatDateTimeToWords(dateTimeString) {
@@ -1160,37 +1112,6 @@ Array.from(questionArray).forEach((elem) => {
         executeQuestion(elem);
     });
 });
-
-let langDivs = document.querySelectorAll('.select-lang');
-langDivs.forEach(div => {
-    div.addEventListener('click', function() {
-        if (this.classList.contains('selected')) {
-            return; // Exit the function if it already has the 'selected' class
-        }
-       langDivs.forEach(d => d.classList.remove('selected'));
-       this.classList.add('selected');
-       selectedLanguage = this.getAttribute('data-lang');
-       console.log('Selected language: ', selectedLanguage);
-        let languageDiv = document.createElement('div');
-        languageDiv.classList.add('message', 'left');
-        let assistantDiv = document.createElement('div');
-        assistantDiv.classList.add('assistant');
-        // Set textContent based on selected language
-        if (selectedLanguage === 'kr') {
-            assistantDiv.textContent = '기본 언어로 한국어를 선택하였습니다.';
-        } else if (selectedLanguage === 'jp') {
-            assistantDiv.textContent = 'デフォルト言語として日本語が選ばれました。';
-        } else if (selectedLanguage === 'en') {
-            assistantDiv.textContent = 'English has been selected as the default language.';
-        }
-        languageDiv.appendChild(assistantDiv);
-        const chatBox = document.querySelector('#chat-box');
-        chatBox.appendChild(languageDiv);
-
-        handleLanguageChange();
-
-    });
-})
 
 // Modal handling
 let modal = document.getElementById("myModal");

@@ -132,4 +132,10 @@ class TokenService
         }
     }
 
+    public function getUsername($userId) {
+        $user = User::find($userId);
+        $username = $user->name;
+        Log::info("username: ". $username);
+    }
+
 }

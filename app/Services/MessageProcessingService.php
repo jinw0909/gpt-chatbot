@@ -78,12 +78,12 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When your response "format_type" is "crypto_analysis", "analysis_translated" field and the "recommend_reason_translated" field should be translated into the local language of the user. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and should also refer to the recent price movement change of the symbol. The "analysis_translated" field should also refer to the "recommended_reason_translated" content inside the "recommendation_status" which explains why the symbol is currently recommended. When the "recommend_reason_translated" says there are S, S2, or S3 signals it means price of the crypto is an a declining trend which could be an opportunity for short position traders, while L, L2, L3 signal means the price in on a inclining trend which can be an opportunity for long position traders.'
+                'content' => 'When your response "format_type" is "crypto_analysis", "analysis_translated" field and the "recommend_reason_translated" field should be made in the default language of the user. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and should also refer to the most recent price movement change of the symbol. The "analysis_translated" field should also refer to the "recommended_reason_translated" content inside the "recommendation_status" which explains why the symbol is currently recommended. When the "recommended_reason_translated" says there are S, S2, or S3 signals, it means price of the crypto is in a declining trend which could be an opportunity for the short position traders, while L, L2, L3 signal means the price in on a inclining trend which means it could be an opportunity for the long position traders.'
             ],
-//            [
-//                'role' => 'system',
-//                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated "analysis_translated" should include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
-//            ],
+            [
+                'role' => 'system',
+                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated response should be in a format_type of "default" and include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
+            ],
             [
                 'role' => 'system',
                 'content' => 'Upon receiving request from the user to recommend cryptocurrencies, or to recommend some more or other cryptocurrencies, call the function "recommend_cryptos" and return the response in the format_type of "crypto_recommendations". If the user did not specify the limit, pass 3 as the "limit" argument. If there are no more cryptos to recommend, respond with format_type of "default". '
@@ -118,10 +118,10 @@ class MessageProcessingService
                     'When the Goya score is on a downward trend, the price of the cryptocurrency is likely to go down, and otherwise when the score is showing a upward trend, the actual price of the cryptocurrency is likely to go up.'.
                     'Goya score is derived from collecting and analyzing objective blockchain transaction activity data of the symbol cryptocurrency focused mainly on the movements that has positive or negative impacts on the price of the cryptocurrency. However, there are many other objective indicators from which the Goya score is derived from. '
             ],
-            [
-                'role' => 'system',
-                'content' => 'From the "recommended_reason" content, L1, L2, L3 signal means that the symbol cryptocurrency price is on a upward trend. S1, S2, S3 signal means that the price is on a downward trend for that symbol. However the S1, S2, S3 signals are not necessarily negative signals because futures short trading is also a possible choice in the field of crypto trading. When creating the analysis, this point of view may be reflected as well. '
-            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'From the "recommended_reason" content, L1, L2, L3 signal means that the symbol cryptocurrency price is on a upward trend. S1, S2, S3 signal means that the price is on a downward trend for that symbol. However the S1, S2, S3 signals are not necessarily negative signals because futures short trading is also a possible choice in the field of crypto trading. When creating the analysis, this point of view may be reflected as well. '
+//            ],
             [
                 'role' => 'system',
                 'content' =>

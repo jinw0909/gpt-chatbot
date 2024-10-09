@@ -8,6 +8,7 @@ const texts = {
         placeHolder: '메시지를 입력해 주세요...',
         generating: "답변 생성중...",
         headerText: ['안녕하세요.', 'Goya Chat AI에 오신 것을 환영합니다.', 'Goya Chat AI는 사용료가 부과되는 유료 서비스입니다.', 'Chat AI 질문을 클릭해 주세요.'],
+        sirText: ['님 안녕하세요.'],
         askQuestion: 'Chat AI 질문하기',
         initialQuery: ['진입하기 좋은 암호 화폐 추천', '암호 화폐 시장 동향', '고야 스코어란?'],
         timezone: 'Asia/Seoul',
@@ -17,9 +18,9 @@ const texts = {
         aboutGoya: '고야 스코어란?',
         otherNews: '다른 주요 뉴스',
         analyzeBtc: '비트코인 스코어 및 가격',
-        explainSymbol: '',
-        analyzeSymbol: '',
-        analyzeSymbolMonth: '',
+        explainSymbol: '에 대해 알려줘',
+        analyzeSymbol: ' 스코어 및 가격',
+        analyzeSymbolMonth: ' 한 달간 스코어 및 가격',
         otherCrypto: '다른 암호 화폐 추천',
         explainCriteria: '추천 기준을 알려줘'
     },
@@ -32,7 +33,8 @@ const texts = {
         placeHolder: 'メッセージを入力してください...',
         generating: "回答を生成中...",
         headerText: ['こんにちは。', 'Goya Chat AIへようこそ。', 'Goya Chat AIは有料サービスです。', 'Chat AIの質問をクリックしてください。'],
-        askQuestion: 'Chat AIに質問する',
+        sirText: ['様、こんにちは。'],
+        askQuestion: 'Chat AIに質問',
         initialQuery: ['エントリーに適した暗号通貨のおすすめ', '暗号通貨市場の動向', 'Goyaスコアとは？'],
         timezone: 'Asia/Tokyo',
         recommendCrypto: 'エントリーに適した暗号通貨のおすすめ',
@@ -41,9 +43,9 @@ const texts = {
         aboutGoya: 'Goyaスコアとは？',
         otherNews: '他の主要なニュース',
         analyzeBtc: 'ビットコインのスコアと価格',
-        explainSymbol: '',
-        analyzeSymbol: '',
-        analyzeSymbolMonth: '',
+        explainSymbol: 'について教えてください',
+        analyzeSymbol: 'のスコアと価格',
+        analyzeSymbolMonth: 'の過去1ヶ月のスコアと価格',
         otherCrypto: '他の暗号通貨のおすすめ',
         explainCriteria: '推奨基準について教えてください'
     },
@@ -56,6 +58,7 @@ const texts = {
         placeHolder: 'Please enter a message...',
         generating: "Generating response...",
         headerText: ['Hello.', 'Welcome to Goya Chat AI.', 'Goya Chat AI is a paid service.', 'Please click on a Chat AI question.'],
+        sirText: ['Hello, '],
         askQuestion: 'Ask Chat AI',
         initialQuery: ['Recommended cryptocurrencies to enter', 'Cryptocurrency market trends', 'What is the Goya Score?'],
         timezone: 'UTC',
@@ -65,9 +68,9 @@ const texts = {
         aboutGoya: 'What is the Goya Score?',
         otherNews: 'Other major news',
         analyzeBtc: 'Bitcoin score and price',
-        explainSymbol: '',
-        analyzeSymbol: '',
-        analyzeSymbolMonth: '',
+        explainSymbol: 'Tell me about ',
+        analyzeSymbol: ' score and price',
+        analyzeSymbolMonth: ' one-month score and price',
         otherCrypto: 'Other cryptocurrency recommendations',
         explainCriteria: 'Tell me about the recommendation criteria'
     },
@@ -134,6 +137,38 @@ const timeZoneAbbreviations = {
 };
 
 let selectedLanguage = 'kr'; // Default selected language
+let username = '';
+
+let langDivs = document.querySelectorAll('.select-lang');
+langDivs.forEach(div => {
+    div.addEventListener('click', function() {
+        if (this.classList.contains('selected')) {
+            return; // Exit the function if it already has the 'selected' class
+        }
+        langDivs.forEach(d => d.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedLanguage = this.getAttribute('data-lang');
+        console.log('Selected language: ', selectedLanguage);
+        let languageDiv = document.createElement('div');
+        languageDiv.classList.add('message', 'left');
+        let assistantDiv = document.createElement('div');
+        assistantDiv.classList.add('assistant');
+        // Set textContent based on selected language
+        if (selectedLanguage === 'kr') {
+            assistantDiv.textContent = '기본 언어로 한국어를 선택하였습니다.';
+        } else if (selectedLanguage === 'jp') {
+            assistantDiv.textContent = 'デフォルト言語として日本語が選ばれました。';
+        } else if (selectedLanguage === 'en') {
+            assistantDiv.textContent = 'English has been selected as the default language.';
+        }
+        languageDiv.appendChild(assistantDiv);
+        const chatBox = document.querySelector('#chat-box');
+        chatBox.appendChild(languageDiv);
+
+        handleLanguageChange();
+
+    });
+})
 
 function handleLanguageChange(event) {
     console.log("Selected Language:", selectedLanguage);
@@ -168,11 +203,60 @@ function handleLanguageChange(event) {
 //     loginTimeSpan.textContent = `${currentTime} ${timeZoneAbbreviation}`;
 // }
 
+// function initText() {
+//     console.log("Username: ", username);
+//     const langText = texts[selectedLanguage];
+//     // Get all elements that need to be changed
+//     const chargeText = document.getElementById('add-button');
+//     const connectTimeText = document.getElementById('connect-time');
+//     const headerTextSpans = document.querySelectorAll('#header-text span');
+//     const askQuestionText = document.getElementById('ask-question');
+//     const initialQueryElems = document.querySelectorAll('#initial-query p');
+//     const placeHolderText = document.getElementById('message-input');
+//     const openChatText = document.getElementById('input-open');
+//     const closeChatText = document.getElementById('input-close');
+//
+//     // Update the text content of the elements
+//     chargeText.textContent = langText.charge;
+//     // connectTimeText.textContent = langText.connectedTime;
+//     // headerTextSpans.forEach((span, index) => {
+//     //     if (langText.headerText[index]) {
+//     //         span.textContent = langText.headerText[index];
+//     //     }
+//     // });
+//
+//     headerTextSpans.forEach((span, index) => {
+//         if (index === 0 && username && username.trim() !== '') {
+//             // First headerTextSpan: add sirText + username
+//             span.textContent = langText.sirText + " " + username;
+//             // If selected language is 'en', append a dot
+//             if (selectedLanguage === 'en') {
+//                 span.textContent += ".";
+//             }
+//         } else if (langText.headerText[index]) {
+//             span.textContent = langText.headerText[index];
+//         }
+//     });
+//
+//     askQuestionText.textContent = langText.askQuestion;
+//     initialQueryElems.forEach((p, index) => {
+//         if (langText.initialQuery[index]) {
+//             p.textContent = langText.initialQuery[index];
+//         }
+//     });
+//     placeHolderText.placeholder = langText.placeHolder;
+//     openChatText.innerHTML = langText.openChat;
+//     closeChatText.innerHTML = langText.closeChat;
+//
+//     // Set login time based on selected language
+//     // setLoginTime();
+// }
 function initText() {
+    console.log("Username: ", username);
     const langText = texts[selectedLanguage];
-
     // Get all elements that need to be changed
     const chargeText = document.getElementById('add-button');
+    const sendText = document.getElementById('send-button');
     const connectTimeText = document.getElementById('connect-time');
     const headerTextSpans = document.querySelectorAll('#header-text span');
     const askQuestionText = document.getElementById('ask-question');
@@ -183,12 +267,25 @@ function initText() {
 
     // Update the text content of the elements
     chargeText.textContent = langText.charge;
+    sendText.textContent = langText.send;
     // connectTimeText.textContent = langText.connectedTime;
     headerTextSpans.forEach((span, index) => {
-        if (langText.headerText[index]) {
+        if (index === 0 && username && username.trim() !== '') {
+            // First headerTextSpan logic based on language
+            if (selectedLanguage === 'en') {
+                // If 'en', append username after sirText
+                span.textContent = langText.sirText + username;
+                // Add a dot if language is 'en'
+                span.textContent += ".";
+            } else {
+                // If not 'en', prepend username to sirText
+                span.textContent = username + langText.sirText;
+            }
+        } else if (langText.headerText[index]) {
             span.textContent = langText.headerText[index];
         }
     });
+
     askQuestionText.textContent = langText.askQuestion;
     initialQueryElems.forEach((p, index) => {
         if (langText.initialQuery[index]) {
@@ -202,6 +299,7 @@ function initText() {
     // Set login time based on selected language
     // setLoginTime();
 }
+
 
 // Function to map class names to keys in the texts object
 function getClassToKeyMap() {
@@ -230,14 +328,24 @@ function changeText() {
         const key = classToKeyMap[className];
         // console.log("key: ", key);
         const elements = document.querySelectorAll(`.${className}`);
-
         elements.forEach(element => {
             if (langText[key]) {
                 // Handle special cases for keys that require symbol name prepending
                 if (key === 'explainSymbol' || key === 'analyzeSymbol' || key === 'analyzeSymbolMonth') {
-                    const symbolMatch = element.textContent.match(/^[^\s]+/); // Assumes the symbol is the first word
-                    const symbol = symbolMatch ? symbolMatch[0] : '';
-                    element.textContent = `${symbol}${langText[key]}`;
+                    // const symbolMatch = element.textContent.match(/^[^\s]+/); // Assumes the symbol is the first word
+                    // const symbol = symbolMatch ? symbolMatch[0] : '';
+                    // element.textContent = `${symbol}${langText[key]}`;
+                    console.log('element: ', element);
+                    const symbol = element.getAttribute('data-symbol');
+                    if (symbol) {
+                        // If the key is explainSymbol and the selected language is 'en', append the symbol
+                        if (key === 'explainSymbol' && selectedLanguage === 'en') {
+                            element.textContent = `${langText[key]} ${symbol}`; // Append symbol
+                        } else {
+                            // Prepend the symbol in other cases
+                            element.textContent = `${symbol}${langText[key]}`;
+                        }
+                    }
                 } else {
                     element.textContent = langText[key];
                 }
@@ -247,6 +355,21 @@ function changeText() {
     // Set login time based on selected language
     // setLoginTime();
 }
+async function getUsername(){
+    try {
+        const response = await fetch('/user/1');
+        if (response.ok) {
+            const userInfo = await response.json();
+            console.log("UserInfo: ", userInfo);
+            username = userInfo.name;
+        }
+    } catch (error) {
+        console.error('Error: ', error);
+    }
+}
 
 // Call initText initially to set up the text based on the default selected language
-document.addEventListener('DOMContentLoaded', initText);
+document.addEventListener('DOMContentLoaded', async () => {
+    await getUsername();
+    initText();
+});

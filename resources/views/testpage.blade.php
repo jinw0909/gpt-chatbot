@@ -147,11 +147,39 @@
                         </div>
                         @endif
                     </main>
-                    <div class="charge-modal-content">
-                        <div class="charge-modal-header"></div>
-                        <div class="charge-modal-top charge-modal-elem"></div>
-                        <div class="charge-modal-mid charge-modal-elem"></div>
-                        <div class="charge-modal-bottom charge-modal-elem"></div>
+                    <div class="charge-modal" id="charge-modal">
+                        <div class="charge-modal-content" id="charge-modal-content">
+                        <div class="charge-modal-header">
+                            Goya Chat AI 요금 충전
+<!--                            <div class="charge-modal-title" id="charge-modal-title">Select Your Preferred Amount</div>-->
+<!--                            <div class="charge-modal-close" id="charge-modal-close">X</div>-->
+                        </div>
+                        <div class="charge-modal-body">
+                            <div class="charge-modal-question">요금 충전 페이지로 이동하시겠습니까?</div>
+                            <div class="charge-modal-buttons">
+                                <div class="charge-modal-btn" id="confirm-btn">이동</div>
+                                <div class="charge-modal-btn" id="reject-btn">취소</div>
+                            </div>
+                        </div>
+<!--                        <div class="charge-modal-top charge-modal-elem">-->
+<!--                            <div class="charge-amount">$100</div>-->
+<!--                            <div class="charge-start">-->
+<!--                                <div class="charge-start-btn">select</div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="charge-modal-mid charge-modal-elem">-->
+<!--                            <div class="charge-amount">$200</div>-->
+<!--                            <div class="charge-start">-->
+<!--                                <div class="charge-start-btn">select</div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="charge-modal-bottom charge-modal-elem">-->
+<!--                            <div class="charge-amount">$300</div>-->
+<!--                            <div class="charge-start">-->
+<!--                                <div class="charge-start-btn">select</div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+                    </div>
                     </div>
                 </div>
             </div>
@@ -166,5 +194,6 @@
 <script src="{{ asset('js/chat.js') }}"></script>
 <!--<script src="{{ asset('js/conversation.js') }}"></script>-->
 <script src="{{ asset('js/texts.js') }}"></script>
+<script src="{{ asset('js/charge.js') }}"></script>
 </body>
 </html>
