@@ -22,7 +22,8 @@ const texts = {
         analyzeSymbol: ' 스코어 및 가격',
         analyzeSymbolMonth: ' 한 달간 스코어 및 가격',
         otherCrypto: '다른 암호 화폐 추천',
-        explainCriteria: '추천 기준을 알려줘'
+        explainCriteria: '추천 기준을 알려줘',
+        caution: '※ 본 암호화폐 추천은 투자시 절대적인 기준이 아닌 참고 용도로만 사용하시기 바랍니다. 투자하시기 전 반드시 마지막 시그널 발생 시간을 확인하시고 실제 차트와 비교하신 후에 진입하셔야 합니다. 또한 투자로 발생한 모든 손실 및 책임은 투자자 본인에게 있는 점을 다시 한 번 알려드립니다.'
     },
     jp: {
         connectedTime: '接続時間',
@@ -47,7 +48,8 @@ const texts = {
         analyzeSymbol: 'のスコアと価格',
         analyzeSymbolMonth: 'の過去1ヶ月のスコアと価格',
         otherCrypto: '他の暗号通貨のおすすめ',
-        explainCriteria: '推奨基準について教えてください'
+        explainCriteria: '推奨基準について教えてください',
+        caution: '※ 本暗号通貨の推薦は、投資の絶対的な基準ではなく、参考目的でのみご利用ください。投資を行う前に、必ず最後のシグナル発生時刻を確認し、実際のチャートと比較した上でエントリーしてください。また、投資によって生じたすべての損失および責任は、投資家ご自身にあることを改めてご確認ください。'
     },
     en: {
         connectedTime: 'Connected Time',
@@ -72,7 +74,8 @@ const texts = {
         analyzeSymbol: ' score and price',
         analyzeSymbolMonth: ' one-month score and price',
         otherCrypto: 'Other cryptocurrency recommendations',
-        explainCriteria: 'Tell me about the recommendation criteria'
+        explainCriteria: 'Tell me about the recommendation criteria',
+        caution: '※ This cryptocurrency recommendation should be used for reference purposes only and not as an absolute standard for investment. Before investing, be sure to check the time of the last signal and compare it with the actual chart before entering. Please note once again that all losses and liabilities arising from investments rest solely with the investor.'
     },
     zh: {  // Example for Chinese
         connectedTime: '连接时间',
@@ -96,10 +99,10 @@ const texts = {
         analyzeSymbol: '',
         analyzeSymbolMonth: '',
         otherCrypto: '其他加密货币推荐',
-        explainCriteria: '告诉我推荐标准'
+        explainCriteria: '告诉我推荐标准',
+        caution: '本加密货币推荐仅供参考，不能作为投资的绝对标准。在投资之前，请务必确认最后的信号发生时间，并与实际图表进行比较后再进行操作。此外，请再次确认，所有因投资产生的损失和责任均由投资者本人承担。'
     }
 };
-
 const timeUnits = {
     kr: {
         hour: '시간 ',
@@ -107,8 +110,8 @@ const timeUnits = {
         minute: '분 ',
         minutes: '분 ',
         articles: '전 (작성 시간)',
-        analysis: '전 (마지막 스코어/가격)',
-        recommend: '전 (마지막 시그널)'
+        analysis: '전 (마지막 스코어 기록 시간)',
+        recommend: '전 (마지막 시그널 발생 시간)'
     },
     jp: {
         hour: '時間',
@@ -116,17 +119,17 @@ const timeUnits = {
         minute: '分',
         minutes: '分',
         articles: '前（作成時間）',
-        analysis: '前（最新のスコア/価格）',
-        recommend: '前（最新のシグナル）'
+        analysis: '前（最新スコアの記録時間）',
+        recommend: '前（最新シグナルの記録時間）'
     },
     en: {
-        hour: 'hour ',
-        hours: 'hours ',
-        minute: 'minute ',
-        minutes: 'minutes ',
+        hour: ' hour ',
+        hours: ' hours ',
+        minute: ' minute ',
+        minutes: ' minutes ',
         articles: 'ago (Time Written)',
-        analysis: 'ago (Last Score/Price)',
-        recommend: 'ago (Last Signal)'
+        analysis: 'ago (Last Score/Price Time)',
+        recommend: 'ago (Last Signal Time)'
     }
 };
 

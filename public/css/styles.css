@@ -102,7 +102,20 @@ body {
 .recommend-img {
     margin-bottom: .5rem;
 }
+.time { margin: .25rem 0; }
+/*.time > div { display: inline; }*/
+.time > div:first-child { margin-right: .25rem; }
 
+.caution { margin-top: .5rem; color: indianred; }
+
+.recommend-comment {
+    color: orange;
+    margin-top: .5rem;
+}
+.recommend-btn.recommend-close-btn {
+    background-color: white;
+    color: black;
+}
 /* Modal Styles */
 .modal {
     display: none;
@@ -376,7 +389,12 @@ footer {
     margin-top: 1rem;
 }
 
-.article-button { transition: .5s; }
+.article-button {
+    transition: .5s;
+    border: 1px solid #888;
+    border-radius: 4px;
+    cursor: pointer;
+}
 .article-button.active {
     background-color: black;
     color: white;

@@ -133,6 +133,7 @@ let sendMessage = async (custom) => {
                 revealedArticles.shift();
                 const recommendations = parsedResponse.data.content;
                 const symbols = [];
+                const language = parsedResponse.data.language || 'en';
                 recommendations.forEach(parsed => {
                     console.log("parsed recommendation: ", parsed);
                     parsed.symbol = parsed.symbol.toUpperCase();
@@ -144,10 +145,12 @@ let sendMessage = async (custom) => {
 
                     // Create div for datetime
                     const datetimeDiv = document.createElement('div');
-                    datetimeDiv.textContent = `${parsed.datetime}`;
+                    // datetimeDiv.textContent = `${parsed.datetime}`;
+                    datetimeDiv.textContent = `${parsed.datetime.replace('T', ' ').split(':').slice(0, 2).join(":")}`;
 
                     const gapDiv = document.createElement('div');
-                    const timeTexts = timeUnits[selectedLanguage];
+                    // const timeTexts = timeUnits[selectedLanguage];
+                    const timeTexts = timeUnits[language];
 
                     let timeGapText = '';
                     if (parsed.time_gap.hours) {
@@ -163,6 +166,11 @@ let sendMessage = async (custom) => {
                     gapDiv.textContent = timeGapText;
                     gapDiv.style.color = '#bbb';
 
+                    const timeDiv = document.createElement('div');
+                    timeDiv.classList.add('time');
+                    timeDiv.appendChild(datetimeDiv);
+                    timeDiv.appendChild(gapDiv);
+
                     // Create div for image
                     const imageDiv = document.createElement('div');
                     imageDiv.classList.add('recommend-img');
@@ -177,6 +185,10 @@ let sendMessage = async (custom) => {
                     contentDiv.textContent = `${parsed.recommended_reason_translated}`;
                     // contentDiv.textContent = `${parsed.recommended_reason}`;
 
+                    const cautionDiv = document.createElement('div');
+                    cautionDiv.textContent = texts[language]['caution'];
+                    cautionDiv.classList.add('caution');
+
                     // Create wrapper
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'message';
@@ -184,10 +196,12 @@ let sendMessage = async (custom) => {
                     assistantDiv.className = 'assistant';
 
                     assistantDiv.appendChild(symbolDiv);
-                    assistantDiv.appendChild(datetimeDiv);
-                    assistantDiv.appendChild(gapDiv);
+                    // assistantDiv.appendChild(datetimeDiv);
+                    // assistantDiv.appendChild(gapDiv);
+                    assistantDiv.appendChild(timeDiv);
                     assistantDiv.appendChild(imageDiv);
                     assistantDiv.appendChild(contentDiv);
+                    assistantDiv.appendChild(cautionDiv);
 
                     //create query options
                     const queryDiv = document.createElement('div');
@@ -304,6 +318,7 @@ let sendMessage = async (custom) => {
             }
             else if (parsedResponse.data.format_type === 'crypto_analysis') {
                 const symbols = parsedResponse.data.content;
+                const language = parsedResponse.data.language || 'en';
                 recommendedSymbols.shift();
                 revealedArticles.shift();
                 symbols.forEach((parsed) => {
@@ -323,12 +338,13 @@ let sendMessage = async (custom) => {
                         priceDiv.textContent = '$0'; // or any default text you want to show when the price is null
                     }
 
-                    const timeDiv = document.createElement('div');
-                    timeDiv.textContent = parsed.symbol_data.record_time;
-
+                    const datetimeDiv = document.createElement('div');
+                    // datetimeDiv.textContent = parsed.symbol_data.record_time;
+                    datetimeDiv.textContent = parsed.symbol_data.record_time.replace('T', ' ').split(":").slice(0, 2).join(":");
                     const gapDiv = document.createElement('div');
-
-                    const timeTexts = timeUnits[selectedLanguage];
+                    console.log("response language: ", language);
+                    const timeTexts = timeUnits[language];
+                    // const timeTexts = timeUnits[selectedLanguage];
 
                     let timeGapText = '';
                     if (parsed.symbol_data.time_gap.hours) {
@@ -343,6 +359,11 @@ let sendMessage = async (custom) => {
 
                     gapDiv.textContent = timeGapText;
                     gapDiv.style.color = '#bbb';
+
+                    const timeDiv = document.createElement('div');
+                    timeDiv.classList.add('time');
+                    timeDiv.appendChild(datetimeDiv);
+                    timeDiv.appendChild(gapDiv);
 
                     const analysisDiv = document.createElement('div');
                     analysisDiv.textContent = parsed.analysis_translated;
@@ -359,7 +380,8 @@ let sendMessage = async (custom) => {
                         assistantDiv.appendChild(symbolDiv);
                         assistantDiv.appendChild(priceDiv);
                         assistantDiv.appendChild(timeDiv);
-                        assistantDiv.appendChild(gapDiv);
+                        // assistantDiv.appendChild(datetimeDiv);
+                        // assistantDiv.appendChild(gapDiv);
                         assistantDiv.appendChild(canvas);
                         assistantDiv.appendChild(analysisDiv);
                     } else if (Array.isArray(parsed.crypto_data) && parsed.crypto_data.length === 0) {
@@ -371,34 +393,40 @@ let sendMessage = async (custom) => {
                     if (parsed.recommendation_status.is_recommended) {
                         const status = parsed.recommendation_status;
                         const recommendComment = document.createElement('div');
-                        if (selectedLanguage === 'kr') {
-                            recommendComment.textContent = `※ ${parsed.symbol} 신호가 지난 6시간 내에 발생했습니다`; // "※ {symbol} has signal in the past 6 hours" in Korean
-                        } else if (selectedLanguage === 'jp') {
+                        recommendComment.classList.add("recommend-comment");
+                        // if (selectedLanguage === 'kr') {
+                        //     recommendComment.textContent = `※ ${parsed.symbol} 신호가 지난 6시간 내에 발생했습니다`; // "※ {symbol} has signal in the past 6 hours" in Korean
+                        // } else if (selectedLanguage === 'jp') {
+                        //     recommendComment.textContent = `※ ${parsed.symbol}は過去6時間にシグナルがあります`; // "※ {symbol} has signal in the past 6 hours" in Japanese
+                        // } else if (selectedLanguage === 'en') {
+                        //     recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 6 hours`;
+                        // }
+                        if (language === 'kr') {
+                            recommendComment.textContent = `※ ${parsed.symbol}에서 지난 6시간 내에 신호가 발생했습니다`; // "※ {symbol} has signal in the past 6 hours" in Korean
+                        } else if (language === 'jp') {
                             recommendComment.textContent = `※ ${parsed.symbol}は過去6時間にシグナルがあります`; // "※ {symbol} has signal in the past 6 hours" in Japanese
-                        } else if (selectedLanguage === 'en') {
+                        } else if (language === 'en') {
                             recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 6 hours`;
                         }
-                        recommendComment.style.color = 'orange';
-                        recommendComment.style.margin = '.25rem 0';
+                        // recommendComment.style.color = 'orange';
+                        // recommendComment.style.margin = '.25rem 0';
                         const openBtn = document.createElement('button');
                         openBtn.textContent = 'View Signal';
                         openBtn.style.cursor = 'pointer';
-                        openBtn.classList.add("recommend-btn");
+                        openBtn.classList.add("recommend-btn", "recommend-open-btn");
                         const closeBtn = document.createElement('button');
+                        closeBtn.classList.add('close-btn');
                         closeBtn.textContent = 'close';
                         closeBtn.style.display = 'none';
                         closeBtn.style.cursor = 'pointer';
-                        closeBtn.classList.add('recommend-btn');
+                        closeBtn.classList.add('recommend-btn', 'recommend-close-btn');
                         const recommendDiv = document.createElement('div');
-                        const recommendTimeDiv = document.createElement('div');
-                        recommendTimeDiv.textContent = status.recommended_datetime;
-                        const recommendImageDiv = document.createElement('img');
-                        recommendImageDiv.src = status.image_url;
-                        recommendImageDiv.style.width = '100%';
-                        recommendImageDiv.style.borderRadius = '8px';
-                        const recommendGapDiv = document.createElement('div');
+                        const recommendDatetimeDiv = document.createElement('div');
+                        recommendDatetimeDiv.textContent = status.recommended_datetime.replace('T', ' ').split(':').slice(0, 2).join(":");
 
-                        const timeTexts = timeUnits[selectedLanguage];
+                        const recommendGapDiv = document.createElement('div');
+                        // const timeTexts = timeUnits[selectedLanguage];
+                        const timeTexts = timeUnits[language];
 
                         let recommendGapText = '';
                         if (parsed.recommendation_status.time_gap.hours) {
@@ -414,13 +442,31 @@ let sendMessage = async (custom) => {
                         recommendGapDiv.textContent = recommendGapText;
                         recommendGapDiv.style.color = '#bbb';
 
+                        const recommendTimeDiv = document.createElement('div');
+                        recommendTimeDiv.classList.add('time');
+                        recommendTimeDiv.style.marginTop = '0';
+                        recommendTimeDiv.appendChild(recommendDatetimeDiv);
+                        recommendTimeDiv.appendChild(recommendGapDiv);
+
+                        const recommendImageDiv = document.createElement('img');
+                        recommendImageDiv.src = status.image_url;
+                        recommendImageDiv.style.width = '100%';
+                        recommendImageDiv.style.borderRadius = '8px';
+
                         const recommendContentDiv = document.createElement('div');
                         recommendContentDiv.textContent = status.recommended_reason_translated;
+
+                        const cautionDiv = document.createElement('div');
+                        cautionDiv.classList.add('caution');
+                        cautionDiv.textContent = texts[language]['caution'];
+
                         // recommendContentDiv.textContent = status.recommended_reason;
                         recommendDiv.appendChild(recommendTimeDiv);
-                        recommendDiv.appendChild(recommendGapDiv);
+                        // recommendDiv.appendChild(recommendDatetimeDiv);
+                        // recommendDiv.appendChild(recommendGapDiv);
                         recommendDiv.appendChild(recommendImageDiv);
                         recommendDiv.appendChild(recommendContentDiv);
+                        recommendDiv.appendChild(cautionDiv);
                         // recommendDiv.style.display = 'none';
                         recommendDiv.style.overflow = 'hidden';
                         recommendDiv.classList.add('recommend');
@@ -517,6 +563,7 @@ let sendMessage = async (custom) => {
                     chatBox.appendChild(wrapperDiv);
                     chatBox.appendChild(queryDiv);
                     const timeLabels = parsed.crypto_data.map(item => item.datetime);
+                    console.log("timeLabel passed to the function drawchart(): ", timeLabels);
                     const scoreMovement = parsed.crypto_data.map(item => item.score);
                     const priceMovement = parsed.crypto_data.map(item => item.price);
                     drawChart(priceMovement, scoreMovement, timeLabels, canvas);
@@ -525,7 +572,8 @@ let sendMessage = async (custom) => {
             else if (parsedResponse.data.format_type === 'articles') {
                 recommendedSymbols.unshift();
                 const articles = parsedResponse.data.content;
-                let articleType = '';
+                const language = parsedResponse.data.language;
+
                 articles.forEach(parsed => {
                     console.log("parsed article: ", parsed);
 
@@ -536,14 +584,15 @@ let sendMessage = async (custom) => {
 
                     const titleDiv = document.createElement('div');
                     titleDiv.style.color = 'aqua';
-
                     // Check if the type is "viewpoint"
                     titleDiv.textContent = parsed.title;
 
                     const datetimeDiv = document.createElement('div');
-                    datetimeDiv.textContent = parsed.datetime;
+                    // datetimeDiv.textContent = parsed.datetime;
+                    datetimeDiv.textContent = `${parsed.datetime.replace('T', ' ').split(':').slice(0, 2).join(":")}`;
                     const timegapDiv = document.createElement('div');
-                    const timeTexts = timeUnits[selectedLanguage];
+                    // const timeTexts = timeUnits[selectedLanguage];
+                    const timeTexts = timeUnits[language];
 
                     let timeGapText = '';
                     if (parsed.time_gap.hours) {
@@ -559,8 +608,14 @@ let sendMessage = async (custom) => {
                     timegapDiv.textContent = timeGapText;
                     timegapDiv.style.color = '#bbb';
 
+                    const timeDiv = document.createElement('div');
+                    timeDiv.classList.add('time');
+                    timeDiv.appendChild(datetimeDiv);
+                    timeDiv.appendChild(timegapDiv);
+
                     // Create div for image
                     const imageDiv = document.createElement('div');
+                    imageDiv.style.width = '100%';
                     const imageElement = document.createElement('img');
                     imageElement.src = parsed.image_url;
                     imageElement.style.width = '100%';
@@ -639,8 +694,9 @@ let sendMessage = async (custom) => {
                     const assistantMessageDiv = document.createElement('div');
                     assistantMessageDiv.className = 'assistant';
                     assistantMessageDiv.appendChild(titleDiv);
-                    assistantMessageDiv.appendChild(datetimeDiv);
-                    assistantMessageDiv.appendChild(timegapDiv);
+                    // assistantMessageDiv.appendChild(datetimeDiv);
+                    // assistantMessageDiv.appendChild(timegapDiv);
+                    assistantMessageDiv.appendChild(timeDiv);
                     assistantMessageDiv.appendChild(imageDiv);
                     assistantMessageDiv.appendChild(buttonContainer);
                     assistantMessageDiv.appendChild(contentDiv);
@@ -704,8 +760,9 @@ let sendMessage = async (custom) => {
                 recommendedSymbols.unshift();
                 revealedArticles.unshift();
                 const parsed = parsedResponse.data.content;
+                const language = parsedResponse.data.language;
 
-                console.log("parsed viewpoint: ", parsed);
+                //console.log("parsed viewpoint: ", parsed);
 
                 const titleDiv = document.createElement('div');
                 titleDiv.style.color = 'aqua';
@@ -713,10 +770,13 @@ let sendMessage = async (custom) => {
                 titleDiv.textContent = formatDateTimeToWords(parsed.id);
 
                 const datetimeDiv = document.createElement('div');
-                datetimeDiv.textContent = parsed.datetime;
-                const timegapDiv = document.createElement('div');
+                datetimeDiv.textContent = `${parsed.datetime.replace('T', ' ').split(':').slice(0, 2).join(":")}`;
+                // datetimeDiv.textContent = parsed.datetime;
+                const gapDiv = document.createElement('div');
 
-                const timeTexts = timeUnits[selectedLanguage];
+                // const timeTexts = timeUnits[selectedLanguage];
+                // const timeTexts = timeUnits[selectedLanguage];
+                const timeTexts = timeUnits[language];
 
                 let timeGapText = '';
                 if (parsed.time_gap.hours) {
@@ -729,8 +789,13 @@ let sendMessage = async (custom) => {
                     timeGapText += timeTexts.articles;
                 }
 
-                timegapDiv.textContent = timeGapText;
-                timegapDiv.style.color = '#bbb';
+                gapDiv.textContent = timeGapText;
+                gapDiv.style.color = '#bbb';
+
+                const timeDiv = document.createElement('div');
+                timeDiv.classList.add('time');
+                timeDiv.appendChild(datetimeDiv);
+                timeDiv.appendChild(gapDiv);
 
                 // Create div for image
                 const imageDiv = document.createElement('div');
@@ -759,8 +824,9 @@ let sendMessage = async (custom) => {
                 const assistantMessageDiv = document.createElement('div');
                 assistantMessageDiv.className = 'assistant';
                 assistantMessageDiv.appendChild(titleDiv);
-                assistantMessageDiv.appendChild(datetimeDiv);
-                assistantMessageDiv.appendChild(timegapDiv);
+                // assistantMessageDiv.appendChild(datetimeDiv);
+                // assistantMessageDiv.appendChild(gapDiv);
+                assistantMessageDiv.appendChild(timeDiv);
                 assistantMessageDiv.appendChild(imageDiv);
                 assistantMessageDiv.appendChild(contentDiv);
                 assistantMessageDiv.appendChild(summaryDiv);
@@ -902,17 +968,39 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
         }
         return ''; // Hide other labels by making them empty strings
     });
+    console.log('custom labels: ', customLabels);
 
     // Utility function to format date to MM/DD HH:mm
+    // const formatDate = (isoString) => {
+    //     if (!isoString) return ''; // Handle empty strings
+    //
+    //     // Split the date and time parts from the ISO string
+    //     const [datePart, timePart] = isoString.split('T');
+    //
+    //     // Extract the year, month, and day from the date part
+    //     const [year, month, day] = datePart.split('-');
+    //
+    //     // Extract the hours and minutes from the time part (ignoring seconds and timezone)
+    //     const [hourMinutePart] = timePart.split('+')[0].split('-')[0].split('Z')[0]; // Handles both +00:00 and Z formats
+    //     const [hours, minutes] = hourMinutePart.split(':');
+    //
+    //     // Return the formatted string as MM/DD HH:mm
+    //     console.log("formatDate result: ", `${month}/${day} ${hours}:${minutes}`);
+    //     return `${month}/${day} ${hours}:${minutes}`;
+    // };
     const formatDate = (isoString) => {
         if (!isoString) return ''; // Handle empty strings
 
-        const date = new Date(isoString);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
-        const day = date.getDate().toString().padStart(2, '0');
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
+        // Split the date and time parts from the ISO string
+        const [datePart, timePartWithOffset] = isoString.split('T');
 
+        // Extract the year, month, and day from the date part
+        const [year, month, day] = datePart.split('-');
+
+        // Extract the time part by removing the timezone offset
+        const timePart = timePartWithOffset.split(/[+-]/)[0]; // Split by '+' or '-' to remove timezone
+        const [hours, minutes] = timePart.split(':'); // Extract hours and minutes from the time part
+        // Return the formatted string as MM/DD HH:mm
         return `${month}/${day} ${hours}:${minutes}`;
     };
 
@@ -965,6 +1053,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                         callback: function(value, index) {
                             if (customLabels[index]) {
                                 return formatDate(customLabels[index]);
+                                // return customLabels[index];
                             }
                             return ''; // Hide empty labels
                         },

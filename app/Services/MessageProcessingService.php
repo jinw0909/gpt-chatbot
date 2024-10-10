@@ -51,7 +51,7 @@ class MessageProcessingService
         }
 
         $messages = $this->prepareMessages($message, $systems, $conversation);
-        $response = $this->sendMessageToOpenAI($messages, $tools, $userId, $functionList = []);
+        $response = $this->sendMessageToOpenAI($messages, $tools, $userId, $lang, $timezone, $functionList = []);
 
         $maxUsage = $this->tokenService->getMaxUsage($userId);
         $left = $this->tokenService->reduceCharge($userId);
@@ -78,7 +78,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When the format_type of the response is "crypto_analysis", "analysis_translated" field and the "recommended_reason_translated" field should be made in the default language of the user if the default language of the user is not English. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and should also refer to the most recent price movement change of the symbol. The "analysis_translated" field should also refer to the "recommended_reason_translated" content inside the "recommendation_status" which explains why the symbol is currently recommended. When the "recommended_reason_translated" says there are S, S2, or S3 signals, it means price of the crypto is in a declining trend which could be an opportunity for the short position traders, while L, L2, L3 signal means the price in on a inclining trend which means it could be an opportunity for the long position traders.'
+                'content' => 'When the format_type of the response is "crypto_analysis", "analysis_translated" field and the "recommended_reason_translated" field should be made in the default language of the user if the default language of the user is not English. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and also refer the several most recent price movement trend of the symbol. Also, the "analysis_translated" field should also refer to the "recommended_reason_translated" content of the "recommendation_status" field which explains why the symbol is currently recommended. When the "recommended_reason_translated" says there are S, S2, or S3 signals, it means the price of the crypto is in a declining trend which could be an opportunity for the short position traders, while L, L2, L3 signal means the price in on a inclining trend which means it could be an opportunity for the long position traders.'
             ],
             [
                 'role' => 'system',
@@ -453,9 +453,14 @@ class MessageProcessingService
                                             'type' => 'string',
                                             'enum' => ['default']
                                         ],
-                                        'content' => ['type' => 'string']
+                                        'content' => ['type' => 'string'],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['kr', 'jp', 'en'],
+                                            'description' => 'The default language of the user'
+                                        ]
                                     ],
-                                    'required' => ['format_type', 'content'],
+                                    'required' => ['format_type', 'content', 'language'],
                                     'additionalProperties' => false
                                 ],
                                 [
@@ -537,9 +542,14 @@ class MessageProcessingService
                                                 ],
                                                 'additionalProperties' => false
                                             ]
+                                        ],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['kr', 'jp', 'en'],
+                                            'description' => 'The default language of the user'
                                         ]
                                     ],
-                                    'required' => ['format_type', 'content'],
+                                    'required' => ['format_type', 'content', 'language'],
                                     'additionalProperties' => false
                                 ],
 //                                [
@@ -657,9 +667,14 @@ class MessageProcessingService
                                                 'required' => ['symbol', 'datetime', 'time_gap', 'image_url', 'recommended_reason_translated'],
                                                 'additionalProperties' => false
                                             ]
+                                        ],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['kr', 'jp', 'en'],
+                                            'description' => 'The default language of the user'
                                         ]
                                     ],
-                                    'required' => ['format_type', 'content'],
+                                    'required' => ['format_type', 'content', 'language'],
                                     'additionalProperties' => false
                                 ],
 //                                [
@@ -743,8 +758,13 @@ class MessageProcessingService
                                                 'additionalProperties' => false
                                             ],
                                         ],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['kr', 'jp', 'en'],
+                                            'description' => 'The default language of the user'
+                                        ]
                                     ],
-                                    'required' => ['format_type', 'content'],
+                                    'required' => ['format_type', 'content', 'language'],
 //                                    'required' => ['format_type', 'content'],
                                     'additionalProperties' => false
                                 ],
@@ -787,8 +807,13 @@ class MessageProcessingService
                                             'required' => ['title', 'datetime', 'time_gap', 'image_url', 'content', 'summary', 'article', 'id', 'language'],
                                             'additionalProperties' => false
                                         ],
+                                        'language' => [
+                                            'type' => 'string',
+                                            'enum' => ['kr', 'jp', 'en'],
+                                            'description' => 'The default language of the user'
+                                        ]
                                     ],
-                                    'required' => ['format_type', 'content'],
+                                    'required' => ['format_type', 'content', 'language'],
                                     'additionalProperties' => false
                                 ],
                             ]
@@ -828,7 +853,7 @@ class MessageProcessingService
         return ['tools' => $tools, 'toolChoice' => $toolChoice];
     }
 
-    private function sendMessageToOpenAI($messages, $tools, $userId, $functionList)
+    private function sendMessageToOpenAI($messages, $tools, $userId, $lang, $timezone, $functionList)
     {
         try {
             // Get the response format based on the functionList
@@ -1101,8 +1126,12 @@ class MessageProcessingService
                         Log::warning("Function name is null in toolCall: ", ["toolCall" => $toolCall]);
                     }
                 }
+                $messages[] = [
+                    'role' => 'system',
+                    'content' => 'The default language of the user is ' . $lang . ' and the default timezone of the user is ' . $timezone . '. '
+                ];
                 Log::info("functionList(recurse): ", ["functionList" => $functionList]);
-                return $this->sendMessageToOpenAI($messages, $tools, $userId, $functionList);
+                return $this->sendMessageToOpenAI($messages, $tools, $userId, $lang, $timezone,$functionList);
             }
         } catch (\Exception $e) {
             Log::error('Error Communicating with OpenAI: ', ['error' => $e->getMessage()]);
