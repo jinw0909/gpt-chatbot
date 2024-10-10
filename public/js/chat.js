@@ -63,6 +63,9 @@ let sendMessage = async (custom) => {
     messageInput.readOnly = true;
     // messageInput.classList.add('locked');
     chatForm.classList.add('locked');
+    document.querySelectorAll('.question').forEach(div => {
+        div.classList.add('locked');
+    });
 
     // Add the user's message to the chat box
     const userMessageWrapper = document.createElement('div');
@@ -198,14 +201,15 @@ let sendMessage = async (custom) => {
                     const question2 = document.createElement('p');
                     const question3 = document.createElement('p');
 
+
                     if (parsed.symbol.endsWith("USDT")) {
                         // Remove "USDT" from the end of the symbol
                         parsed.symbol = parsed.symbol.substring(0, parsed.symbol.length - 4);
                     }
 
-                    question1.classList.add('analyze-symbol');
-                    question2.classList.add('analyze-symbol-month');
-                    question3.classList.add('explain-symbol');
+                    question1.classList.add('analyze-symbol', 'question');
+                    question2.classList.add('analyze-symbol-month', 'question');
+                    question3.classList.add('explain-symbol', 'question');
                     question1.setAttribute('data-symbol', parsed.symbol);
                     question2.setAttribute('data-symbol', parsed.symbol);
                     question3.setAttribute('data-symbol', parsed.symbol);
@@ -219,8 +223,8 @@ let sendMessage = async (custom) => {
                         question2.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格`;
                         question3.textContent = `${parsed.symbol}について教えてください`;
                     } else if (selectedLanguage === 'en') {
-                        question1.textContent = `${parsed.symbol} Score and Price`;
-                        question2.textContent = `${parsed.symbol} One-Month Score and Price`;
+                        question1.textContent = `${parsed.symbol} score and price`;
+                        question2.textContent = `${parsed.symbol} one-month score and price`;
                         question3.textContent = `Tell me about ${parsed.symbol}`;
                     }
 
@@ -259,9 +263,9 @@ let sendMessage = async (custom) => {
                 const question2 = document.createElement('p');
                 const question3 = document.createElement('p');
 
-                question1.classList.add("other-crypto");
-                question2.classList.add("explain-criteria");
-                question3.classList.add("market-trend");
+                question1.classList.add("other-crypto", "question");
+                question2.classList.add("explain-criteria", "question");
+                question3.classList.add("market-trend", "question");
 
                 // Update text content based on the selected language
                 if (selectedLanguage === 'kr') {
@@ -465,7 +469,7 @@ let sendMessage = async (custom) => {
                             question1.textContent = `${parsed.symbol} Score and Price`;
                         }
                     } else {
-                        question1.setAttribute('data-symbol', parsed.symbol);
+                        question1.classList.add('analyze-symbol-month');
                         if (selectedLanguage === 'kr') {
                             question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
                         } else if (selectedLanguage === 'jp') {
@@ -475,8 +479,9 @@ let sendMessage = async (custom) => {
                         }
                     }
 
-                    question2.classList.add('explain-symbol');
-                    question3.classList.add('recommend-crypto');
+                    question1.classList.add("question");
+                    question2.classList.add("explain-symbol", "question");
+                    question3.classList.add("recommend-crypto", "question");
                     question1.setAttribute('data-symbol', parsed.symbol);
                     question2.setAttribute('data-symbol', parsed.symbol);
                     question3.setAttribute('data-symbol', parsed.symbol);
@@ -658,9 +663,9 @@ let sendMessage = async (custom) => {
                 const question2 = document.createElement('p');
                 const question3 = document.createElement('p');
 
-                question1.classList.add("other-news");
-                question2.classList.add("analyze-btc");
-                question3.classList.add("recommend-crypto");
+                question1.classList.add("other-news", "question");
+                question2.classList.add("analyze-btc", "question");
+                question3.classList.add("recommend-crypto", "question");
 
                 if (selectedLanguage === 'kr') {
                     question1.textContent = `다른 주요 암호 화폐 뉴스`; // "Other major cryptocurrency news" in Korean
@@ -775,9 +780,9 @@ let sendMessage = async (custom) => {
                 const question2 = document.createElement('p');
                 const question3 = document.createElement('p');
 
-                question1.classList.add('major-news');
-                question2.classList.add('about-goya');
-                question3.classList.add('recommend-crypto');
+                question1.classList.add('major-news', 'question');
+                question2.classList.add('about-goya', 'question');
+                question3.classList.add('recommend-crypto', 'question');
 
                 if (selectedLanguage === 'kr') {
                     question1.textContent = `암호 화폐 관련 주요 뉴스`;
@@ -875,6 +880,9 @@ let sendMessage = async (custom) => {
         messageInput.readOnly = false;
         chatForm.classList.remove('locked');
         // messageInput.classList.remove('locked');
+        document.querySelectorAll('.question').forEach(div => {
+            div.classList.remove('locked');
+        });
         console.log("symbols: ", recommendedSymbols);
         console.log("articles: ", revealedArticles);
     }

@@ -164,6 +164,8 @@ langDivs.forEach(div => {
         languageDiv.appendChild(assistantDiv);
         const chatBox = document.querySelector('#chat-box');
         chatBox.appendChild(languageDiv);
+        // Scroll to the bottom of the chat box
+        chatBox.scrollTop = chatBox.scrollHeight;
 
         handleLanguageChange();
 
