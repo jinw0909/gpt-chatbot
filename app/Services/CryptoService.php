@@ -221,7 +221,6 @@ class CryptoService
 //        // Return the result as JSON
 //        return json_encode($response);
 //    }
-
     public function analyzeCrypto(array $symbols, $hours = 24, $timezone = 'UTC')
     {
         // Initialize the results array
@@ -234,10 +233,12 @@ class CryptoService
             $latestPriceData = json_decode($this->getLatestPrice($symbol, $timezone), true);
             $cryptoData = json_decode($this->getCryptoData($symbol, $hours, $timezone), true);
             $recommendationStatus = json_decode($this->checkRecommendationStatus($symbol, $timezone), true);
+//            $cryptoLogo = $this->getCryptoLogo($symbol);
 
             // Combine the results for the current symbol
             $symbolResult = [
                 'symbol' => $normalizedSymbol,
+//                'symbol_logo' => $cryptoLogo,
                 'symbol_data' => $latestPriceData,
                 'crypto_data' => $cryptoData,
                 'recommendation_status' => $recommendationStatus,
@@ -287,8 +288,11 @@ class CryptoService
         // Calculate the time gap for each row
         $result = $result->map(function($item) use ($timezone) {
             $item->time_gap = $this->calculateTimeGap($item->datetime, $timezone);
+//            $item->symbol_logo = $this->getCryptoLogo($item->symbol);
             return $item;
         });
+
+
 
         $jsonResult = json_encode($result);
         Log::info($jsonResult);
@@ -439,7 +443,6 @@ class CryptoService
         // Return the results
         return $finalResults->values(); // Return as a collection or array
     }
-
     public function getRecommendationData($limit, $timezone, $coin_list = [])
     {
         if ($limit === 0) { $limit = 3; }
@@ -546,7 +549,6 @@ class CryptoService
         // Return the content (recommended_reason)
         return $query->recommended_reason;
     }
-
     public function getCryptoData(string $symbol, $hours = 24, $timezone = 'UTC')
     {
         if ($hours < 12) { $hours = 24; }
@@ -722,5 +724,23 @@ class CryptoService
             'hours' => $interval->h,
             'minutes' => $interval->i,
         ];
+    }
+    public function getCryptoLogo($symbol) {
+        $symbol = $this->normalizeSymbol($symbol, false);
+        Log::info("Normalized Symbol: ", ["symbol" => $symbol]);
+        // Logic for hourly interval
+        $result = DB::connection('mysql3')
+            ->table('bu.Symbols')
+            ->where('symbol', $symbol)
+            ->select('symbol', 'imageUrl')
+            ->first();
+        if ($result) {
+            Log::info("symbol & image: ", ["logo" => $result]);
+            return $result->imageUrl;
+        }
+
+        //optionally return null or some default value if the symbol is not found
+        return null;
+
     }
 }

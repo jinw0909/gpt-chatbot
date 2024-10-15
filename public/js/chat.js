@@ -3,6 +3,19 @@ let conversation = [];
 document.addEventListener('DOMContentLoaded', async () => {
     await getUsername();
 });
+document.addEventListener('keydown', function(event) {
+   if (event.key === 'Enter') {
+       if (event.shiftKey) {
+           return;
+       } else {
+           //check if the focused element is the message input
+           if (document.activeElement.id === 'message-input') {
+               event.preventDefault(); // Prevent the default behavior
+               sendMessage(); //Call the sendMessageFunction
+           }
+       }
+   }
+});
 document.getElementById('send-button').addEventListener('click', async function() {
     sendMessage();
 });
@@ -138,10 +151,24 @@ let sendMessage = async (custom) => {
                     console.log("parsed recommendation: ", parsed);
                     parsed.symbol = parsed.symbol.toUpperCase();
                     symbols.push(parsed.symbol);
+
+                    const headerDiv = document.createElement('div');
+                    headerDiv.classList.add('header-div');
+                    const logoDiv = document.createElement('div');
+                    logoDiv.classList.add('logo-div');
+                    if (!parsed.symbol_logo) {
+                        logoDiv.style.display = 'none';
+                    } else {
+                        logoDiv.style.backgroundImage = `url(${parsed.symbol_logo})`;
+                    }
                     // Create div for symbol
                     const symbolDiv = document.createElement('div');
                     symbolDiv.textContent = `${parsed.symbol}`;
                     symbolDiv.style.color = 'aqua';
+                    symbolDiv.classList.add('symbol-div');
+
+                    headerDiv.appendChild(logoDiv);
+                    headerDiv.appendChild(symbolDiv);
 
                     // Create div for datetime
                     const datetimeDiv = document.createElement('div');
@@ -195,7 +222,8 @@ let sendMessage = async (custom) => {
                     const assistantDiv = document.createElement('div');
                     assistantDiv.className = 'assistant';
 
-                    assistantDiv.appendChild(symbolDiv);
+                    // assistantDiv.appendChild(symbolDiv);
+                    assistantDiv.appendChild(headerDiv);
                     // assistantDiv.appendChild(datetimeDiv);
                     // assistantDiv.appendChild(gapDiv);
                     assistantDiv.appendChild(timeDiv);
@@ -326,11 +354,26 @@ let sendMessage = async (custom) => {
                     parsed.symbol = parsed.symbol.toUpperCase();
                     const canvas = document.createElement('canvas');
 
+                    const headerDiv = document.createElement('div');
+                    const logoDiv = document.createElement('div');
+                    logoDiv.classList.add('logo-div');
+                    if (!parsed.symbol_logo) {
+                        logoDiv.style.display = 'none';
+                    } else {
+                        logoDiv.style.backgroundImage = `url(${parsed.symbol_logo})`;
+                    }
+
                     const symbolDiv = document.createElement('div');
                     symbolDiv.textContent = parsed.symbol;
                     symbolDiv.style.color = 'aqua';
+                    symbolDiv.classList.add('symbol-div');
+
+                    headerDiv.appendChild(logoDiv);
+                    headerDiv.appendChild(symbolDiv);
+                    headerDiv.classList.add('header-div');
 
                     const priceDiv = document.createElement('div');
+                    priceDiv.classList.add('price');
                     console.log('symbol_price:', parsed.symbol_data.symbol_price, typeof parsed.symbol_data.symbol_price);
                     if (parsed.symbol_price !== null && !isNaN(parsed.symbol_data.symbol_price)) {
                         priceDiv.textContent = `$${Number(parsed.symbol_data.symbol_price).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 7 })}`;
@@ -377,7 +420,8 @@ let sendMessage = async (custom) => {
                     //divide by checking the existence of the crypto_data
                     if (Array.isArray(parsed.crypto_data) && parsed.crypto_data.length > 0) {
                         // If parsed.crypto_data is a non-empty array, append all elements
-                        assistantDiv.appendChild(symbolDiv);
+                        // assistantDiv.appendChild(symbolDiv);
+                        assistantDiv.appendChild(headerDiv);
                         assistantDiv.appendChild(priceDiv);
                         assistantDiv.appendChild(timeDiv);
                         // assistantDiv.appendChild(datetimeDiv);

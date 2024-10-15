@@ -478,6 +478,7 @@ class MessageProcessingService
                                                 'type' => 'object',
                                                 'properties' => [
                                                     'symbol' => ['type' => 'string'],
+//                                                    'symbol_logo' => ['type' => 'string', 'description' => 'logo image url of the symbol'],
                                                     'symbol_data' => [
                                                         'type' => 'object',
                                                         'properties' => [
@@ -651,6 +652,7 @@ class MessageProcessingService
                                                 'type' => 'object',
                                                 'properties' => [
                                                     'symbol' => ['type' => 'string'],
+//                                                    'symbol_logo' => ['type' => 'string', 'description' => 'image url of the symbol logo'],
                                                     'datetime' => ['type' => 'string'],
                                                     'time_gap' => [
                                                         'type' => 'object',
@@ -1016,6 +1018,7 @@ class MessageProcessingService
                             $timezone = $contentItem['timezone'] ?? 'UTC';
                             // Get the new crypto data for the current symbol
                             $cryptoData = $this->cryptoService->getCryptoData($symbol, $interval, $timezone);
+                            $symbolLogo = $this->cryptoService->getCryptoLogo($symbol);
 //                            $recommendationStatus = $this->cryptoService->checkRecommendationStatus($symbol, $timezone);
                             // Ensure $cryptoData is decoded if it's a JSON string
                             if (is_string($cryptoData)) {
@@ -1033,6 +1036,7 @@ class MessageProcessingService
 
                             // Replace the original cryptoData with the newly retrieved value
                             $contentItem['crypto_data'] = $cryptoData;
+                            $contentItem['symbol_logo'] = $symbolLogo;
 //                            $contentItem['recommendation_status'] = $recommendationStatus;
                         }
                     }
@@ -1041,9 +1045,9 @@ class MessageProcessingService
                     $responseText = json_encode($parsedContent);
                     Log::info("Modified responseText: " . $responseText);
                 }
-//                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'crypto_recommendations') {
-//                    Log::info("crypto recommendations format");
-//                    foreach ($parsedContent['data']['content'] as &$contentItem) {
+                if (isset($parsedContent['data']['content']) && is_array($parsedContent['data']['content']) && $parsedContent['data']['format_type'] === 'crypto_recommendations') {
+                    Log::info("crypto recommendations format");
+                    foreach ($parsedContent['data']['content'] as &$contentItem) {
 //                        if (isset($contentItem['id']) && isset($contentItem['language'])) {
 //                            // Extract symbol
 //                            $id = $contentItem['id'];
@@ -1067,13 +1071,15 @@ class MessageProcessingService
 //                            if ($recommended_reason !== null) {
 //                                $contentItem['recommended_reason'] = $recommended_reason;
 //                            }
-//
 //                        }
-//                    }
-//
-//                    $responseText = json_encode($parsedContent);
-//                    Log::info("Modified responseText: " . $responseText);
-//                }
+                        $symbol = $contentItem['symbol'];
+                        $symbolLogo = $this->cryptoService->getCryptoLogo($symbol);
+                        $contentItem['symbol_logo'] = $symbolLogo;
+                    }
+
+                    $responseText = json_encode($parsedContent);
+                    Log::info("Modified responseText: " . $responseText);
+                }
 
                 if (!$functionCall) {
                     $this->tokenService->setCostToZero($userId);

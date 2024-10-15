@@ -1,5 +1,6 @@
 /* public/css/styles.css */
-
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@200..900&family=Noto+Sans+KR:wght@200..900&display=swap');
 
 * { box-sizing: border-box; }
 textarea:focus-visible { outline: 0; }
@@ -9,8 +10,10 @@ body {
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    letter-spacing: .5px;
+    /*font-family: "Noto Sans KR", "Noto Sans JP", sans-serif;*/
+    font-optical-sizing: auto;
     font-style: normal;
+    letter-spacing: .5px;
 }
 
 .main { display: flex; flex-direction: column; height: 100%; }
@@ -102,7 +105,22 @@ body {
 .recommend-img {
     margin-bottom: .5rem;
 }
-.time { margin: .25rem 0; }
+.header-div {
+    display: flex;
+    gap: .25em;
+    align-items: center;
+}
+.logo-div {
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 1em;
+    height: 1em;
+    background-color: white;
+    border-radius: 50%;
+    border: 1px solid #888;
+}
+.price { margin-top: .25em; }
+.time { margin-bottom: .25rem; }
 /*.time > div { display: inline; }*/
 .time > div:first-child { margin-right: .25rem; }
 
