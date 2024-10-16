@@ -23,7 +23,9 @@ const texts = {
         analyzeSymbolMonth: ' 한 달간 스코어 및 가격',
         otherCrypto: '다른 암호 화폐 추천',
         explainCriteria: '추천 기준을 알려줘',
-        caution: '※ 본 암호화폐 추천은 투자시 절대적인 기준이 아닌 참고 용도로만 사용하시기 바랍니다. 투자하시기 전 반드시 마지막 시그널 발생 시간을 확인하시고 실제 차트와 비교하신 후에 진입하셔야 합니다. 또한 투자로 발생한 모든 손실 및 책임은 투자자 본인에게 있는 점을 다시 한 번 알려드립니다.'
+        caution: '※ 본 암호화폐 추천은 투자시 절대적인 기준이 아닌 참고 용도로만 사용하시기 바랍니다. 투자하시기 전 반드시 마지막 시그널 발생 시간을 확인하시고 실제 차트와 비교하신 후에 진입하셔야 합니다. 또한 투자로 발생한 모든 손실 및 책임은 투자자 본인에게 있는 점을 다시 한 번 알려드립니다.',
+        errorMessage: '응답 생성에 실패하였습니다.',
+        connectTime: '접속 시간'
     },
     jp: {
         connectedTime: '接続時間',
@@ -49,7 +51,9 @@ const texts = {
         analyzeSymbolMonth: 'の過去1ヶ月のスコアと価格',
         otherCrypto: '他の暗号通貨のおすすめ',
         explainCriteria: '推奨基準について教えてください',
-        caution: '※ 本暗号通貨の推薦は、投資の絶対的な基準ではなく、参考目的でのみご利用ください。投資を行う前に、必ず最後のシグナル発生時刻を確認し、実際のチャートと比較した上でエントリーしてください。また、投資によって生じたすべての損失および責任は、投資家ご自身にあることを改めてご確認ください。'
+        caution: '※ 本暗号通貨の推薦は、投資の絶対的な基準ではなく、参考目的でのみご利用ください。投資を行う前に、必ず最後のシグナル発生時刻を確認し、実際のチャートと比較した上でエントリーしてください。また、投資によって生じたすべての損失および責任は、投資家ご自身にあることを改めてご確認ください。',
+        errorMessage: 'メッセージ生成に失敗しました。',
+        connectTime: '接続時間'
     },
     en: {
         connectedTime: 'Connected Time',
@@ -75,7 +79,9 @@ const texts = {
         analyzeSymbolMonth: ' one-month score and price',
         otherCrypto: 'Other cryptocurrency recommendations',
         explainCriteria: 'Tell me about the recommendation criteria',
-        caution: '※ This cryptocurrency recommendation should be used for reference purposes only and not as an absolute standard for investment. Before investing, be sure to check the time of the last signal and compare it with the actual chart before entering. Please note once again that all losses and liabilities arising from investments rest solely with the investor.'
+        caution: '※ This cryptocurrency recommendation should be used for reference purposes only and not as an absolute standard for investment. Before investing, be sure to check the time of the last signal and compare it with the actual chart before entering. Please note once again that all losses and liabilities arising from investments rest solely with the investor.',
+        errorMessage: 'Failed to generate message.',
+        connectTime: 'Connected time'
     },
     zh: {  // Example for Chinese
         connectedTime: '连接时间',
@@ -100,7 +106,9 @@ const texts = {
         analyzeSymbolMonth: '',
         otherCrypto: '其他加密货币推荐',
         explainCriteria: '告诉我推荐标准',
-        caution: '本加密货币推荐仅供参考，不能作为投资的绝对标准。在投资之前，请务必确认最后的信号发生时间，并与实际图表进行比较后再进行操作。此外，请再次确认，所有因投资产生的损失和责任均由投资者本人承担。'
+        caution: '本加密货币推荐仅供参考，不能作为投资的绝对标准。在投资之前，请务必确认最后的信号发生时间，并与实际图表进行比较后再进行操作。此外，请再次确认，所有因投资产生的损失和责任均由投资者本人承担。',
+        errorMessage: '无法生成消息',
+        connectTime: '连接时间'
     }
 };
 const timeUnits = {
@@ -141,6 +149,7 @@ const timeZoneAbbreviations = {
 
 let selectedLanguage = 'kr'; // Default selected language
 let username = '';
+let currentEpoch = Date.now();
 
 let langDivs = document.querySelectorAll('.select-lang');
 langDivs.forEach(div => {
@@ -256,7 +265,7 @@ function handleLanguageChange(event) {
 //     // Set login time based on selected language
 //     // setLoginTime();
 // }
-function initText() {
+async function initText() {
     console.log("Username: ", username);
     const langText = texts[selectedLanguage];
     // Get all elements that need to be changed
@@ -302,7 +311,7 @@ function initText() {
     closeChatText.innerHTML = langText.closeChat;
 
     // Set login time based on selected language
-    // setLoginTime();
+    await setConnectTime(currentEpoch);
 }
 
 
@@ -319,12 +328,14 @@ function getClassToKeyMap() {
         'analyze-symbol': 'analyzeSymbol',
         'analyze-symbol-month': 'analyzeSymbolMonth',
         'other-crypto': 'otherCrypto',
-        'explain-criteria': 'explainCriteria'
+        'explain-criteria': 'explainCriteria',
+        'error-message': 'errorMessage',
+        'connect-time': 'connectTime'
     };
 }
 
 // New function to change text for all elements with specific classes
-function changeText() {
+async function changeText() {
     const langText = texts[selectedLanguage];
     const classToKeyMap = getClassToKeyMap();
 
@@ -356,6 +367,7 @@ function changeText() {
                 }
             }
         });
+        await setConnectTime(currentEpoch);
     }
     // Set login time based on selected language
     // setLoginTime();
@@ -372,6 +384,48 @@ async function getUsername(){
         console.error('Error: ', error);
     }
 }
+
+
+async function setConnectTime(currentEpoch) {
+    const date = new Date(currentEpoch);
+
+    // Define the options common to all languages, using 'en-US' locale
+    const options = {
+        timeZone: 'Asia/Seoul',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false // Use 24-hour format
+    };
+
+    // Format the time using 'en-US'
+    const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date);
+
+    // Modify based on the selected language
+    let finalFormattedTime = formattedTime;
+
+    if (selectedLanguage === 'kr') {
+        // For Korean: add Korean units
+        finalFormattedTime = formattedTime
+            .replace('/', '월 ')  // Replace '/' with '월'
+            .replace(',', '일')   // Replace ',' with '일'
+            .replace(':', '시 ') + '분';  // Add '시' after the hour and '분' after the minute
+    } else if (selectedLanguage === 'jp') {
+        // For Japanese: add Japanese units
+        finalFormattedTime = formattedTime
+            .replace('/', '月')  // Replace '/' with '月'
+            .replace(',', '日')   // Replace ',' with '日'
+            .replace(':', '時') + '分';  // Add '時' after the hour and '分' after the minute
+    }
+    // If 'en', no changes are made to the formattedTime
+
+    console.log("Time in Seoul: " + finalFormattedTime);
+    document.getElementById('login-time').textContent = finalFormattedTime;
+}
+
+
+
 
 // Call initText initially to set up the text based on the default selected language
 document.addEventListener('DOMContentLoaded', async () => {

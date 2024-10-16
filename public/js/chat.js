@@ -357,6 +357,7 @@ let sendMessage = async (custom) => {
                     const headerDiv = document.createElement('div');
                     const logoDiv = document.createElement('div');
                     logoDiv.classList.add('logo-div');
+
                     if (!parsed.symbol_logo) {
                         logoDiv.style.display = 'none';
                     } else {
@@ -374,6 +375,7 @@ let sendMessage = async (custom) => {
 
                     const priceDiv = document.createElement('div');
                     priceDiv.classList.add('price');
+
                     console.log('symbol_price:', parsed.symbol_data.symbol_price, typeof parsed.symbol_data.symbol_price);
                     if (parsed.symbol_price !== null && !isNaN(parsed.symbol_data.symbol_price)) {
                         priceDiv.textContent = `$${Number(parsed.symbol_data.symbol_price).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 7 })}`;
@@ -975,7 +977,20 @@ let sendMessage = async (custom) => {
             generatingWrapper.style.display = 'none';
             const errorMessageDiv = document.createElement('div');
             errorMessageDiv.className = 'error-message';
-            errorMessageDiv.textContent = 'Something probably went wrong';
+            switch (selectedLanguage) {
+                case 'kr':
+                    errorMessageDiv.textContent = '응답 생성에 실패하였습니다.';
+                    break;
+                case 'jp':
+                    errorMessageDiv.textContent = 'メッセージ生成に失敗しました。';
+                    break;
+                case 'en':
+                    errorMessageDiv.textContent = 'Failed to generate message.';
+                    break;
+                default:
+                    errorMessageDiv.textContent = 'Something probably went wrong.';
+                    break;
+            }
             chatBox.appendChild(errorMessageDiv);
         }
     } catch (error) {
@@ -983,7 +998,20 @@ let sendMessage = async (custom) => {
         generatingWrapper.style.display = 'none';
         const errorMessageDiv = document.createElement('div');
         errorMessageDiv.className = 'error-message';
-        errorMessageDiv.textContent = 'Something probably went wrong';
+        switch (selectedLanguage) {
+            case 'kr':
+                errorMessageDiv.textContent = '응답 생성에 실패하였습니다.';
+                break;
+            case 'jp':
+                errorMessageDiv.textContent = 'メッセージ生成に失敗しました。';
+                break;
+            case 'en':
+                errorMessageDiv.textContent = 'Failed to generate message.';
+                break;
+            default:
+                errorMessageDiv.textContent = 'Something probably went wrong.';
+                break;
+        }
         chatBox.appendChild(errorMessageDiv);
         console.error('Error:', error);
     } finally {
@@ -1012,26 +1040,8 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
         }
         return ''; // Hide other labels by making them empty strings
     });
-    console.log('custom labels: ', customLabels);
+    //console.log('custom labels: ', customLabels);
 
-    // Utility function to format date to MM/DD HH:mm
-    // const formatDate = (isoString) => {
-    //     if (!isoString) return ''; // Handle empty strings
-    //
-    //     // Split the date and time parts from the ISO string
-    //     const [datePart, timePart] = isoString.split('T');
-    //
-    //     // Extract the year, month, and day from the date part
-    //     const [year, month, day] = datePart.split('-');
-    //
-    //     // Extract the hours and minutes from the time part (ignoring seconds and timezone)
-    //     const [hourMinutePart] = timePart.split('+')[0].split('-')[0].split('Z')[0]; // Handles both +00:00 and Z formats
-    //     const [hours, minutes] = hourMinutePart.split(':');
-    //
-    //     // Return the formatted string as MM/DD HH:mm
-    //     console.log("formatDate result: ", `${month}/${day} ${hours}:${minutes}`);
-    //     return `${month}/${day} ${hours}:${minutes}`;
-    // };
     const formatDate = (isoString) => {
         if (!isoString) return ''; // Handle empty strings
 
@@ -1064,6 +1074,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                     yAxisID: 'y-right',
                     pointRadius: 1,
                     pointHoverRadius: 3,
+                    hitRadius: 10,
                     tension: 0.4
                 },
                 {
@@ -1075,6 +1086,7 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                     yAxisID: 'y-left',
                     pointRadius: 1,
                     pointHoverRadius: 3,
+                    hitRadius: 10,
                     tension: 0.4
                 }
             ]
@@ -1108,6 +1120,9 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
             },
             plugins: {
                 tooltip: {
+                    enabled: true,
+                    mode: 'nearest',
+                    intersect: true,
                     callbacks: {
                         title: function(tooltipItems) {
                             // Display the label (time) when hovering over a point
@@ -1120,12 +1135,12 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
                 }
             },
             interaction: {
-                mode: 'point',
+                mode: 'nearest',
                 axis: 'x',
-                intersect: true
-            }
+                intersect: true,
+            },
         }
-    })
+    });
     // const myChart = new Chart(ctx, {
     //     type: 'line',
     //     data: {

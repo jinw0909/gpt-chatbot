@@ -75,11 +75,11 @@
                         </div>
                         <div class="chat-box-body">
                             <div id="chat-box" class="chat-box">
-<!--                                <div class="message center">-->
-<!--                                    <div class="system">-->
-<!--                                        <span id="connect-time">접속 시간</span><span id="login-time"></span>-->
-<!--                                    </div>-->
-<!--                                </div>-->
+                                <div class="message center">
+                                    <div class="system">
+                                        <span id="connect-time" class="connect-time">접속 시간</span><span id="login-time"></span>
+                                    </div>
+                                </div>
                                 <div class="message left">
                                     <div class="assistant content" id="header-text">
                                         <span>안녕하세요.</span>

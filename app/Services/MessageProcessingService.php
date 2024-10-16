@@ -129,12 +129,12 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .
+                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .'. ' .
                     'If the user asks to provide additional recommendations, avoid providing these cryptos. '
             ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of articles that is already shown to the user. ' . implode(', ', $revealed) .
+                'content' => 'This is the list of articles that is already shown to the user. ' . implode(', ', $revealed) . '. '.
                     'If the user asks to provide additional articles, avoid providing articles in this list.'
             ],
             [
@@ -171,7 +171,6 @@ class MessageProcessingService
 
         return $messages;
     }
-
 
     private function getTools() {
         return [

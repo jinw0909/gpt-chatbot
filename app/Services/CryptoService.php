@@ -292,8 +292,6 @@ class CryptoService
             return $item;
         });
 
-
-
         $jsonResult = json_encode($result);
         Log::info($jsonResult);
 
