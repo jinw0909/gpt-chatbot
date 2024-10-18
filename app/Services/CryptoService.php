@@ -83,7 +83,7 @@ class CryptoService
 
         $currentKST = new DateTime('now', new DateTimeZone('Asia/Seoul'));
         $twelveHoursAgoKST = clone $currentKST;
-        $twelveHoursAgoKST->modify('-6 hours');
+        $twelveHoursAgoKST->modify('-4 hours');
         Log::info("current KST: ", ["currentKST" => $currentKST]);
         Log::info("12 hours ago KST: ", ["12HoursAgoKST" => $twelveHoursAgoKST]);
 

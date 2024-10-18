@@ -10,22 +10,25 @@ const texts = {
         headerText: ['안녕하세요.', 'Goya Chat AI에 오신 것을 환영합니다.', 'Goya Chat AI는 사용료가 부과되는 유료 서비스입니다.', 'Chat AI 질문을 클릭해 주세요.'],
         sirText: ['님 안녕하세요.'],
         askQuestion: 'Chat AI 질문하기',
-        initialQuery: ['진입하기 좋은 암호 화폐 추천', '암호 화폐 시장 동향', '고야 스코어란?'],
+        initialQuery: ['진입하기 좋은 암호 화폐 추천', '암호 화폐 시장 전망', '고야 스코어란?'],
         timezone: 'Asia/Seoul',
         recommendCrypto: '진입하기 좋은 암호화폐 추천',
-        marketTrend: '암호 화폐 시장 동향',
+        marketTrend: '암호 화폐 시장 전망',
         majorNews: '주요 암호 화폐 뉴스',
         aboutGoya: '고야 스코어란?',
         otherNews: '다른 주요 뉴스',
         analyzeBtc: '비트코인 스코어 및 가격',
+        explainSymbolHead: '암호화폐 ',
         explainSymbol: '에 대해 알려줘',
-        analyzeSymbol: ' 스코어 및 가격',
-        analyzeSymbolMonth: ' 한 달간 스코어 및 가격',
+        analyzeSymbol: ' 24시간 스코어　정보',
+        analyzeSymbolMonth: ' 한 달간 스코어 정보',
         otherCrypto: '다른 암호 화폐 추천',
         explainCriteria: '추천 기준을 알려줘',
         caution: '※ 본 암호화폐 추천은 투자시 절대적인 기준이 아닌 참고 용도로만 사용하시기 바랍니다. 투자하시기 전 반드시 마지막 시그널 발생 시간을 확인하시고 실제 차트와 비교하신 후에 진입하셔야 합니다. 또한 투자로 발생한 모든 손실 및 책임은 투자자 본인에게 있는 점을 다시 한 번 알려드립니다.',
         errorMessage: '응답 생성에 실패하였습니다.',
-        connectTime: '접속 시간'
+        connectTime: '접속 시간',
+        recommendOpenBtn: '시그널 보기',
+        recommendCloseBtn: '닫기'
     },
     jp: {
         connectedTime: '接続時間',
@@ -38,22 +41,25 @@ const texts = {
         headerText: ['こんにちは。', 'Goya Chat AIへようこそ。', 'Goya Chat AIは有料サービスです。', 'Chat AIの質問をクリックしてください。'],
         sirText: ['様、こんにちは。'],
         askQuestion: 'Chat AIに質問',
-        initialQuery: ['エントリーに適した暗号通貨のおすすめ', '暗号通貨市場の動向', 'Goyaスコアとは？'],
+        initialQuery: ['エントリーに適した暗号通貨のおすすめ', '暗号通貨市場の展望', 'Goyaスコアとは？'],
         timezone: 'Asia/Tokyo',
         recommendCrypto: 'エントリーに適した暗号通貨のおすすめ',
-        marketTrend: '暗号通貨市場の動向',
+        marketTrend: '暗号通貨市場の展望',
         majorNews: '主要な暗号通貨ニュース',
         aboutGoya: 'Goyaスコアとは？',
         otherNews: '他の主要なニュース',
         analyzeBtc: 'ビットコインのスコアと価格',
-        explainSymbol: 'について教えてください',
-        analyzeSymbol: 'のスコアと価格',
-        analyzeSymbolMonth: 'の過去1ヶ月のスコアと価格',
+        explainSymbolHead: '暗号通貨',
+        explainSymbol: 'について説明してください',
+        analyzeSymbol: 'の過去24時間のスコアデータ',
+        analyzeSymbolMonth: 'の過去1ヶ月のスコアデータ',
         otherCrypto: '他の暗号通貨のおすすめ',
-        explainCriteria: '推奨基準について教えてください',
+        explainCriteria: '推奨基準について説明してください',
         caution: '※ 本暗号通貨の推薦は、投資の絶対的な基準ではなく、参考目的でのみご利用ください。投資を行う前に、必ず最後のシグナル発生時刻を確認し、実際のチャートと比較した上でエントリーしてください。また、投資によって生じたすべての損失および責任は、投資家ご自身にあることを改めてご確認ください。',
-        errorMessage: 'メッセージ生成に失敗しました。',
-        connectTime: '接続時間'
+        errorMessage: '回答生成に失敗しました。',
+        connectTime: '接続時間',
+        recommendOpenBtn: 'シグナルを確認',
+        recommendCloseBtn: '閉じる'
     },
     en: {
         connectedTime: 'Connected Time',
@@ -66,22 +72,24 @@ const texts = {
         headerText: ['Hello.', 'Welcome to Goya Chat AI.', 'Goya Chat AI is a paid service.', 'Please click on a Chat AI question.'],
         sirText: ['Hello, '],
         askQuestion: 'Ask Chat AI',
-        initialQuery: ['Recommended cryptocurrencies to enter', 'Cryptocurrency market trends', 'What is the Goya Score?'],
+        initialQuery: ['Recommended cryptocurrencies to enter', 'Cryptocurrency market outlook', 'What is the Goya Score?'],
         timezone: 'UTC',
         recommendCrypto: 'Recommended cryptocurrencies to enter',
-        marketTrend: 'Cryptocurrency market trends',
+        marketTrend: 'Cryptocurrency market outlook',
         majorNews: 'Major cryptocurrency news',
         aboutGoya: 'What is the Goya Score?',
         otherNews: 'Other major news',
         analyzeBtc: 'Bitcoin score and price',
-        explainSymbol: 'Tell me about ',
-        analyzeSymbol: ' score and price',
-        analyzeSymbolMonth: ' one-month score and price',
+        explainSymbol: 'Tell me about the cryptocurrency ',
+        analyzeSymbol: ' 24 hrs score data',
+        analyzeSymbolMonth: ' one-month score data',
         otherCrypto: 'Other cryptocurrency recommendations',
         explainCriteria: 'Tell me about the recommendation criteria',
         caution: '※ This cryptocurrency recommendation should be used for reference purposes only and not as an absolute standard for investment. Before investing, be sure to check the time of the last signal and compare it with the actual chart before entering. Please note once again that all losses and liabilities arising from investments rest solely with the investor.',
         errorMessage: 'Failed to generate message.',
-        connectTime: 'Connected time'
+        connectTime: 'Connected time',
+        recommendOpenBtn: 'View Signal',
+        recommendCloseBtn: 'Close'
     },
     zh: {  // Example for Chinese
         connectedTime: '连接时间',
@@ -101,14 +109,16 @@ const texts = {
         aboutGoya: '什么是Goya评分？',
         otherNews: '其他主要新闻',
         analyzeBtc: '比特币评分和价格',
-        explainSymbol: '',
-        analyzeSymbol: '',
-        analyzeSymbolMonth: '',
+        explainSymbol: '是什么?',
+        analyzeSymbol: ' 24小时得分数据',
+        analyzeSymbolMonth: ' 一个月得分数据',
         otherCrypto: '其他加密货币推荐',
         explainCriteria: '告诉我推荐标准',
         caution: '本加密货币推荐仅供参考，不能作为投资的绝对标准。在投资之前，请务必确认最后的信号发生时间，并与实际图表进行比较后再进行操作。此外，请再次确认，所有因投资产生的损失和责任均由投资者本人承担。',
         errorMessage: '无法生成消息',
-        connectTime: '连接时间'
+        connectTime: '连接时间',
+        recommendOpenBtn: '查看信号',
+        recommendCloseBtn: '关闭'
     }
 };
 const timeUnits = {
@@ -314,7 +324,6 @@ async function initText() {
     await setConnectTime(currentEpoch);
 }
 
-
 // Function to map class names to keys in the texts object
 function getClassToKeyMap() {
     return {
@@ -330,7 +339,9 @@ function getClassToKeyMap() {
         'other-crypto': 'otherCrypto',
         'explain-criteria': 'explainCriteria',
         'error-message': 'errorMessage',
-        'connect-time': 'connectTime'
+        'connect-time': 'connectTime',
+        'recommend-open-btn': 'recommendOpenBtn',
+        'recommend-close-btn': 'recommendCloseBtn'
     };
 }
 

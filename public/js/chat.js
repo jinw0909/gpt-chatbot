@@ -3,8 +3,16 @@ let conversation = [];
 document.addEventListener('DOMContentLoaded', async () => {
     await getUsername();
 });
-document.addEventListener('keydown', function(event) {
-   if (event.key === 'Enter') {
+let isComposing = false;
+let messageInput = document.getElementById('message-input');
+messageInput.addEventListener('compositionstart', () => {
+   isComposing = true;
+});
+messageInput.addEventListener('compositionend', () => {
+   isComposing = false;
+});
+messageInput.addEventListener('keydown', function(event) {
+   if (event.key === 'Enter' && !isComposing) {
        if (event.shiftKey) {
            return;
        } else {
@@ -257,17 +265,17 @@ let sendMessage = async (custom) => {
                     question3.setAttribute('data-symbol', parsed.symbol);
 
                     if (selectedLanguage === 'kr') {
-                        question1.textContent = `${parsed.symbol} 스코어 및 가격`;
-                        question2.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
-                        question3.textContent = `${parsed.symbol}에 대해 알려줘`;
+                        question1.textContent = `${parsed.symbol} 24시간 스코어 정보`;
+                        question2.textContent = `${parsed.symbol} 한 달간 스코어 정보`;
+                        question3.textContent = `암호화폐 ${parsed.symbol}에 대해 알려줘`;
                     } else if (selectedLanguage === 'jp') {
-                        question1.textContent = `${parsed.symbol}のスコアと価格`;
-                        question2.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格`;
-                        question3.textContent = `${parsed.symbol}について教えてください`;
+                        question1.textContent = `${parsed.symbol}の24時間スコアデータ`;
+                        question2.textContent = `過去1ヶ月の${parsed.symbol}のスコアデータ`;
+                        question3.textContent = `暗号通貨${parsed.symbol}について説明してください`;
                     } else if (selectedLanguage === 'en') {
-                        question1.textContent = `${parsed.symbol} score and price`;
-                        question2.textContent = `${parsed.symbol} one-month score and price`;
-                        question3.textContent = `Tell me about ${parsed.symbol}`;
+                        question1.textContent = `${parsed.symbol} 24 hours score data`;
+                        question2.textContent = `${parsed.symbol} one-month score data`;
+                        question3.textContent = `Tell me about the cryptocurrency ${parsed.symbol}`;
                     }
 
                     question1.addEventListener('click', function() {
@@ -313,15 +321,15 @@ let sendMessage = async (custom) => {
                 if (selectedLanguage === 'kr') {
                     question1.textContent = `다른 암호 화폐 추천`;
                     question2.textContent = `추천 기준에 대해 알려줘`;
-                    question3.textContent = `암호 화폐 시장 동향`;
+                    question3.textContent = `암호 화폐 시장 전망`;
                 } else if (selectedLanguage === 'jp') {
                     question1.textContent = `他の暗号通貨のおすすめ`;
                     question2.textContent = `おすすめの基準について教えてください`;
-                    question3.textContent = `暗号通貨市場の動向`;
+                    question3.textContent = `暗号通貨市場の展望`;
                 } else if (selectedLanguage === 'en') {
                     question1.textContent = `Other cryptocurrency recommendations`;
                     question2.textContent = `Tell me about the recommendation criteria`;
-                    question3.textContent = `Cryptocurrency market trends`;
+                    question3.textContent = `Cryptocurrency market outlook`;
                 }
 
                 question1.addEventListener('click', function() {
@@ -353,11 +361,9 @@ let sendMessage = async (custom) => {
                     console.log("parsed crypto_analysis: ", parsed);
                     parsed.symbol = parsed.symbol.toUpperCase();
                     const canvas = document.createElement('canvas');
-
                     const headerDiv = document.createElement('div');
                     const logoDiv = document.createElement('div');
                     logoDiv.classList.add('logo-div');
-
                     if (!parsed.symbol_logo) {
                         logoDiv.style.display = 'none';
                     } else {
@@ -440,32 +446,35 @@ let sendMessage = async (custom) => {
                         const status = parsed.recommendation_status;
                         const recommendComment = document.createElement('div');
                         recommendComment.classList.add("recommend-comment");
-                        // if (selectedLanguage === 'kr') {
-                        //     recommendComment.textContent = `※ ${parsed.symbol} 신호가 지난 6시간 내에 발생했습니다`; // "※ {symbol} has signal in the past 6 hours" in Korean
-                        // } else if (selectedLanguage === 'jp') {
-                        //     recommendComment.textContent = `※ ${parsed.symbol}は過去6時間にシグナルがあります`; // "※ {symbol} has signal in the past 6 hours" in Japanese
-                        // } else if (selectedLanguage === 'en') {
-                        //     recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 6 hours`;
-                        // }
-                        if (language === 'kr') {
-                            recommendComment.textContent = `※ ${parsed.symbol}에서 지난 6시간 내에 신호가 발생했습니다`; // "※ {symbol} has signal in the past 6 hours" in Korean
-                        } else if (language === 'jp') {
-                            recommendComment.textContent = `※ ${parsed.symbol}は過去6時間にシグナルがあります`; // "※ {symbol} has signal in the past 6 hours" in Japanese
-                        } else if (language === 'en') {
-                            recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 6 hours`;
-                        }
-                        // recommendComment.style.color = 'orange';
-                        // recommendComment.style.margin = '.25rem 0';
+
                         const openBtn = document.createElement('button');
-                        openBtn.textContent = 'View Signal';
                         openBtn.style.cursor = 'pointer';
                         openBtn.classList.add("recommend-btn", "recommend-open-btn");
+
                         const closeBtn = document.createElement('button');
                         closeBtn.classList.add('close-btn');
-                        closeBtn.textContent = 'close';
                         closeBtn.style.display = 'none';
                         closeBtn.style.cursor = 'pointer';
                         closeBtn.classList.add('recommend-btn', 'recommend-close-btn');
+
+                        if (language === 'kr') {
+                            recommendComment.textContent = `※ ${parsed.symbol}에서 지난 4시간 내에 신호가 발생했습니다.`; // "※ {symbol} has signal in the past 6 hours" in Korean
+                            openBtn.textContent = '시그널 보기';
+                            closeBtn.textContent = '닫기';
+                        } else if (language === 'jp') {
+                            recommendComment.textContent = `※ ${parsed.symbol}には過去4時間で発生したシグナルがあります。`; // "※ {symbol} has signal in the past 6 hours" in Japanese
+                            openBtn.textContent = 'シグナルを確認';
+                            closeBtn.textContent = '閉じる';
+                        } else if (language === 'en') {
+                            recommendComment.textContent = `※ ${parsed.symbol} has signal in the past 4 hours.`;
+                            openBtn.textContent = 'View Signal';
+                            closeBtn.textContent = 'Close';
+                        }
+                        // recommendComment.style.color = 'orange';
+                        // recommendComment.style.margin = '.25rem 0';
+
+                        openBtn.textContent = 'View Signal';
+
                         const recommendDiv = document.createElement('div');
                         const recommendDatetimeDiv = document.createElement('div');
                         recommendDatetimeDiv.textContent = status.recommended_datetime.replace('T', ' ').split(':').slice(0, 2).join(":");
@@ -982,7 +991,7 @@ let sendMessage = async (custom) => {
                     errorMessageDiv.textContent = '응답 생성에 실패하였습니다.';
                     break;
                 case 'jp':
-                    errorMessageDiv.textContent = 'メッセージ生成に失敗しました。';
+                    errorMessageDiv.textContent = '回答生成に失敗しました。';
                     break;
                 case 'en':
                     errorMessageDiv.textContent = 'Failed to generate message.';
@@ -1277,7 +1286,6 @@ let span = document.querySelector(".close");
 btn.onclick = function() {
     modal.style.display = "block";
 }
-
 span.onclick = function() {
     modal.style.display = "none";
 }
