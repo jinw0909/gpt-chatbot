@@ -574,7 +574,7 @@ let sendMessage = async (custom) => {
                         if (selectedLanguage === 'kr') {
                             question1.textContent = `${parsed.symbol} 한 달간 스코어 정보`;
                         } else if (selectedLanguage === 'jp') {
-                            question1.textContent = `過去1ヶ月の${parsed.symbol}の過去一ヶ月間のスコアデータ`;
+                            question1.textContent = `${parsed.symbol}の過去一ヶ月間のスコアデータ`;
                         } else if (selectedLanguage === 'en') {
                             question1.textContent = `${parsed.symbol} one-month score data`;
                         }
@@ -822,7 +822,7 @@ let sendMessage = async (custom) => {
                 const titleDiv = document.createElement('div');
                 titleDiv.style.color = 'aqua';
 
-                titleDiv.textContent = formatDateTimeToWords(parsed.id);
+                titleDiv.textContent = formatDateTimeToWords(parsed.id, language);
 
                 const datetimeDiv = document.createElement('div');
                 datetimeDiv.textContent = `${parsed.datetime.replace('T', ' ').split(':').slice(0, 2).join(":")}`;
@@ -1231,7 +1231,64 @@ let drawChart = (priceMovement, scoreMovement, labels, canvas) => {
     // });
 }
 
-function formatDateTimeToWords(dateTimeString) {
+// function formatDateTimeToWords(dateTimeString, language) {
+//     // Split the input string into date part and time part
+//     const [dateString, timePart] = dateTimeString.split('_'); // ["20240908", "AM"]
+//
+//     // Extract year, month, and day from the date string
+//     const year = dateString.substring(0, 4);   // "2024"
+//     const month = dateString.substring(4, 6);  // "09"
+//     const day = dateString.substring(6, 8);    // "08"
+//
+//     // Convert month number to month name
+//     const monthNumber = parseInt(month, 10);
+//     const monthNames = {
+//         en: [
+//             'January', 'February', 'March', 'April', 'May', 'June',
+//             'July', 'August', 'September', 'October', 'November', 'December'
+//         ],
+//         kr: [
+//             '1월', '2월', '3월', '4월', '5월', '6월',
+//             '7월', '8월', '9월', '10월', '11월', '12월'
+//         ],
+//         jp: [
+//             '1月', '2月', '3月', '4月', '5月', '6月',
+//             '7月', '8月', '9月', '10月', '11月', '12月'
+//         ]
+//     };
+//
+//     // Get month name from the month number
+//     const monthName = monthNumber <= 12 ? monthNames[language][monthNumber - 1] : '';
+//
+//     // Convert day to a number to handle suffix
+//     const dayNumber = parseInt(day, 10);
+//
+//     // Add the appropriate suffix to the day
+//     const suffixes = {
+//         en: (dayNumber === 1 || dayNumber === 21 || dayNumber === 31) ? 'st' :
+//             (dayNumber === 2 || dayNumber === 22) ? 'nd' :
+//                 (dayNumber === 3 || dayNumber === 23) ? 'rd' : 'th',
+//         kr: '일', // In Korean, there are no day suffixes like in English
+//         jp: '日'  // In Japanese, there are no day suffixes like in English
+//     };
+//
+//     // Format the string based on language (no space for Japanese)
+//     const formattedDate = language === 'jp'
+//         ? `${monthName}${dayNumber}${suffixes[language]}`  // No space for Japanese
+//         : `${monthName} ${dayNumber}${suffixes[language]}`;  // Space for other languages
+//
+//     // Final output based on language
+//     const outputs = {
+//         en: `Goya AI Market Analysis, ${formattedDate} ${timePart}`,
+//         kr: `고야 AI 시장 분석, ${formattedDate} ${timePart}`,
+//         jp: `ゴヤAI市場分析, ${formattedDate} ${timePart}`
+//     };
+//
+//     return outputs[language] || 'Invalid Language';
+//
+// }
+
+function formatDateTimeToWords(dateTimeString, language = 'en') {
     // Split the input string into date part and time part
     const [dateString, timePart] = dateTimeString.split('_'); // ["20240908", "AM"]
 
@@ -1240,28 +1297,68 @@ function formatDateTimeToWords(dateTimeString) {
     const month = dateString.substring(4, 6);  // "09"
     const day = dateString.substring(6, 8);    // "08"
 
-    // Convert month number to month name
+    // Convert month number to month name based on language
     const monthNumber = parseInt(month, 10);
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    const monthNames = {
+        en: [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ],
+        kr: [
+            '1월', '2월', '3월', '4월', '5월', '6월',
+            '7월', '8월', '9월', '10월', '11월', '12월'
+        ],
+        jp: [
+            '1月', '2月', '3月', '4月', '5月', '6月',
+            '7月', '8月', '9月', '10月', '11月', '12月'
+        ]
+    };
 
-    // Get month name from the month number
-    const monthName = monthNumber <= 12 ? monthNames[monthNumber - 1] : '';
+    // Get the month name based on the language
+    const monthName = monthNumber <= 12 ? monthNames[language][monthNumber - 1] : '';
 
     // Convert day to a number to handle suffix
     const dayNumber = parseInt(day, 10);
 
-    // Add the appropriate suffix to the day
-    const suffix = (dayNumber === 1 || dayNumber === 21 || dayNumber === 31) ? 'st' :
-        (dayNumber === 2 || dayNumber === 22) ? 'nd' :
-            (dayNumber === 3 || dayNumber === 23) ? 'rd' : 'th';
+    // Add the appropriate suffix to the day (for English)
+    const suffixes = {
+        en: (dayNumber === 1 || dayNumber === 21 || dayNumber === 31) ? 'st' :
+            (dayNumber === 2 || dayNumber === 22) ? 'nd' :
+                (dayNumber === 3 || dayNumber === 23) ? 'rd' : 'th',
+        kr: '일', // In Korean, there are no day suffixes like in English
+        jp: '日'  // In Japanese, there are no day suffixes like in English
+    };
 
-    // Format the final string with the prefix and time first
-    // Return the formatted string
-    return monthName ? `Goya AI Market Analysis, ${timePart} ${monthName} ${dayNumber}${suffix}` : 'Invalid Date';
+    // Handle timePart conversion based on language
+    const timeTranslations = {
+        en: timePart, // AM/PM remains the same for English
+        kr: timePart === 'AM' ? '오전' : '오후', // Korean time translations
+        jp: timePart === 'AM' ? '午前' : '午後'  // Japanese time translations
+    };
+
+    const formattedTimePart = timeTranslations[language] || timePart;
+
+    // Format the string based on language (no space for Japanese)
+    const formattedDate = language === 'jp'
+        ? `${monthName}${dayNumber}${suffixes[language]}`  // No space for Japanese
+        : `${monthName} ${dayNumber}${suffixes[language]}`;  // Space for other languages
+
+    // Final output based on language
+    const outputs = {
+        en: `Goya AI Market Analysis, ${formattedDate} ${formattedTimePart}`,
+        kr: `고야 AI 시장 분석, ${formattedDate} ${formattedTimePart}`,
+        jp: `ゴヤAI市場分析, ${formattedDate}${formattedTimePart}`
+    };
+
+    // Return the formatted string based on the provided language
+    return outputs[language] || 'Invalid Language';
 }
+
+// Example usage:
+// console.log(formatDateTimeToWords('20240908_AM', 'en')); // Goya AI Market Analysis, AM September 8th
+// console.log(formatDateTimeToWords('20240908_AM', 'kr')); // 고야 AI 시장 분석, 오전 9월 8일
+// console.log(formatDateTimeToWords('20240908_AM', 'jp')); // ゴヤAI市場分析, 午前 9月8日
+
 
 let executeQuestion = (elem) => {
     if (elem.textContent !== '') {

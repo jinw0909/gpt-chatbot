@@ -98,19 +98,19 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list. If there is no data retrieved, respond in a format_type of "default".  '
+                'content' => 'When the user asks to pick symbols from the previous recommendation list, first pick symbols from the previous list and call the function "analyze_cryptos". Pass the symbols you picked as an argument. The response format should be the format_type of "crypto_analysis". If the user did not specify the number of symbols to pick from the previous list, then just pick one symbol from the previous list.'
             ],
             [
                 'role' => 'system',
-                'content' => 'When the user asks to tell about the cryptocurrency symbol, or asks to explain about the cryptocurrency symbol, then respond in the format_type of "default". In this case, the response content should focus on explaining about the cryptocurrency symbol itself.'
+                'content' => 'When the user asks to tell about the cryptocurrency symbol, or asks to explain about the cryptocurrency symbol, are asks what the cryptocurrency symbol is, then respond in the format_type of "default". In this case, the response content should be explaining about the cryptocurrency symbol itself and not the score or price data.'
             ],
             [
                 'role' => 'system',
-                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_viewpoint" and respond with a format_type of "viewpoint". The "id" MUST exactly match the retrieved viewpoint id.'
+                'content' => 'Upon receiving inquires related to the cryptocurrency market trend, call the function "show_viewpoint" and respond with a format_type of "viewpoint". The "id" field of the response MUST exactly match the id of the retrieved viewpoint.'
             ],
             [
                 'role' => 'system',
-                'content' => "When the user asks for crypto related articles or additional/other articles, call the function 'show_articles' and respond in a format_type of 'articles'. Check the previously_shown article id from the system message and pass it as an argument. . "
+                'content' => "When the user asks for crypto related articles or additional/other articles, call the function 'show_articles' and respond in a format_type of 'articles'. Check the previously_shown article id list from the system message and pass it as an argument 'previously_shown'."
             ],
             [
                 'role' => 'system',
