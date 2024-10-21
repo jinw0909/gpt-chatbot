@@ -17,7 +17,7 @@ const texts = {
         majorNews: '주요 암호 화폐 뉴스',
         aboutGoya: '고야 스코어란?',
         otherNews: '다른 주요 뉴스',
-        analyzeBtc: '비트코인 스코어 및 가격',
+        analyzeBtc: '비트코인 24시간 스코어 정보',
         explainSymbolHead: '암호화폐 ',
         explainSymbol: '에 대해 알려줘',
         analyzeSymbol: ' 24시간 스코어　정보',
@@ -48,7 +48,7 @@ const texts = {
         majorNews: '主要な暗号通貨ニュース',
         aboutGoya: 'Goyaスコアとは？',
         otherNews: '他の主要なニュース',
-        analyzeBtc: 'ビットコインのスコアと価格',
+        analyzeBtc: 'ビットコインの過去24時間のスコアデータ',
         explainSymbolHead: '暗号通貨',
         explainSymbol: 'について説明してください',
         analyzeSymbol: 'の過去24時間のスコアデータ',
@@ -79,9 +79,9 @@ const texts = {
         majorNews: 'Major cryptocurrency news',
         aboutGoya: 'What is the Goya Score?',
         otherNews: 'Other major news',
-        analyzeBtc: 'Bitcoin score and price',
+        analyzeBtc: 'Bitcoin　24 hours score data',
         explainSymbol: 'Tell me about the cryptocurrency ',
-        analyzeSymbol: ' 24 hrs score data',
+        analyzeSymbol: ' 24 hours score data',
         analyzeSymbolMonth: ' one-month score data',
         otherCrypto: 'Other cryptocurrency recommendations',
         explainCriteria: 'Tell me about the recommendation criteria',
@@ -108,8 +108,9 @@ const texts = {
         majorNews: '主要加密货币新闻',
         aboutGoya: '什么是Goya评分？',
         otherNews: '其他主要新闻',
-        analyzeBtc: '比特币评分和价格',
-        explainSymbol: '是什么?',
+        analyzeBtc: 'BTC 24小时得分数据',
+        explainSymbolHead: '关于加密货币',
+        explainSymbol: '，告诉我一些信息',
         analyzeSymbol: ' 24小时得分数据',
         analyzeSymbolMonth: ' 一个月得分数据',
         otherCrypto: '其他加密货币推荐',
@@ -366,8 +367,12 @@ async function changeText() {
                     const symbol = element.getAttribute('data-symbol');
                     if (symbol) {
                         // If the key is explainSymbol and the selected language is 'en', append the symbol
-                        if (key === 'explainSymbol' && selectedLanguage === 'en') {
-                            element.textContent = `${langText[key]} ${symbol}`; // Append symbol
+                        if (key === 'explainSymbol') {
+                            if (selectedLanguage === 'en') {
+                                element.textContent = `${langText[key]} ${symbol}`;
+                            } else {
+                                element.textContent = `${langText['explainSymbolHead']}${symbol}${langText[key]}`
+                            }
                         } else {
                             // Prepend the symbol in other cases
                             element.textContent = `${symbol}${langText[key]}`;
@@ -383,6 +388,7 @@ async function changeText() {
     // Set login time based on selected language
     // setLoginTime();
 }
+
 async function getUsername(){
     try {
         const response = await fetch('/user/1');
@@ -395,7 +401,6 @@ async function getUsername(){
         console.error('Error: ', error);
     }
 }
-
 
 async function setConnectTime(currentEpoch) {
     const date = new Date(currentEpoch);
@@ -434,9 +439,6 @@ async function setConnectTime(currentEpoch) {
     console.log("Time in Seoul: " + finalFormattedTime);
     document.getElementById('login-time').textContent = finalFormattedTime;
 }
-
-
-
 
 // Call initText initially to set up the text based on the default selected language
 document.addEventListener('DOMContentLoaded', async () => {

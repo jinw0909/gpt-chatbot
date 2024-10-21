@@ -74,15 +74,15 @@ class MessageProcessingService
             [
                 'role' => 'system',
                 'content' =>
-                    'Upon receiving any user inquiry related to the price and score of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, you should call the function "analyze_cryptos" and respond in the "format_type" of "crypto_analysis". The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
+                    'Upon receiving any user inquiry related to the score and price data of the crypto symbol, or upon receiving any inquiry to show the chart of the symbol, you should call the function "analyze_cryptos" and respond in the "format_type" of "crypto_analysis". The time range specified in the user message has to be calculated into hours unit before being passed as the "hours" argument. If the user did not specify the time range, then use 24 as the "hours" argument. '
             ],
             [
                 'role' => 'system',
-                'content' => 'When the format_type of the response is "crypto_analysis", "analysis_translated" field and the "recommended_reason_translated" field should be made in the default language of the user if the default language of the user is not English. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol crypto, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and also refer the several most recent price movement trend of the symbol. Also, the "analysis_translated" field should also refer to the "recommended_reason_translated" content of the "recommendation_status" field which explains why the symbol is currently recommended. When the "recommended_reason_translated" says there are S, S2, or S3 signals, it means the price of the crypto is in a declining trend which could be an opportunity for the short position traders, while L, L2, L3 signal means the price in on a inclining trend which means it could be an opportunity for the long position traders.'
+                'content' => 'When the format_type of the response is "crypto_analysis", "analysis_translated" field and the "recommended_reason_translated" field should be made in the default language of the user if the default language of the user is not English. Also, the "analysis_translated" field must include detailed analysis of the price and score movement of the symbol cryptocurrency, not just introducing the overall movement trend but also dealing with the critical points where the price and score largely fluctuated, and should also refer to the several most recent price movement trend of the symbol. Also, it should also refer to the content of "recommended_reason_translated" field of the "recommendation_status" field which explains the reason why this symbol is currently recommended or not. When the "recommended_reason_translated" field says there are S, S2, or S3 signal, it means the price of the symbol cryptocurrency is in a declining trend which could be an opportunity for the short position traders, while L, L2, L3 signal means the price is on a inclining trend which means it could be an opportunity for the long position traders.'
             ],
             [
                 'role' => 'system',
-                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated response should be in a format_type of "default" and include the text that informs there are no score and price data of the symbol but soon it will be updated and apologizes for the inconvenience.'
+                'content' => 'When you make the function call "analyze_cryptos", but the returned crypto_data (price and score data) is an empty array, then the generated response should be in a format_type of "default" and should be a content which informs that the score and price data of the symbol is currently not ready but soon it will be updated, and apologies for the inconvenience. Also in this case, the response content should not include any data related to the cryptocurrency.'
             ],
             [
                 'role' => 'system',
@@ -127,15 +127,27 @@ class MessageProcessingService
                 'content' =>
                     'Your default response format_type is "default" when there is no specific instruction on the response format_type, and in this case, the content should be in a plain text format not in JSON. '
             ],
+//            [
+//                'role' => 'system',
+//                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .'. ' .
+//                    'If the user asks to provide additional recommendations, avoid providing these cryptos. '
+//            ],
+//            [
+//                'role' => 'system',
+//                'content' => 'This is the list of articles that is already provided to the user. ' . implode(', ', $revealed) . '. '.
+//                    'If the user asks to provide additional articles, avoid providing articles in this list.'
+//            ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of previously recommended cryptos. ' . implode(', ', $recommended) .'. ' .
-                    'If the user asks to provide additional recommendations, avoid providing these cryptos. '
+                'content' => empty($recommended)
+                    ? 'There are no previously recommended cryptos.'
+                    : 'This is the list of previously recommended cryptos: ' . implode(', ', $recommended) . '. If the user asks to provide additional recommendations, avoid providing these cryptos.'
             ],
             [
                 'role' => 'system',
-                'content' => 'This is the list of articles that is already shown to the user. ' . implode(', ', $revealed) . '. '.
-                    'If the user asks to provide additional articles, avoid providing articles in this list.'
+                'content' => empty($revealed)
+                    ? 'There are no previously provided articles.'
+                    : 'This is the list of articles that is already shown to the user: ' . implode(', ', $revealed) . '. If the user asks to provide additional articles, avoid providing articles in this list.'
             ],
             [
                 'role' => 'system',
@@ -178,7 +190,7 @@ class MessageProcessingService
                 'type' => 'function',
                 'function' => [
                     'name' => 'analyze_cryptos',
-                    'description' => 'The function to get the overall data of the given cryptocurrency symbol including price data, score data and the recommendation status.',
+                    'description' => 'The function to get the overall data of the given cryptocurrency symbol including score data, price data and the recommendation status. Every price data returned is in the unit of USD',
                     'strict' => true,
                     'parameters' => [
                         'type' => 'object',

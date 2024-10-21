@@ -563,20 +563,20 @@ let sendMessage = async (custom) => {
                     if (parsed.interval > 48) {
                         question1.classList.add('analyze-symbol');
                         if (selectedLanguage === 'kr') {
-                            question1.textContent = `${parsed.symbol} 스코어 및 가격`;
+                            question1.textContent = `${parsed.symbol} 24시간 스코어 정보`;
                         } else if (selectedLanguage === 'jp') {
-                            question1.textContent = `${parsed.symbol}のスコアと価格`;
+                            question1.textContent = `${parsed.symbol}の過去24時間のスコアデータ`;
                         } else if (selectedLanguage === 'en') {
-                            question1.textContent = `${parsed.symbol} Score and Price`;
+                            question1.textContent = `${parsed.symbol} 24 hours score data`;
                         }
                     } else {
                         question1.classList.add('analyze-symbol-month');
                         if (selectedLanguage === 'kr') {
-                            question1.textContent = `${parsed.symbol} 한 달간 스코어 및 가격`;
+                            question1.textContent = `${parsed.symbol} 한 달간 스코어 정보`;
                         } else if (selectedLanguage === 'jp') {
-                            question1.textContent = `過去1ヶ月の${parsed.symbol}のスコアと価格`;
+                            question1.textContent = `過去1ヶ月の${parsed.symbol}の過去一ヶ月間のスコアデータ`;
                         } else if (selectedLanguage === 'en') {
-                            question1.textContent = `${parsed.symbol} One-Month Score and Price`;
+                            question1.textContent = `${parsed.symbol} one-month score data`;
                         }
                     }
 
@@ -588,13 +588,13 @@ let sendMessage = async (custom) => {
                     question3.setAttribute('data-symbol', parsed.symbol);
 
                     if (selectedLanguage === 'kr') {
-                        question2.textContent = `${parsed.symbol}에 대해 알려줘`;
+                        question2.textContent = `암호화폐 ${parsed.symbol}에 대해 알려줘`;
                         question3.textContent = `진입하기 좋은 암호 화폐 추천`;
                     } else if (selectedLanguage === 'jp') {
-                        question2.textContent = `${parsed.symbol}について教えてください`;
+                        question2.textContent = `暗号通貨${parsed.symbol}について説明してください`;
                         question3.textContent = `エントリーに適した暗号通貨のおすすめ`;
                     } else if (selectedLanguage === 'en') {
-                        question2.textContent = `Tell me about ${parsed.symbol}`;
+                        question2.textContent = `Tell me about the cryptocurrency ${parsed.symbol}`;
                         question3.textContent = `Recommended cryptocurrencies to enter`;
                     }
 
@@ -902,20 +902,20 @@ let sendMessage = async (custom) => {
                 const question3 = document.createElement('p');
 
                 question1.classList.add('major-news', 'question');
-                question2.classList.add('about-goya', 'question');
+                question2.classList.add('analyze-btc', 'question');
                 question3.classList.add('recommend-crypto', 'question');
 
                 if (selectedLanguage === 'kr') {
                     question1.textContent = `암호 화폐 관련 주요 뉴스`;
-                    question2.textContent = `고야 스코어란?`;
+                    question2.textContent = `비트코인 24시간 스코어 정보`;
                     question3.textContent = `진입하기 좋은 암호 화폐 추천`;
                 } else if (selectedLanguage === 'jp') {
                     question1.textContent = `暗号通貨関連の主要ニュース`; // "Major news about cryptocurrencies" in Japanese
-                    question2.textContent = `ゴヤースコアとは？`; // "What is the Goya Score?" in Japanese
+                    question2.textContent = `ビットコインの過去24時間のスコアデータ`; // "What is the Goya Score?" in Japanese
                     question3.textContent = `エントリーに適した暗号通貨のおすすめ`; // "Recommended cryptocurrencies to enter" in Japanese
                 } else if (selectedLanguage === 'en') {
                     question1.textContent = `Major news about cryptocurrencies`;
-                    question2.textContent = `What is the Goya Score?`;
+                    question2.textContent = `Bitcoin　24 hours score data`;
                     question3.textContent = `Recommended cryptocurrencies to enter`;
                 }
 
