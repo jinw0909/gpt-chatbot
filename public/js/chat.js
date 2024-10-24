@@ -473,7 +473,7 @@ let sendMessage = async (custom) => {
                         // recommendComment.style.color = 'orange';
                         // recommendComment.style.margin = '.25rem 0';
 
-                        openBtn.textContent = 'View Signal';
+                        // openBtn.textContent = 'View Signal';
 
                         const recommendDiv = document.createElement('div');
                         const recommendDatetimeDiv = document.createElement('div');

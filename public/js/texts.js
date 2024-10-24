@@ -341,8 +341,8 @@ function getClassToKeyMap() {
         'explain-criteria': 'explainCriteria',
         'error-message': 'errorMessage',
         'connect-time': 'connectTime',
-        'recommend-open-btn': 'recommendOpenBtn',
-        'recommend-close-btn': 'recommendCloseBtn'
+        // 'recommend-open-btn': 'recommendOpenBtn',
+        // 'recommend-close-btn': 'recommendCloseBtn'
     };
 }
 
