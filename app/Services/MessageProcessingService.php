@@ -102,7 +102,7 @@ class MessageProcessingService
             ],
             [
                 'role' => 'system',
-                'content' => "When the user asks to tell or explain about the cryptocurrency symbol itself, or asks what the cryptocurrency symbol is, then the assistant's response format_type should be 'default' and the content should be explaining about the inquired cryptocurrency itself and not about the score and price data of the symbol."
+                'content' => "Upon receiving inquiries to tell or explain about the cryptocurrency symbol itself, or about what the cryptocurrency symbol is, the assistant should not make any function call and the respond in a format_type of 'default'. Also its content should be explaining about the inquired cryptocurrency itself and not the score and price data of the symbol."
             ],
             [
                 'role' => 'system',
