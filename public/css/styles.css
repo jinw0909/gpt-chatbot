@@ -91,7 +91,7 @@ body {
     max-height: 0;
 }
 .recommend.show {
-    max-height: 500px;
+    max-height: 650px;
 }
 .recommend-btn {
     border: 1px solid white;
